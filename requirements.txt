@@ -2,3 +2,6 @@ pandas
 xgboost
 scikit-learn
 numpy
+seaborn
+matplotlib
+jupyter
