@@ -1,0 +1,89 @@
+======================================================================
+[F1-CHAMP] F1 RACE PREDICTOR - Japanese Grand Prix
+======================================================================
+
+Race: Japanese Grand Prix
+Totaal laps: 53
+Timestamp: 2026-01-22 17:05:25
+
+PREDICTION EVOLUTION PER LAP:
+----------------------------------------------------------------------
+LAP 5: 1. Driver 1 (90.4%) | 2. Driver 11 (88.7%) | 3. Driver 4 (87.1%) | 4. Driver 55 (85.8%) | 5. Driver 14 (84.5%) | 
+LAP 6: 1. Driver 1 (89.8%) | 2. Driver 11 (88.3%) | 3. Driver 4 (86.7%) | 4. Driver 55 (85.2%) | 5. Driver 14 (83.9%) | 
+LAP 7: 1. Driver 1 (89.5%) | 2. Driver 11 (87.9%) | 3. Driver 4 (86.3%) | 4. Driver 55 (84.9%) | 5. Driver 14 (83.7%) | 
+LAP 8: 1. Driver 1 (89.1%) | 2. Driver 11 (87.3%) | 3. Driver 4 (85.8%) | 4. Driver 55 (84.3%) | 5. Driver 14 (83.2%) | 
+LAP 9: 1. Driver 1 (89.5%) | 2. Driver 11 (87.9%) | 3. Driver 4 (86.2%) | 4. Driver 55 (84.8%) | 5. Driver 14 (83.5%) | 
+LAP 10: 1. Driver 1 (89.2%) | 2. Driver 11 (87.6%) | 3. Driver 4 (85.9%) | 4. Driver 55 (84.5%) | 5. Driver 14 (83.3%) | 
+LAP 11: 1. Driver 1 (88.8%) | 2. Driver 11 (87.2%) | 3. Driver 55 (85.8%) | 4. Driver 14 (82.9%) | 5. Driver 81 (80.6%) | 
+LAP 12: 1. Driver 1 (87.6%) | 2. Driver 11 (85.9%) | 3. Driver 55 (84.4%) | 4. Driver 14 (83.3%) | 5. Driver 16 (81.2%) | 
+LAP 13: 1. Driver 1 (87.5%) | 2. Driver 11 (85.9%) | 3. Driver 55 (84.5%) | 4. Driver 16 (82.8%) | 5. Driver 63 (78.8%) | 
+LAP 14: 1. Driver 1 (87.7%) | 2. Driver 11 (86.2%) | 3. Driver 55 (84.8%) | 4. Driver 16 (83.0%) | 5. Driver 63 (80.5%) | 
+LAP 15: 1. Driver 1 (87.7%) | 2. Driver 16 (82.9%) | 3. Driver 63 (80.5%) | 4. Driver 11 (79.8%) | 5. Driver 4 (79.4%) | 
+LAP 16: 1. Driver 16 (85.3%) | 2. Driver 63 (83.1%) | 3. Driver 4 (82.4%) | 4. Driver 1 (81.5%) | 5. Driver 44 (81.3%) | 
+LAP 17: 1. Driver 16 (86.9%) | 2. Driver 11 (83.9%) | 3. Driver 4 (83.9%) | 4. Driver 63 (83.2%) | 5. Driver 55 (79.8%) | 
+LAP 18: 1. Driver 1 (89.7%) | 2. Driver 16 (87.3%) | 3. Driver 11 (86.3%) | 4. Driver 4 (85.7%) | 5. Driver 55 (80.3%) | 
+LAP 19: 1. Driver 1 (89.2%) | 2. Driver 16 (86.9%) | 3. Driver 11 (85.5%) | 4. Driver 4 (85.4%) | 5. Driver 55 (82.2%) | 
+LAP 20: 1. Driver 1 (88.7%) | 2. Driver 16 (86.3%) | 3. Driver 4 (84.9%) | 4. Driver 11 (84.8%) | 5. Driver 55 (81.4%) | 
+LAP 21: 1. Driver 1 (90.2%) | 2. Driver 4 (85.0%) | 3. Driver 11 (85.0%) | 4. Driver 16 (84.8%) | 5. Driver 55 (83.4%) | 
+LAP 22: 1. Driver 1 (89.8%) | 2. Driver 11 (86.3%) | 3. Driver 16 (84.3%) | 4. Driver 4 (83.2%) | 5. Driver 55 (82.2%) | 
+LAP 23: 1. Driver 1 (87.4%) | 2. Driver 11 (83.8%) | 3. Driver 16 (82.3%) | 4. Driver 4 (80.6%) | 5. Driver 55 (80.0%) | 
+LAP 24: 1. Driver 1 (89.6%) | 2. Driver 11 (85.9%) | 3. Driver 16 (84.8%) | 4. Driver 4 (82.5%) | 5. Driver 55 (82.1%) | 
+LAP 25: 1. Driver 1 (89.6%) | 2. Driver 11 (86.0%) | 3. Driver 16 (84.7%) | 4. Driver 4 (82.4%) | 5. Driver 55 (82.2%) | 
+LAP 26: 1. Driver 1 (89.1%) | 2. Driver 11 (87.5%) | 3. Driver 55 (85.3%) | 4. Driver 14 (79.8%) | 5. Driver 63 (77.7%) | 
+LAP 27: 1. Driver 1 (88.3%) | 2. Driver 11 (86.3%) | 3. Driver 55 (84.4%) | 4. Driver 14 (82.4%) | 5. Driver 81 (79.7%) | 
+LAP 28: 1. Driver 1 (88.8%) | 2. Driver 11 (86.8%) | 3. Driver 55 (84.8%) | 4. Driver 14 (82.9%) | 5. Driver 16 (82.2%) | 
+LAP 29: 1. Driver 1 (88.4%) | 2. Driver 11 (86.5%) | 3. Driver 55 (84.5%) | 4. Driver 14 (82.5%) | 5. Driver 16 (81.9%) | 
+LAP 30: 1. Driver 1 (88.2%) | 2. Driver 11 (86.3%) | 3. Driver 55 (84.2%) | 4. Driver 14 (82.2%) | 5. Driver 16 (81.5%) | 
+LAP 31: 1. Driver 1 (87.9%) | 2. Driver 11 (85.9%) | 3. Driver 55 (83.8%) | 4. Driver 14 (82.0%) | 5. Driver 16 (81.2%) | 
+LAP 32: 1. Driver 1 (87.5%) | 2. Driver 11 (85.5%) | 3. Driver 55 (83.4%) | 4. Driver 16 (82.5%) | 5. Driver 14 (81.6%) | 
+LAP 33: 1. Driver 1 (86.3%) | 2. Driver 55 (82.3%) | 3. Driver 16 (81.2%) | 4. Driver 4 (79.6%) | 5. Driver 11 (79.1%) | 
+LAP 34: 1. Driver 16 (84.1%) | 2. Driver 55 (83.1%) | 3. Driver 4 (82.3%) | 4. Driver 1 (80.3%) | 5. Driver 63 (77.8%) | 
+LAP 35: 1. Driver 55 (85.6%) | 2. Driver 16 (84.4%) | 3. Driver 11 (84.0%) | 4. Driver 4 (81.1%) | 5. Driver 1 (78.4%) | 
+LAP 36: 1. Driver 1 (90.7%) | 2. Driver 11 (86.8%) | 3. Driver 16 (83.6%) | 4. Driver 4 (81.8%) | 5. Driver 63 (79.0%) | 
+LAP 37: 1. Driver 1 (90.1%) | 2. Driver 11 (87.9%) | 3. Driver 16 (84.6%) | 4. Driver 4 (82.9%) | 5. Driver 44 (78.6%) | 
+LAP 38: 1. Driver 1 (89.9%) | 2. Driver 11 (88.0%) | 3. Driver 16 (84.4%) | 4. Driver 55 (83.2%) | 5. Driver 4 (82.6%) | 
+LAP 39: 1. Driver 1 (89.8%) | 2. Driver 11 (87.9%) | 3. Driver 16 (84.3%) | 4. Driver 55 (83.3%) | 5. Driver 4 (82.5%) | 
+LAP 40: 1. Driver 1 (89.1%) | 2. Driver 11 (87.2%) | 3. Driver 16 (83.9%) | 4. Driver 55 (82.7%) | 5. Driver 4 (82.1%) | 
+LAP 41: 1. Driver 1 (88.3%) | 2. Driver 11 (86.5%) | 3. Driver 16 (82.8%) | 4. Driver 55 (82.1%) | 5. Driver 4 (81.0%) | 
+LAP 42: 1. Driver 1 (88.6%) | 2. Driver 11 (86.8%) | 3. Driver 16 (83.0%) | 4. Driver 55 (82.4%) | 5. Driver 4 (81.4%) | 
+LAP 43: 1. Driver 1 (88.7%) | 2. Driver 11 (86.9%) | 3. Driver 16 (83.3%) | 4. Driver 55 (82.4%) | 5. Driver 4 (81.6%) | 
+LAP 44: 1. Driver 1 (88.3%) | 2. Driver 11 (86.4%) | 3. Driver 55 (83.6%) | 4. Driver 16 (82.9%) | 5. Driver 14 (79.7%) | 
+LAP 45: 1. Driver 1 (88.1%) | 2. Driver 11 (86.2%) | 3. Driver 55 (83.6%) | 4. Driver 16 (82.6%) | 5. Driver 14 (79.4%) | 
+LAP 46: 1. Driver 1 (87.7%) | 2. Driver 11 (85.7%) | 3. Driver 55 (84.6%) | 4. Driver 16 (80.5%) | 5. Driver 14 (79.1%) | 
+LAP 47: 1. Driver 1 (87.6%) | 2. Driver 11 (85.6%) | 3. Driver 55 (84.7%) | 4. Driver 16 (80.6%) | 5. Driver 14 (78.9%) | 
+LAP 48: 1. Driver 1 (87.6%) | 2. Driver 11 (85.4%) | 3. Driver 55 (84.4%) | 4. Driver 16 (80.5%) | 5. Driver 4 (78.8%) | 
+LAP 49: 1. Driver 1 (87.0%) | 2. Driver 11 (85.0%) | 3. Driver 55 (84.1%) | 4. Driver 16 (80.5%) | 5. Driver 4 (78.7%) | 
+LAP 50: 1. Driver 1 (86.2%) | 2. Driver 11 (84.7%) | 3. Driver 55 (83.7%) | 4. Driver 16 (80.3%) | 5. Driver 4 (78.6%) | 
+LAP 51: 1. Driver 1 (86.4%) | 2. Driver 11 (84.4%) | 3. Driver 55 (83.5%) | 4. Driver 16 (80.4%) | 5. Driver 4 (78.7%) | 
+LAP 52: 1. Driver 1 (86.0%) | 2. Driver 11 (84.0%) | 3. Driver 55 (83.2%) | 4. Driver 16 (80.3%) | 5. Driver 4 (78.7%) | 
+LAP 53: 1. Driver 1 (86.2%) | 2. Driver 11 (84.0%) | 3. Driver 55 (83.3%) | 4. Driver 16 (80.6%) | 5. Driver 4 (78.8%) | 
+
+======================================================================
+FINAL CLASSIFICATION - ALLE DRIVERS
+======================================================================
+Driver | Actual Pos | Predicted Pos | Confidence | Tire
+----------------------------------------------------------------------
+    1. Driver 1   |          1 |             1 |      100.0% | HARD
+    2. Driver 11  |          2 |             2 |      100.0% | HARD
+    3. Driver 55  |          3 |             3 |      100.0% | HARD
+    4. Driver 16  |          4 |             4 |      100.0% | HARD
+    5. Driver 4   |          5 |             5 |      100.0% | HARD
+    6. Driver 14  |          6 |             6 |      100.0% | HARD
+    7. Driver 63  |          7 |             7 |      100.0% | MEDIUM
+    8. Driver 81  |          8 |             8 |      100.0% | HARD
+    9. Driver 44  |          9 |             9 |      100.0% | MEDIUM
+
+======================================================================
+TIRE STRATEGY ANALYSIS
+======================================================================
+HARD      : Avg  98.62s | Min  93.71s | Max 140.24s | Samples 538
+MEDIUM    : Avg 100.94s | Min  93.95s | Max 195.12s | Samples 267
+SOFT      : Avg 107.08s | Min  94.90s | Max 188.46s | Samples 71
+
+Fastest Tire: HARD (98.62s)
+
+======================================================================
+DEEP AI ANALYSIS - CURRENT vs PREDICTED
+======================================================================
+Driver | Current Pos | Predicted Pos | Confidence | Pace Score
+----------------------------------------------------------------------
