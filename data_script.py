@@ -24,12 +24,12 @@ seasons = pd.read_csv('../F1_data_mangement/seasons.csv')
 df = pd.merge(results, races[['raceId', 'year', 'circuitId', 'date']], on='raceId', how='left')
 
 # Stap B: Driver info toevoegen (Naam, Geboortedatum)
-df = pd.merge(df, drivers[['driverId', 'dob', 'nationality']], on='driverId', how='left')
+df = pd.merge(df, drivers[['driverId', 'driverRef', 'dob', 'nationality']], on='driverId', how='left')
 
 # Stap C: Constructor info toevoegen (Teamnaam)
 df = pd.merge(df, constructors[['constructorId', 'name']], on='constructorId', how='left', suffixes=('', '_team'))
 
-df = pd.merge(df, circuits[['circuitId', 'alt']], on='circuitId', how='left')
+df = pd.merge(df, circuits[['circuitId', 'alt', 'country']], on='circuitId', how='left')
 
 df = pd.merge(df, constructor_results[['raceId', 'constructorId', 'points']], on=['raceId', 'constructorId'], how='left', suffixes=('', '_constructor'))
 
