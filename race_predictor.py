@@ -278,10 +278,10 @@ def main():
     print("[F1-CHAMP] F1 RACE PREDICTOR 2024")
     print("   Live Per-Lap Predictions")
     print("="*70)
-        # Create output folder if needed
+    # Create output folder if needed
     output_folder = "outputs"
     os.makedirs(output_folder, exist_ok=True)
-        # Selecteer race
+    # Selecteer race
     race_num = select_race()
     
     # Load data

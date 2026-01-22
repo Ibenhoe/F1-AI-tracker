@@ -50,13 +50,17 @@ class ContinuousModelLearner:
         else:
             print(f"   Model will be trained from scratch")
     
-    def pretrain_on_historical_data(self, csv_path: str = 'processed_f1_training_data.csv'):
+    def pretrain_on_historical_data(self, csv_path: str = 'processed_f1_training_data.csv',
+                                     exclude_race_number: Optional[int] = None,
+                                     current_year: Optional[int] = None):
         """
         Pre-train model op historische F1 data voor betere baseline
         Dit verhoogt confidence scores omdat model patterns kent
         
         Args:
             csv_path: Path naar CSV met historische race data
+            exclude_race_number: Race number te excluden (huidge race)
+            current_year: Current year - exclude races na deze datum
         """
         if not os.path.exists(csv_path):
             print(f"[WARN] Historical data file not found: {csv_path}")
@@ -67,9 +71,22 @@ class ContinuousModelLearner:
             df = pd.read_csv(csv_path)
             print(f"[OK] Loaded {len(df)} historical race records")
             
+            # FILTER: Exclude future races or current race
+            if 'year' in df.columns and 'round' in df.columns:
+                if current_year and exclude_race_number:
+                    # Keep only races BEFORE current race
+                    # Format: (year < current_year) OR (year == current_year AND round < exclude_race_number)
+                    mask = (df['year'] < current_year) | ((df['year'] == current_year) & (df['round'] < exclude_race_number))
+                    df = df[mask]
+                    print(f"[OK] Filtered to {len(df)} records (excluded current race and future)")
+                elif current_year:
+                    # Keep only races from previous years
+                    df = df[df['year'] < current_year]
+                    print(f"[OK] Filtered to {len(df)} records (excluded current year)")
+            
             # Prepare features and target
             feature_cols = []
-            target_col = 'positionOrder'
+            target_col = 'positionOrder' if 'positionOrder' in df.columns else 'finish_position'
             
             # Determine available features
             available_cols = df.columns.tolist()
@@ -77,6 +94,9 @@ class ContinuousModelLearner:
             # Use relevant features
             if 'grid' in available_cols:
                 feature_cols.append('grid')
+            elif 'grid_position' in available_cols:
+                feature_cols.append('grid_position')
+            
             if 'driver_age' in available_cols:
                 feature_cols.append('driver_age')
             if 'points_constructor' in available_cols:
