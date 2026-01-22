@@ -57,8 +57,13 @@ df['age_bin_code'] = le_age.fit_transform(df['age_bin'].astype(str))
 # Dit vertelt het model wie er NU in vorm is, in plaats van wie er 10 jaar geleden goed was.
 
 def calculate_rolling_avg(group, window=5):
-    # shift(1) zorgt dat we de uitslag van de huidige race niet gebruiken om zichzelf te voorspellen
-    return group.shift(1).rolling(window, min_periods=1).mean()
+    # shift(1) zorgt dat we de uitslag van de huidige race niet gebruiken
+    # We gebruiken een gewogen gemiddelde: recentere races tellen zwaarder (lineair: 1, 2, 3, 4, 5)
+    def weighted_mean(x):
+        weights = np.arange(1, len(x) + 1)
+        return np.average(x, weights=weights)
+        
+    return group.shift(1).rolling(window, min_periods=1).apply(weighted_mean, raw=True)
 
 df['driver_recent_form'] = df.groupby('driverId')['positionOrder'].transform(calculate_rolling_avg)
 df['constructor_recent_form'] = df.groupby('constructorId')['positionOrder'].transform(calculate_rolling_avg)
@@ -66,6 +71,31 @@ df['constructor_recent_form'] = df.groupby('constructorId')['positionOrder'].tra
 # Vul lege waarden (eerste races van seizoen) met een gemiddelde (bijv. P12)
 df['driver_recent_form'] = df['driver_recent_form'].fillna(12.0)
 df['constructor_recent_form'] = df['constructor_recent_form'].fillna(12.0)
+
+# 7. TRACK HISTORY (Historie op dit specifieke circuit)
+# We kijken naar hoe de coureur het in het verleden op DIT circuit heeft gedaan.
+
+def calculate_expanding_mean(group):
+    # shift(1) om huidige race niet mee te tellen (data leakage voorkomen)
+    return group.shift(1).expanding().mean()
+
+def calculate_expanding_sum(group):
+    return group.shift(1).expanding().sum()
+
+# Groepeer per coureur en circuit
+track_groups = df.groupby(['driverId', 'circuitId'])
+
+df['driver_track_avg_grid'] = track_groups['grid'].transform(calculate_expanding_mean)
+df['driver_track_avg_finish'] = track_groups['positionOrder'].transform(calculate_expanding_mean)
+
+# Podiums berekenen (Top 3)
+df['is_podium'] = (df['positionOrder'] <= 3).astype(int)
+df['driver_track_podiums'] = track_groups['is_podium'].transform(calculate_expanding_sum)
+
+# Vul lege waarden (eerste keer op circuit) met neutrale waarden
+df['driver_track_avg_grid'] = df['driver_track_avg_grid'].fillna(12.0)
+df['driver_track_avg_finish'] = df['driver_track_avg_finish'].fillna(12.0)
+df['driver_track_podiums'] = df['driver_track_podiums'].fillna(0.0)
 
 # --- DEFINIEER FEATURES ---
 feature_cols = [
@@ -77,7 +107,10 @@ feature_cols = [
     'grid_bin_code',
     'age_bin_code',
     'driver_recent_form',      # NIEUW: Vorm van de coureur
-    'constructor_recent_form'  # NIEUW: Vorm van de auto
+    'constructor_recent_form', # NIEUW: Vorm van de auto
+    'driver_track_avg_grid',   # NIEUW: Historie op deze baan
+    'driver_track_avg_finish', # NIEUW: Historie op deze baan
+    'driver_track_podiums'     # NIEUW: Aantal podiums hier
 ]
 
 # Filter data: Alleen rijen met een geldig resultaat
@@ -95,9 +128,9 @@ print(f"\nStart training met {len(feature_cols)} features...")
 model = xgb.XGBRegressor(objective='reg:squarederror', random_state=42)
 
 param_grid = {
-    'n_estimators': [40, 50, 60, 100, 200],
+    'n_estimators': [40, 50, 60, 100, 200, 300, 400, 500],
     'max_depth': [1, 2, 3, 4, 5],
-    'learning_rate': [0.01, 0.05, 0.1]
+    'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.3]
 }
 
 grid_search = GridSearchCV(
@@ -130,7 +163,22 @@ def get_recent_form(id_col, id_val, target_col='positionOrder', window=5):
     history = df[df[id_col] == id_val].sort_values(by='date').tail(window)
     if len(history) == 0:
         return 12.0 # Geen historie? Dan gokken we middenveld (P12)
-    return history[target_col].mean()
+    
+    # Gewogen gemiddelde berekenen voor de voorspelling
+    values = history[target_col].values
+    weights = np.arange(1, len(values) + 1)
+    return np.average(values, weights=weights)
+
+# Hulpfunctie: Haal de historie op dit circuit op
+def get_track_history(driver_id, circuit_id):
+    history = df[(df['driverId'] == driver_id) & (df['circuitId'] == circuit_id)]
+    if len(history) == 0:
+        return 12.0, 12.0, 0.0 # Default waarden
+    
+    avg_grid = history['grid'].mean()
+    avg_finish = history['positionOrder'].mean()
+    podiums = len(history[history['positionOrder'] <= 3])
+    return avg_grid, avg_finish, podiums
 
 upcoming_race_dict = {
     'driver_name':   ['Leclerc', 'Perez', 'Hamilton', 'Norris', 'Piastri', 'Russell', 'Sainz', 'Alonso', 'Ocon', 'Albon', 'Verstappen', 'Gasly', 'Ricciardo', 'Bottas', 'Stroll', 'Hulkenberg', 'Magnussen', 'Sargeant', 'Zhou', 'Tsunoda'],
@@ -164,6 +212,12 @@ X_next['age_bin_code'] = le_age.transform(X_next['age_bin'].astype(str))
 X_next['driver_recent_form'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x))
 X_next['constructor_recent_form'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x))
 
+# Track History toevoegen
+track_stats = X_next.apply(lambda x: get_track_history(x['driverId'], x['circuitId']), axis=1)
+X_next['driver_track_avg_grid'] = [x[0] for x in track_stats]
+X_next['driver_track_avg_finish'] = [x[1] for x in track_stats]
+X_next['driver_track_podiums'] = [x[2] for x in track_stats]
+
 # Selecteer input
 X_next_input = X_next[feature_cols]
 
@@ -181,7 +235,7 @@ X_next['ai_score'] = predictions
 final_ranking = X_next.sort_values(by='ai_score', ascending=True)
 
 # Maak een net dashboard lijstje
-top_10_dashboard = final_ranking[['driver_name', 'grid', 'ai_score', 'driver_recent_form', 'constructor_recent_form']].head(10)
+top_10_dashboard = final_ranking[['driver_name', 'grid', 'ai_score', 'driver_recent_form', 'driver_track_podiums']].head(10)
 top_10_dashboard.index = range(1, 11) # Nummers 1 t/m 10 ervoor zetten
 
 print("\n========================================")
