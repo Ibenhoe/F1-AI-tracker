@@ -1,0 +1,138 @@
+.predictions-container {
+  background-color: var(--secondary-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.predictions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.predictions-header h2 {
+  font-size: 1.3rem;
+  color: var(--light-text);
+}
+
+.predictions-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.prediction-row {
+  display: grid;
+  grid-template-columns: 50px 1fr 40px;
+  align-items: center;
+  gap: 15px;
+  padding: 12px;
+  background-color: rgba(16, 185, 129, 0.05);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.prediction-row:hover {
+  background-color: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent-color);
+}
+
+.pred-position {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--accent-color);
+  text-align: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background-color: rgba(16, 185, 129, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pred-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pred-driver {
+  font-weight: 600;
+  color: var(--light-text);
+  font-size: 0.95rem;
+}
+
+.pred-confidence {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.confidence-bar {
+  flex: 1;
+  height: 6px;
+  background-color: var(--border-color);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.confidence-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-color), #059669);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.confidence-text {
+  font-size: 0.8rem;
+  color: var(--accent-color);
+  font-weight: 600;
+  min-width: 35px;
+  text-align: right;
+}
+
+.pred-change {
+  font-size: 1.5rem;
+  text-align: center;
+}
+
+.pred-change.up {
+  color: var(--accent-color);
+}
+
+.pred-change.down {
+  color: var(--primary-color);
+}
+
+.pred-change.stable {
+  color: #f59e0b;
+}
+
+/* Scrollbar styling */
+.predictions-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.predictions-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.predictions-list::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.predictions-list::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-color);
+}

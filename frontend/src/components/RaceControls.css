@@ -1,0 +1,135 @@
+.race-controls {
+  background-color: var(--secondary-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.controls-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.control-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.control-btn {
+  padding: 10px 16px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.control-btn:hover:not(:disabled) {
+  background-color: #b91c1c;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+}
+
+.control-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.control-btn:disabled,
+.control-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.speed-select {
+  padding: 8px 12px;
+  background-color: rgba(220, 38, 38, 0.1);
+  border: 1px solid var(--primary-color);
+  color: var(--light-text);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.speed-select:hover:not(:disabled) {
+  background-color: rgba(220, 38, 38, 0.2);
+}
+
+.speed-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.speed-select option {
+  background-color: var(--secondary-color);
+  color: var(--light-text);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: rgba(16, 185, 129, 0.1);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  margin-left: auto;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.status-dot.connected {
+  background-color: var(--accent-color);
+}
+
+.status-dot.disconnected {
+  background-color: var(--primary-color);
+}
+
+.status-text {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  font-weight: 600;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (max-width: 768px) {
+  .controls-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .control-group {
+    width: 100%;
+  }
+
+  .control-btn {
+    flex: 1;
+  }
+
+  .status-indicator {
+    margin-left: 0;
+  }
+}

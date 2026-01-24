@@ -8,3 +8,8 @@ jupyter
 fastf1>=3.0.0
 requests
 python-dateutil
+flask
+flask-cors
+flask-socketio
+python-socketio
+python-engineio

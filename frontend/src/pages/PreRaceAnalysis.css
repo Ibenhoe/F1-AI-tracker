@@ -1,0 +1,38 @@
+.pre-race-analysis {
+  width: 100%;
+}
+
+.pre-race-analysis h1 {
+  font-size: 2rem;
+  margin-bottom: 30px;
+  color: var(--primary-color);
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.analysis-card {
+  background-color: var(--secondary-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 20px;
+  transition: all 0.2s ease;
+}
+
+.analysis-card:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 20px rgba(220, 38, 38, 0.1);
+}
+
+.analysis-card h2 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  font-size: 1.2rem;
+}
+
+.analysis-card p {
+  color: #d1d5db;
+}
