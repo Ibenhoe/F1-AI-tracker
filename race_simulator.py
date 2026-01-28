@@ -174,13 +174,12 @@ class RaceSimulator:
         # Add MODEL METRICS for frontend display
         if self.model is not None:
             try:
-                # V2 model has lap_updates_count instead of get_model_metrics_for_frontend
+                # V3 model uses updates_count (not lap_updates_count)
                 lap_state['model_metrics'] = {
-                    'total_updates': self.model.lap_updates_count,
-                    'model_maturity_percentage': min(100, self.model.lap_updates_count * 5),
-                    'sgd_trained': self.model.sgd_model is not None,
-                    'mlp_trained': self.model.mlp_model is not None,
-                    'gb_trained': self.model.gb_model is not None
+                    'total_updates': getattr(self.model, 'updates_count', 0),
+                    'model_maturity_percentage': min(100, getattr(self.model, 'updates_count', 0) * 5),
+                    'position_model_ready': self.model.features_fitted,
+                    'features_fitted': getattr(self.model, 'features_fitted', False)
                 }
             except Exception as e:
                 print(f"[WARN] Could not get model metrics: {e}")
@@ -282,32 +281,36 @@ class RaceSimulator:
             try:
                 # Prepare lap data for training - must match pre-training features!
                 # Pre-trained on: grid, grid_position, driver_age, points_constructor, circuitId, constructorId, year
-                # DO NOT INCLUDE position/positionOrder in features - those are TARGETS!
-                lap_training_data = []
+                                # V3 Model: Use add_race_data() to add data with proper tire/pit stop tracking
+                # Format data with all required fields for advanced pit stop/tire analysis
+                lap_drivers_for_model = []
                 for driver_code, state in self.driver_states.items():
-                    lap_training_data.append({
-                        'grid': float(state['grid_position']),
-                        'grid_position': float(state['grid_position']),
-                        'driver_age': 28.0,  # Default average
-                        'points_constructor': 100.0,  # Default average
-                        'circuitId': 1.0,  # Placeholder
-                        'constructorId': 1.0,  # Placeholder
-                        'year': 2024.0,  # Current year
-                        'position': float(state['position']),  # Target (separate from features)
-                    })
+                    if not state.get('dnf', False):  # Skip DNF drivers
+                        lap_drivers_for_model.append({
+                            'driver': driver_code,
+                            'position': state['position'],
+                            'lap_time': state['lap_times'][-1] if state['lap_times'] else 90.0,
+                            'tire_compound': state['tire_compound'],
+                            'tire_age': state['tire_age'],
+                            'pit_stops': state['pit_stops'],
+                            'grid_position': state['grid_position'],
+                            'points_constructor': 100.0  # Default team strength
+                        })
                 
-                # Add to model buffer for incremental training
-                self.model.lap_data_buffer.extend(lap_training_data)
+                # Add this lap's data to the model (Advanced interface)
+                self.model.add_lap_data(lap_number, lap_drivers_for_model)
                 
-                # Train model EVERY LAP (not every 2 laps) for continuous learning
-                if len(self.model.lap_data_buffer) >= 10:
-                    result = self.model.update_model(target_variable='position')
-                    if result.get('status') == 'updated':
-                        print(f"[MODEL] Updated - LAP {lap_number} - MAE: {result.get('mae', 0):.2f} - Updates: {self.model.lap_updates_count}/{self.model.updates_count}")
-                    elif result.get('status') == 'skipped':
-                        print(f"[MODEL] Skipped - LAP {lap_number}: {result.get('reason', 'Unknown')}")
-                    else:
-                        print(f"[MODEL] Error - LAP {lap_number}: {result.get('error', 'Unknown')}")
+                # Train model EVERY LAP with continuous learning
+                result = self.model.update_model(
+                    lap_data=lap_drivers_for_model,
+                    current_lap=lap_number,
+                    total_laps=self.total_laps,
+                    race_context={'circuit': self.race_name}
+                )
+                if result.get('status') == 'updated':
+                    print(f"[MODEL] Trained on {result.get('samples', 0)} drivers - LAP {lap_number}")
+                else:
+                    print(f"[MODEL] Error - LAP {lap_number}: {result.get('error', 'Unknown')}")
             except Exception as e:
                 print(f"[SIMULATOR] Warning: Could not train model: {e}")
                 import traceback
@@ -413,70 +416,62 @@ class RaceSimulator:
                         'trend': 'stable'
                     })
             else:
-                # Use V2 AI model for predictions (returns tuple: pos, confidence)
-                model_predictions = {}
-                
+                # Use Advanced AI model predict_lap() for better predictions
+                # Build drivers_data from current states
+                drivers_data = []
                 for driver_code, state in self.driver_states.items():
-                    if state.get('dnf', False):
-                        continue  # Skip DNF drivers
-                    
-                    try:
-                        # Create feature dict for model.predict()
-                        # MUST use EXACT SAME FEATURES as pre-training: grid, grid_position, driver_age, points_constructor, circuitId, constructorId, year
-                        # Can include 'position' for context (used in confidence calculation), but NOT in scaler transform
-                        
-                        features = {
-                            'grid': float(state['grid_position']),
-                            'grid_position': float(state['grid_position']),
-                            'driver_age': 28.0,  # Default average
-                            'points_constructor': 100.0,  # Default average
-                            'circuitId': 1.0,  # Placeholder
-                            'constructorId': 1.0,  # Placeholder
-                            'year': 2024.0,  # Current year
-                            'position': float(state['position'])  # For context only (not used in scaler)
-                        }
-                        
-                        # V2 model.predict() returns tuple: (predicted_position, confidence)
-                        predicted_pos, confidence = self.model.predict(features)
-                        
-                        model_predictions[driver_code] = {
-                            'position': state['position'],
-                            'prediction': max(1, min(20, int(predicted_pos))),
+                    if not state.get('dnf', False):  # Skip DNF drivers
+                        drivers_data.append({
                             'driver_code': driver_code,
-                            'driver_name': state.get('driver_name', driver_code),
-                            'confidence': confidence,  # V2 already caps this at max 80%
-                            'trend': 'up' if predicted_pos < state['position'] else ('down' if predicted_pos > state['position'] else 'stable'),
-                            'grid_pos': state['grid_position'],
-                            'pit_stops': state.get('pit_stops', 0)
-                        }
-                    except Exception as e:
-                        # Fallback: use lower confidence but still dynamic
-                        fallback_conf = max(30, 60 - (state['position'] * 1.5))
-                        model_predictions[driver_code] = {
+                            'driver': driver_code,
                             'position': state['position'],
-                            'prediction': state['position'],
-                            'driver_code': driver_code,
-                            'driver_name': state.get('driver_name', driver_code),
-                            'confidence': fallback_conf,
-                            'trend': 'stable',
-                            'grid_pos': state['grid_position'],
-                            'pit_stops': state.get('pit_stops', 0)
-                        }
+                            'grid_position': state['grid_position'],
+                            'tire_age': state.get('tire_age', 1),
+                            'tire_compound': state.get('tire_compound', 'MEDIUM'),
+                            'pit_stops': state.get('pit_stops', 0),
+                            'constructor': state.get('team', 'Unknown'),
+                            'driver_number': state.get('driver_number', 0),
+                            'driver_age': state.get('driver_age', 28),
+                            'points_constructor': 100.0,
+                            'lap_time': state.get('current_lap_time', 100.0),
+                            'gap_to_leader': abs(state.get('gap_to_leader', 0.0)),
+                            'gap': state.get('gap_to_driver_ahead', 0.0)
+                        })
                 
-                # Return top 5 drivers by confidence
-                predictions = sorted(
-                    model_predictions.values(),
-                    key=lambda x: x['confidence'],
-                    reverse=True
-                )[:5]
+                # Call predict_lap() which uses Advanced ML ensemble model
+                if drivers_data and self.model:
+                    model_predictions_dict = self.model.predict_lap(
+                        lap_data=drivers_data,
+                        current_lap=lap_number,
+                        total_laps=self.total_laps,
+                        race_context={'circuit': self.race_name}
+                    )
+                    
+                    # Convert to output format
+                    predictions = []
+                    for driver_code, pred in model_predictions_dict.items():
+                        state = self.driver_states.get(driver_code, {})
+                        
+                        predictions.append({
+                            'position': state.get('position', 15),
+                            'driver_code': driver_code,
+                            'driver_name': state.get('driver_name', driver_code),
+                            'confidence': float(pred.get('confidence', 50.0)),
+                            'prediction': state.get('position', 15),
+                            'trend': pred.get('trend', 'stable'),
+                            'grid_pos': state.get('grid_position', 15),
+                            'pit_stops': state.get('pit_stops', 0)
+                        })
                 
                 # Log for debugging
-                top5_strs = [f"{p['driver_code']}({p['confidence']:.0f}%)" for p in predictions]
-                model_maturity = min(100, self.model.lap_updates_count * 10) if hasattr(self.model, 'lap_updates_count') else 0
-                print(f"[PREDICTIONS] Lap {lap_number} - Top 5: {top5_strs} | Model maturity: {model_maturity:.0f}%")
+                top5_strs = [f"{p['driver_code']}({p['confidence']:.0f}%)" for p in predictions[:5]]
+                model_maturity = min(100, self.model.training_count // 25) if hasattr(self.model, 'training_count') else 0
+                print(f"[PREDICTIONS] Lap {lap_number} - Top 5: {top5_strs} | Model training: {model_maturity:.0f}%")
                 
         except Exception as e:
             print(f"[SIMULATOR] Error getting predictions: {str(e)}")
+            import traceback
+            traceback.print_exc()
             # Fallback predictions based on current position
             for driver_code, state in sorted(
                 self.driver_states.items(),

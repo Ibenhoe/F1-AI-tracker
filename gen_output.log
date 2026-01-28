@@ -1,0 +1,246 @@
+core           INFO 	Loading data for Austrian Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+core        WARNING 	Driver  8: Lap timing integrity check failed for 1 lap(s)
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core           INFO 	Finished loading data for 20 drivers: ['77', '16', '4', '44', '55', '11', '10', '31', '99', '5', '6', '26', '23', '7', '63', '8', '20', '18', '3', '33']
+core           INFO 	Loading data for Styrian Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.057000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '77', '33', '23', '4', '11', '18', '3', '55', '26', '7', '20', '8', '99', '10', '63', '6', '31', '16', '5']
+core           INFO 	Loading data for Hungarian Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+core        WARNING 	Fixed incorrect tyre stint information for driver '20'
+core        WARNING 	Fixed incorrect tyre stint information for driver '8'
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.098000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '33', '77', '18', '23', '5', '11', '3', '55', '20', '16', '26', '4', '31', '7', '8', '99', '63', '6', '10']
+core           INFO 	Loading data for British Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core           INFO 	Finished loading data for 20 drivers: ['44', '33', '16', '3', '4', '31', '10', '23', '18', '5', '77', '63', '55', '99', '6', '8', '7', '26', '20', '27']
+core           INFO 	Loading data for 70th Anniversary Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 33 completed the race distance 00:00.036000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['33', '44', '77', '16', '23', '18', '27', '31', '4', '26', '10', '5', '55', '3', '7', '8', '99', '63', '6', '20']
+core           INFO 	Loading data for Spanish Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.071000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '33', '77', '18', '11', '55', '5', '23', '10', '4', '3', '26', '31', '7', '20', '99', '63', '6', '8', '16']
+core           INFO 	Loading data for Belgian Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+core        WARNING 	Fixed incorrect tyre stint information for driver '33'
+core        WARNING 	Fixed incorrect tyre stint information for driver '23'
+core        WARNING 	Fixed incorrect tyre stint information for driver '4'
+core        WARNING 	Fixed incorrect tyre stint information for driver '7'
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.105000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '77', '33', '3', '31', '23', '4', '10', '18', '11', '26', '7', '5', '16', '8', '6', '20', '99', '63', '55']
+core           INFO 	Loading data for Italian Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 10 completed the race distance 00:00.067000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['10', '55', '18', '4', '77', '3', '44', '31', '26', '11', '6', '8', '7', '63', '23', '99', '33', '16', '20', '5']
+core           INFO 	Loading data for Tuscan Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.070000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '77', '23', '3', '11', '4', '26', '16', '7', '5', '63', '8', '18', '31', '6', '20', '99', '55', '33', '10']
+core           INFO 	Loading data for Russian Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 77 completed the race distance 00:00.039000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['77', '33', '44', '11', '3', '16', '31', '26', '10', '23', '99', '20', '5', '7', '4', '6', '8', '63', '55', '18']
+core           INFO 	Loading data for Eifel Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.016000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '33', '3', '11', '55', '10', '16', '27', '8', '99', '5', '7', '20', '6', '26', '4', '23', '31', '77', '63']
+core           INFO 	Loading data for Portuguese Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.098000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '77', '33', '16', '10', '55', '11', '31', '3', '5', '7', '23', '4', '63', '99', '20', '8', '6', '26', '18']
+core           INFO 	Loading data for Emilia Romagna Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.100000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '77', '3', '26', '16', '11', '55', '4', '7', '99', '6', '5', '18', '8', '23', '63', '33', '20', '31', '10']
+core           INFO 	Loading data for Turkish Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core        WARNING 	Driver 44 completed the race distance 00:00.068000 before the recorded end of the session.
+core           INFO 	Finished loading data for 20 drivers: ['44', '11', '5', '16', '55', '33', '23', '4', '18', '3', '31', '26', '10', '77', '7', '63', '20', '8', '6', '99']
+core           INFO 	Loading data for Bahrain Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+======================================================================
+[GENERATOR] F1 Historical Data CSV - FastF1 Direct
+======================================================================
+
+[YEAR 2020]
+  Found 19 races
+    [ 0] Pre-Season Test 1              ... [ERROR] Cannot get testing event by round number
+    [ 0] Pre-Season Test 2              ... [ERROR] Cannot get testing event by round number
+    [ 1] Austrian Grand Prix            ... [OK] 20 drivers
+    [ 2] Styrian Grand Prix             ... [OK] 20 drivers
+    [ 3] Hungarian Grand Prix           ... [OK] 20 drivers
+    [ 4] British Grand Prix             ... [OK] 20 drivers
+    [ 5] 70th Anniversary Grand Prix    ... [OK] 20 drivers
+    [ 6] Spanish Grand Prix             ... [OK] 20 drivers
+    [ 7] Belgian Grand Prix             ... [OK] 20 drivers
+    [ 8] Italian Grand Prix             ... [OK] 20 drivers
+    [ 9] Tuscan Grand Prix              ... [OK] 20 drivers
+    [10] Russian Grand Prix             ... [OK] 20 drivers
+    [11] Eifel Grand Prix               ... [OK] 20 drivers
+    [12] Portuguese Grand Prix          ... [OK] 20 drivers
+    [13] Emilia Romagna Grand Prix      ... [OK] 20 drivers
+    [14] Turkish Grand Prix             ... [OK] 20 drivers

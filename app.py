@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 import threading
 import time
-from continuous_model_learner_v2 import ContinuousModelLearner
+from continuous_model_learner_advanced import AdvancedContinuousLearner
 from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 import fastf1
@@ -275,41 +275,56 @@ def _fetch_fastf1_data(race_num):
             result = False
         
         if result:
-            # Get qualifying session for grid positions
+            # STEP 1: Get ONLY qualifying session for ACTUAL grid positions
+            # IMPORTANT: We use qualifying ORDER as the true grid positions, NOT race results!
+            print("[BACKGROUND] Loading qualifying session for TRUE grid positions...")
+            drivers = []
+            qual_grid_map = {}  # {driver_code: grid_position}
+            session = fetcher.session  # Get session reference
+            laps = None
+            
             try:
                 qual_session = fastf1.get_session(2024, race_num, 'Q')
                 qual_session.load()
-                qual_results = qual_session.results
-            except:
-                qual_results = None
-            
-            # Get real drivers from FastF1 race session
-            driver_codes = fetcher.get_drivers_in_race()
-            session = fetcher.session
-            drivers = []
-            
-            # Build driver list from FastF1 session results
-            if hasattr(session, 'results') and session.results is not None:
-                results = session.results
-                for idx, (code, row) in enumerate(results.iterrows()):
-                    if pd.notna(row.get('Abbreviation')):
-                        driver_code = str(row.get('Abbreviation', code))
-                        grid_pos = idx + 1
-                        if qual_results is not None:
-                            try:
-                                qual_row = qual_results[qual_results['Abbreviation'] == driver_code]
-                                if len(qual_row) > 0:
-                                    grid_pos = int(qual_row.iloc[0]['GridPosition'])
-                            except:
-                                pass
-                        
-                        drivers.append({
-                            'code': driver_code,
-                            'name': str(row.get('FullName', 'Unknown')),
-                            'team': str(row.get('TeamName', 'Unknown')),
-                            'number': int(row.get('DriverNumber', idx + 1)),
-                            'grid_position': grid_pos
-                        })
+                
+                if qual_session.results is not None and len(qual_session.results) > 0:
+                    # Grid positions are the ROW ORDER in qualifying results!
+                    for grid_idx, (_, qual_row) in enumerate(qual_session.results.iterrows()):
+                        driver_code = str(qual_row.get('Abbreviation', ''))
+                        if driver_code and driver_code != 'nan':
+                            grid_pos = grid_idx + 1  # 1-based position
+                            qual_grid_map[driver_code] = grid_pos
+                            driver_name = str(qual_row.get('FullName', 'Unknown'))
+                            team_name = str(qual_row.get('TeamName', 'Unknown'))
+                            driver_num = int(qual_row.get('DriverNumber', 0))
+                            
+                            drivers.append({
+                                'code': driver_code,
+                                'name': driver_name,
+                                'team': team_name,
+                                'number': driver_num,
+                                'grid_position': grid_pos
+                            })
+                            print(f"    Grid P{grid_pos:2d}: {driver_code} - {driver_name}")
+                    
+                    print(f"[BACKGROUND] ✅ Loaded {len(drivers)} drivers from QUALIFYING")
+                else:
+                    print("[BACKGROUND] ⚠️ No qualifying results found")
+                    
+            except Exception as qual_err:
+                print(f"[BACKGROUND] ⚠️ Error loading qualifying: {qual_err}")
+                # Fallback: get drivers from race session
+                if hasattr(session, 'results') and session.results is not None:
+                    for idx, (_, row) in enumerate(session.results.iterrows()):
+                        if pd.notna(row.get('Abbreviation')):
+                            driver_code = str(row.get('Abbreviation', ''))
+                            drivers.append({
+                                'code': driver_code,
+                                'name': str(row.get('FullName', 'Unknown')),
+                                'team': str(row.get('TeamName', 'Unknown')),
+                                'number': int(row.get('DriverNumber', idx + 1)),
+                                'grid_position': idx + 1
+                            })
             
             # Get real lap data
             if hasattr(session, 'laps') and session.laps is not None:
@@ -363,8 +378,8 @@ def _fetch_fastf1_data(race_num):
 def _train_ai_model(laps):
     """Load and train AI model with historical and race-specific data"""
     try:
-        print("[BACKGROUND] Loading AI model...")
-        model = ContinuousModelLearner()
+        print("[BACKGROUND] Loading Advanced AI model...")
+        model = AdvancedContinuousLearner()
         model_cache['model'] = model
         
         # PRE-TRAIN on historical F1 data for better baseline
@@ -380,13 +395,29 @@ def _train_ai_model(laps):
         if laps is not None and len(laps) > 0:
             print(f"[BACKGROUND] Fine-tuning AI model on {len(laps)} race laps...")
             try:
-                # Single pass sufficient for incremental learning with `partial_fit`
-                model.update_model(target_variable='position')
+                # Convert lap data to driver data format
+                lap_drivers = []
+                for lap_data_dict in laps.to_dict('records')[:100]:  # Sample first 100 laps
+                    lap_drivers.append({
+                        'driver_code': str(lap_data_dict.get('Driver', 'UNK')),
+                        'position': int(lap_data_dict.get('Position', 15)),
+                        'lap_time': lap_data_dict.get('Time'),
+                        'tire_compound': str(lap_data_dict.get('Compound', 'MEDIUM')),
+                        'lap_number': int(lap_data_dict.get('LapNumber', 1))
+                    })
+                
+                if lap_drivers:
+                    model.update_model(
+                        lap_data=lap_drivers,
+                        current_lap=1,
+                        total_laps=69,
+                        race_context={'circuit': 'Unknown'}
+                    )
             except Exception as train_err:
                 print(f"[BACKGROUND] ⚠️ Could not fine-tune model: {train_err}")
         
         model_cache['loaded'] = True
-        print("[BACKGROUND] ✅ AI model ready! (Pre-trained + fine-tuned)")
+        print("[BACKGROUND] ✅ AI model ready! (Pre-trained + fine-tuned with 40+ features)")
         return model
     except Exception as e:
         print(f"[BACKGROUND] Error loading AI model: {str(e)}")

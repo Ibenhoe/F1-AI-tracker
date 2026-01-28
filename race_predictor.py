@@ -13,7 +13,7 @@ from datetime import datetime
 if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-from continuous_model_learner_v2 import ContinuousModelLearner
+from continuous_model_learner_advanced import AdvancedContinuousLearner
 from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 
@@ -347,9 +347,9 @@ def main():
     
     # Initialize INCREMENTAL model
     print("\n" + "="*70)
-    print("[INIT] Initializing Incremental Learning Model")
+    print("[INIT] Initializing ADVANCED Incremental Learning Model")
     print("="*70)
-    model = ContinuousModelLearner(learning_decay=0.9, min_samples_to_train=3)
+    model = AdvancedContinuousLearner()
     
     # Pre-train on historical data
     print("\n[PRETRAIN] Loading 5-year F1 historical data...")
@@ -358,8 +358,10 @@ def main():
     print("\n" + "="*70)
     print(f"[RACE-START] LIVE PREDICTION - {race_info['event']}")
     print(f"   Totaal laps: {total_laps}")
-    print(f"   Model updates EVERY LAP with partial_fit (incremental learning)")
-    print(f"   Confidence: NEVER 100% (max 80% - realistic predictions only)")
+    print(f"   Advanced Model: 40+ engineered features")
+    print(f"   Ensemble: SGD + GradientBoosting + XGBoost + RandomForest")
+    print(f"   Per-lap incremental learning: ENABLED")
+    print(f"   Confidence: Dynamic (15-85%, based on prediction stability)")
     print("="*70)
     
     # Initialize output storage
@@ -373,17 +375,16 @@ def main():
         model.add_lap_data(lap_num, lap_data_list)
         
         # ===== UPDATE MODEL WITH PARTIAL_FIT (CONTINUOUS LEARNING) =====
-        # THIS IS THE KEY - Model learns from this lap immediately!
-        # Performance note: update_model() is called every lap for true incremental learning.
-        # This is by design but can be computationally intensive for large driver counts.
-        # To optimize, profile update_model() with realistic data and consider:
-        # 1) Tuning learning_decay and min_samples_to_train parameters
-        # 2) Updating less frequently (e.g., every 5 laps) if performance becomes critical
-        # 3) Using lightweight incremental algorithms (current SGDRegressor is efficient)
+        # THIS IS THE KEY - Model learns from this lap immediately with advanced features!
         if lap_num >= 1:  # Start updating from lap 1
-            update_result = model.update_model(target_variable='position')
+            update_result = model.update_model(
+                lap_data_list, 
+                current_lap=lap_num, 
+                total_laps=total_laps,
+                race_context={'circuit': race_info.get('event', 'Unknown')}
+            )
             if update_result['status'] == 'updated':
-                print(f"[UPDATE] Lap {lap_num}: Model trained on {update_result['samples_used']} samples (MAE: {update_result['mae']:.2f})")
+                print(f"[UPDATE] Lap {lap_num}: Advanced model trained on {update_result['samples']} samples (Total: {update_result['training_total']})")
         
         # Show predictions every lap after lap 2
         if lap_num >= 2:

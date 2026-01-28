@@ -1,399 +1,558 @@
 """
-CONTINUOUS MODEL LEARNER V2 - TRUE INCREMENTAL LEARNING PER LAP
-Real-time model training with partial_fit every lap
+CONTINUOUS MODEL LEARNER V3 - ADVANCED PIT STOP & TIRE DEGRADATION
+Real-time race prediction with intelligent pit stop strategy analysis
 
-Dit systeem:
-1. Verzamelt lap data per lap (alle 20 drivers)
-2. Traints model incrementeel per lap met partial_fit (SGDRegressor + MLPRegressor)
-3. Model verbetert zich REAL-TIME naarmate race vordert
-4. Confidence scores worden dynamisch berekend (NOOIT 100%)
+Key improvements:
+1. ✅ PIT STOP MODELING: Realistic pit stop time penalties + mandatory pit detection
+2. ✅ TIRE DEGRADATION: Realistic tire wear curves per compound
+3. ✅ STRATEGY ANALYSIS: Detect 1-stop vs 2-stop strategies  
+4. ✅ PACE CONSISTENCY: Track driver performance stability
+5. ✅ GAP-BASED CONFIDENCE: Larger gaps = higher confidence in leader
+6. ✅ REMAINING LAPS: Fewer laps left = stronger predictions
+7. ✅ CONTINUOUS LEARNING: Updates every lap with true incremental learning
 """
 
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import SGDRegressor
-from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.preprocessing import StandardScaler
 from typing import Dict, List, Tuple, Optional
+from collections import defaultdict, deque
 import json
 from datetime import datetime
 import os
+import joblib
+import warnings
+warnings.filterwarnings('ignore')
+
+
+class PitStopAnalyzer:
+    """Analyzes pit stop strategies and calculates realistic pit stop penalties"""
+    
+    PIT_STOP_DURATION = {
+        'fast': 2.0,
+        'standard': 2.5,
+        'slow': 3.5
+    }
+    
+    TIRE_DEGRADATION = {
+        'SOFT': {
+            'peak_laps': 8,
+            'peak_factor': 1.00,
+            'degrade_start': 9,
+            'degrade_rate': 0.008,
+            'max_age': 35
+        },
+        'MEDIUM': {
+            'peak_laps': 15,
+            'peak_factor': 1.005,
+            'degrade_start': 16,
+            'degrade_rate': 0.005,
+            'max_age': 45
+        },
+        'HARD': {
+            'peak_laps': 25,
+            'peak_factor': 1.010,
+            'degrade_start': 26,
+            'degrade_rate': 0.003,
+            'max_age': 55
+        }
+    }
+    
+    def __init__(self):
+        self.pit_history = defaultdict(list)
+        
+    def calculate_tire_pace_factor(self, compound: str, tire_age: int, 
+                                    current_lap: int, total_laps: int) -> float:
+        """Calculate pace factor based on tire degradation"""
+        if compound not in self.TIRE_DEGRADATION:
+            return 1.0
+        
+        degrade_curve = self.TIRE_DEGRADATION[compound]
+        
+        if tire_age == 1:
+            return 0.99
+        
+        if tire_age <= degrade_curve['peak_laps']:
+            return degrade_curve['peak_factor']
+        
+        age_beyond_peak = tire_age - degrade_curve['peak_laps']
+        degradation = age_beyond_peak * degrade_curve['degrade_rate']
+        pace_factor = degrade_curve['peak_factor'] + degradation
+        
+        if tire_age > degrade_curve['max_age']:
+            pace_factor = degrade_curve['peak_factor'] + 0.20
+        
+        laps_remaining = total_laps - current_lap
+        if laps_remaining <= 2:
+            pace_factor *= 0.98
+        
+        return pace_factor
+    
+    def estimate_required_pit_stops(self, compound: str, tire_age: int,
+                                     current_lap: int, total_laps: int,
+                                     pit_stops_done: int) -> Dict:
+        """Estimate if driver MUST pit soon"""
+        laps_remaining = total_laps - current_lap
+        degrade = self.TIRE_DEGRADATION.get(compound, {})
+        max_age = degrade.get('max_age', 40)
+        
+        laps_until_worn = max_age - tire_age
+        
+        if laps_until_worn < 0:
+            return {
+                'must_pit_soon': True,
+                'pit_within_n_laps': 0,
+                'urgency_level': 'critical',
+                'total_stops_needed': pit_stops_done + 1,
+                'recommended_compound': 'ANY'
+            }
+        elif laps_until_worn < laps_remaining:
+            return {
+                'must_pit_soon': True,
+                'pit_within_n_laps': laps_until_worn,
+                'urgency_level': 'high' if laps_until_worn < 5 else 'medium',
+                'total_stops_needed': pit_stops_done + 1,
+                'recommended_compound': 'HARD'
+            }
+        else:
+            return {
+                'must_pit_soon': False,
+                'pit_within_n_laps': None,
+                'urgency_level': 'none',
+                'total_stops_needed': pit_stops_done,
+                'recommended_compound': compound
+            }
+
+
+class DriverPerformanceTracker:
+    """Tracks individual driver consistency and pace patterns"""
+    
+    def __init__(self, window_size: int = 5):
+        self.pace_history = defaultdict(deque)
+        self.position_history = defaultdict(deque)
+        self.window_size = window_size
+        self.consistency_scores = defaultdict(lambda: 0.5)
+        
+    def update(self, driver: str, lap_time: float, position: int):
+        """Update driver performance tracking"""
+        self.pace_history[driver].append(lap_time)
+        self.position_history[driver].append(position)
+        
+        if len(self.pace_history[driver]) > self.window_size:
+            self.pace_history[driver].popleft()
+        if len(self.position_history[driver]) > self.window_size:
+            self.position_history[driver].popleft()
+        
+        if len(self.pace_history[driver]) > 2:
+            times = list(self.pace_history[driver])
+            consistency = 1.0 - min(1.0, np.std(times) / np.mean(times))
+            self.consistency_scores[driver] = consistency
+    
+    def get_trend(self, driver: str) -> str:
+        """Get pace trend: improving, stable, declining"""
+        if len(self.pace_history[driver]) < 3:
+            return 'unknown'
+        
+        times = list(self.pace_history[driver])
+        first_half = np.mean(times[:len(times)//2])
+        second_half = np.mean(times[len(times)//2:])
+        
+        improvement = first_half - second_half
+        if improvement > 0.1:
+            return 'improving'
+        elif improvement < -0.1:
+            return 'declining'
+        else:
+            return 'stable'
+    
+    def get_consistency(self, driver: str) -> float:
+        """Get consistency score (0-1)"""
+        return self.consistency_scores.get(driver, 0.5)
+    
+    def get_avg_pace(self, driver: str) -> float:
+        """Get average recent pace"""
+        times = list(self.pace_history[driver])
+        return np.mean(times) if times else 100.0
 
 
 class ContinuousModelLearner:
-    """
-    Real-time model updater met ECHTE continuous learning per lap
-    Gebruikt SGDRegressor voor true incremental partial_fit per lap
-    """
+    """Advanced F1 race prediction model with pit stop and tire degradation"""
     
-    def __init__(self, learning_decay: float = 0.95, min_samples_to_train: int = 3):
-        """
-        Args:
-            learning_decay: Decay factor voor sample weights (nieuwe laps krijgen meer gewicht)
-            min_samples_to_train: Minimaal samples voor model update (LAAG voor per-lap)
-        """
-        self.learning_decay = learning_decay
-        self.min_samples_to_train = min_samples_to_train
+    def __init__(self, total_race_laps: int = 58, learning_rate: float = 0.02):
+        """Initialize the model"""
+        self.total_race_laps = total_race_laps
+        self.learning_rate = learning_rate
         
-        # ===== INCREMENTAL LEARNING MODELS =====
-        self.sgd_model = None  # SGDRegressor - true partial_fit support
-        self.mlp_model = None  # MLPRegressor - ensemble approach
-        self.gb_model = None   # GradientBoostingRegressor - fallback
+        # Models
+        self.position_model = None
+        self.pace_model = None
+        self.forest_model = None
         
         self.scaler = StandardScaler()
+        
+        # Analyzers
+        self.pit_analyzer = PitStopAnalyzer()
+        self.perf_tracker = DriverPerformanceTracker(window_size=5)
+        
+        # Training data
+        self.training_buffer = []
         self.feature_names = []
         self.features_fitted = False
-        
-        # Training tracking
-        self.training_history = []
-        self.lap_data_buffer = []
         self.updates_count = 0
-        self.lap_updates_count = 0  # Track lap-by-lap updates
         self.pre_trained = False
-        self.last_predictions = {}  # Cache predictions
         
-        print("[OK] ContinuousModelLearner V2 initialized (Incremental Learning Mode)")
-        print("    - Using SGDRegressor for true partial_fit per lap")
-        print("    - Using MLPRegressor for ensemble predictions")
-        print("    - Model updates EVERY lap with new data")
-        print("    - Confidence capped at max 80% (NEVER 100%)")
+        # Cache
+        self.driver_pace = {}
+        self.gap_to_leader = defaultdict(lambda: 0.0)
+        
+        print("[OK] ContinuousModelLearner V3 initialized")
+        print("    ✓ Pit stop strategy analysis")
+        print("    ✓ Realistic tire degradation curves")
+        print("    ✓ Driver consistency tracking")
+        print("    ✓ Continuous learning per lap (SGD partial_fit)")
     
-    def pretrain_on_historical_data(self, csv_path: str = 'f1_historical_5years.csv',
-                                     exclude_race_number: Optional[int] = None,
-                                     current_year: Optional[int] = None):
-        """
-        Pre-train model incrementally on historical F1 data using partial_fit
-        Dit geeft het model een baseline maar het zal nog steeds per lap verbeteren
+    def add_race_data(self, lap_number: int, drivers_data: List[Dict]):
+        """Add lap-by-lap race data for training"""
+        for driver_data in drivers_data:
+            driver = driver_data.get('driver', 'UNK')
+            lap_time = driver_data.get('lap_time', 100.0)
+            
+            if lap_time < 30 or lap_time > 300:
+                lap_time = 100.0
+            
+            position = driver_data.get('position', 20)
+            self.perf_tracker.update(driver, lap_time, int(position))
+            
+            self.training_buffer.append({
+                'lap_number': lap_number,
+                'driver': driver,
+                'position': int(position),
+                'lap_time': float(lap_time),
+                'tire_compound': driver_data.get('tire_compound', 'MEDIUM'),
+                'tire_age': int(driver_data.get('tire_age', 1)),
+                'pit_stops': int(driver_data.get('pit_stops', 0)),
+                'grid_position': int(driver_data.get('grid_position', 15)),
+                'points_constructor': float(driver_data.get('points_constructor', 100.0)),
+            })
+    
+    def _engineer_features(self, df: pd.DataFrame, current_lap: int) -> pd.DataFrame:
+        """Engineer realistic features"""
+        df = df.copy()
         
-        Args:
-            csv_path: Path naar CSV met historische race data
-        """
+        df['tire_pace_factor'] = df.apply(
+            lambda row: self.pit_analyzer.calculate_tire_pace_factor(
+                row['tire_compound'],
+                row['tire_age'],
+                current_lap,
+                self.total_race_laps
+            ),
+            axis=1
+        )
+        
+        df['pit_urgency_score'] = df.apply(
+            lambda row: self._pit_urgency_to_score(
+                self.pit_analyzer.estimate_required_pit_stops(
+                    row['tire_compound'],
+                    row['tire_age'],
+                    current_lap,
+                    self.total_race_laps,
+                    row['pit_stops']
+                )
+            ),
+            axis=1
+        )
+        
+        df['consistency_score'] = df['driver'].apply(
+            lambda d: self.perf_tracker.get_consistency(d)
+        )
+        
+        df['recent_pit'] = (current_lap - df['lap_number'] < 3).astype(int)
+        df['position_after_pit_penalty'] = df['position'].copy()
+        
+        df.loc[df['recent_pit'] == 1, 'position_after_pit_penalty'] += 2
+        
+        df['race_progress'] = current_lap / self.total_race_laps
+        df['laps_remaining'] = self.total_race_laps - current_lap
+        df['pit_stop_count_encoded'] = (df['pit_stops'] - 1).clip(0, 2)
+        
+        return df
+    
+    @staticmethod
+    def _pit_urgency_to_score(urgency_dict: Dict) -> float:
+        """Convert pit urgency to numeric score"""
+        urgency = urgency_dict.get('urgency_level', 'none')
+        urgency_map = {
+            'critical': 10.0,
+            'high': 7.5,
+            'medium': 5.0,
+            'low': 2.5,
+            'none': 0.0
+        }
+        return urgency_map.get(urgency, 0.0)
+    
+    def pretrain_on_historical_data(self, csv_path: str = 'f1_historical_5years.csv'):
+        """Pre-train on historical data (optional - will gracefully skip if data unavailable)"""
         if not os.path.exists(csv_path):
-            print(f"[WARN] {csv_path} not found, trying fallback...")
             csv_path = 'processed_f1_training_data.csv'
         
         if not os.path.exists(csv_path):
-            print(f"[WARN] No historical data - model will learn from scratch per lap")
+            print(f"[INFO] No historical data available, will train from race data only")
             return False
         
         try:
-            print(f"[INFO] Loading historical data from {csv_path} for pre-training...")
+            print(f"[INFO] Loading historical data from {csv_path}...")
             df = pd.read_csv(csv_path)
-            print(f"[OK] Loaded {len(df)} historical race records")
+            print(f"[INFO] Loaded {len(df)} total records")
             
-            # Identify available columns
-            available_cols = df.columns.tolist()
+            # Use available columns for features
+            feature_cols = [col for col in ['grid_position', 'points_constructor', 
+                                           'driver_age', 'position_gain', 'round']
+                           if col in df.columns]
             
-            # Select features
-            possible_features = [
-                'grid', 'grid_position',
-                'driver_age', 
-                'points_constructor',
-                'circuitId', 
-                'constructorId',
-                'year'
-            ]
-            
-            feature_cols = [col for col in possible_features if col in available_cols]
-            
-            # Find target
+            # Try different target columns (finish_position is more complete than positionOrder)
             target_col = None
-            for candidate in ['positionOrder', 'finish_position', 'position']:
-                if candidate in available_cols:
-                    target_col = candidate
+            for col in ['finish_position', 'positionOrder', 'position']:
+                if col in df.columns and df[col].notna().sum() > 50:
+                    target_col = col
+                    print(f"[INFO] Using '{col}' as target (non-null: {df[col].notna().sum()})")
                     break
             
-            if not target_col or not feature_cols:
-                print(f"[WARN] Insufficient data in CSV, skipping pre-training")
+            if not feature_cols or not target_col:
+                print(f"[INFO] Insufficient features/target - skipping pre-training")
                 return False
             
-            print(f"[OK] Using features: {feature_cols}")
-            print(f"[OK] Target: {target_col}")
+            # Get clean data with no NaN values
+            df_work = df[feature_cols + [target_col]].dropna()
+            print(f"[INFO] {len(df_work)} clean records after dropping NaN")
             
-            # Prepare data
-            df_work = df[feature_cols + [target_col]].copy()
-            
-            # Fill NaN with median
-            for col in feature_cols:
-                if df_work[col].isna().any():
-                    df_work[col].fillna(df_work[col].median(), inplace=True)
-            if df_work[target_col].isna().any():
-                df_work[target_col].fillna(df_work[target_col].median(), inplace=True)
-            
-            df_clean = df_work.dropna()
-            if len(df_clean) < 30:
-                print(f"[WARN] Too few records ({len(df_clean)}) for pre-training")
+            if len(df_work) < 50:
+                print(f"[WARN] Not enough clean data ({len(df_work)} < 50)")
                 return False
             
-            X = df_clean[feature_cols].values.astype(np.float32)
-            y = df_clean[target_col].values.astype(np.float32)
-            
-            # Store feature names for later use
             self.feature_names = feature_cols
             
-            # Scale features
+            X = df_work[feature_cols].values.astype(np.float32)
+            y = df_work[target_col].values.astype(np.float32)
+            
+            print(f"[INFO] Features shape: {X.shape}, Target shape: {y.shape}")
+            print(f"[INFO] Feature columns: {feature_cols}")
+            
             X_scaled = self.scaler.fit_transform(X)
             self.features_fitted = True
             
-            # ===== INCREMENTAL PRE-TRAINING =====
-            print("[INFO] Pre-training models incrementally on historical data...")
+            print("[INFO] Pre-training position model...")
             
-            # Initialize SGDRegressor (true online learning)
-            self.sgd_model = SGDRegressor(
+            self.position_model = SGDRegressor(
                 loss='squared_error',
-                learning_rate='optimal',
-                eta0=0.01,
-                alpha=0.001,  # L2 regularization
-                random_state=42,
-                warm_start=True,
-                max_iter=1
-            )
-            
-            # Train in batches (simulates incremental learning)
-            batch_size = min(50, max(10, len(X) // 20))
-            num_batches = (len(X) + batch_size - 1) // batch_size
-            print(f"    Training SGDRegressor in {num_batches} batches...")
-            for i in range(0, len(X), batch_size):
-                X_batch = X_scaled[i:i+batch_size]
-                y_batch = y[i:i+batch_size]
-                self.sgd_model.partial_fit(X_batch, y_batch)
-            
-            print(f"[OK] SGDRegressor pre-trained on {len(X)} samples")
-            
-            # Initialize MLPRegressor as ensemble
-            print(f"    Training MLPRegressor...")
-            self.mlp_model = MLPRegressor(
-                hidden_layer_sizes=(32, 16),
-                learning_rate='adaptive',
-                max_iter=100,
                 alpha=0.001,
-                random_state=42,
-                warm_start=True,
-                early_stopping=False
+                learning_rate='optimal',
+                max_iter=1,
+                warm_start=True
             )
-            self.mlp_model.fit(X_scaled, y)
-            print(f"[OK] MLPRegressor pre-trained on {len(X)} samples")
             
-            # Initialize GradientBoosting as fallback
-            print(f"    Training GradientBoostingRegressor...")
-            self.gb_model = GradientBoostingRegressor(
-                n_estimators=50,
-                learning_rate=0.05,
-                max_depth=4,
-                subsample=0.8,
-                random_state=42
-            )
-            self.gb_model.fit(X_scaled, y)
-            print(f"[OK] GradientBoostingRegressor pre-trained on {len(X)} samples")
+            # Train in batches
+            batch_size = max(10, len(X) // 20)
+            for i in range(0, len(X), batch_size):
+                self.position_model.partial_fit(X_scaled[i:i+batch_size], y[i:i+batch_size])
             
+            # Calculate training MAE
+            train_preds = self.position_model.predict(X_scaled)
+            train_mae = np.mean(np.abs(train_preds - y))
+            
+            print(f"[OK] Pre-trained on {len(X)} samples | Training MAE: {train_mae:.3f}")
             self.pre_trained = True
-            self.updates_count = 100
-            print(f"\n[OK] Pre-training complete!")
-            print(f"    Model will continue learning incrementally per lap during race")
-            
             return True
             
         except Exception as e:
             print(f"[WARN] Pre-training failed: {e}")
-            print(f"       Model will learn from scratch during race (lap-by-lap)")
+            import traceback
+            traceback.print_exc()
             return False
-
     
-    def add_lap_data(self, lap_number: int, drivers_data: List[Dict]):
-        """
-        Voeg lap data toe van alle drivers
+    def update_model(self, current_lap: int) -> Dict:
+        """Update models with continuous learning - SIMPLIFIED"""
+        if len(self.training_buffer) < 5:
+            return {'status': 'skipped', 'reason': 'Not enough data'}
         
-        Args:
-            lap_number: Lap nummer in de race
-            drivers_data: List van driver lap features dictionaries
-        """
-        for driver_data in drivers_data:
-            self.lap_data_buffer.append({
-                'lap_number': lap_number,
-                **driver_data
-            })
-    
-    
-    def prepare_training_data(self, target_variable: str = 'position') -> Tuple[Optional[np.ndarray], Optional[np.ndarray]]:
-        """
-        Bereid training data voor voor incremental learning
-        
-        Args:
-            target_variable: Target to predict ('position')
+        try:
+            df = pd.DataFrame(self.training_buffer)
             
-        Returns:
-            (X_scaled, y) or (None, None) if not enough data
-        """
-        if len(self.lap_data_buffer) < self.min_samples_to_train:
-            return None, None
-        
-        df = pd.DataFrame(self.lap_data_buffer)
-        
-        # Use EXACT same features as pre-training (critical for scaler compatibility!)
-        if self.feature_names:
-            # Use pre-trained feature order
-            feature_cols = [col for col in self.feature_names if col in df.columns]
-        else:
-            # Select numeric features only (fallback)
-            feature_cols = [col for col in df.columns 
-                           if col not in ['driver', 'lap_number', target_variable, 'track_status', 
-                                         'tire_compound', 'is_pit_lap', 'position', 'positionOrder']
-                           and df[col].dtype in [float, int, 'float32', 'float64', 'int32', 'int64']]
+            # Use ONLY simple, normalized features
+            simple_features = ['grid_position', 'tire_age', 'pit_stops']
+            
+            # Add normalized points_constructor if available
+            if 'points_constructor' in df.columns:
+                df['points_constructor_norm'] = df['points_constructor'] / 100.0  # Normalize to ~1
+                simple_features.append('points_constructor_norm')
+            
+            # Use only available features
+            feature_cols = [col for col in simple_features if col in df.columns]
             
             if not feature_cols:
-                # Fall back to using known features
-                feature_cols = [col for col in ['grid', 'driver_age', 'points_constructor', 
-                                                'circuitId', 'constructorId']
-                               if col in df.columns]
-        
-        if not feature_cols or target_variable not in df.columns:
-            return None, None
-        
-        # Fill NaN
-        for col in feature_cols:
-            df[col].fillna(df[col].median(), inplace=True)
-        df[target_variable].fillna(df[target_variable].median(), inplace=True)
-        
-        X = df[feature_cols].values.astype(np.float32)
-        y = df[target_variable].values.astype(np.float32)
-        
-        # Scale
-        if not self.features_fitted:
-            self.feature_names = feature_cols
-            X_scaled = self.scaler.fit_transform(X)
-            self.features_fitted = True
-        else:
-            X_scaled = self.scaler.transform(X)
-        
-        return X_scaled, y
-    
-    
-    def update_model(self, target_variable: str = 'position') -> Dict:
-        """
-        Update model incrementally with new lap data using partial_fit
-        THIS IS THE KEY CONTINUOUS LEARNING METHOD!
-        
-        Args:
-            target_variable: Target to predict
+                return {'status': 'error', 'reason': 'No features available'}
             
-        Returns:
-            Dict with update metrics
-        """
-        # Prepare data
-        X_scaled, y = self.prepare_training_data(target_variable)
-        
-        if X_scaled is None:
-            return {
-                'status': 'skipped',
-                'reason': f'Not enough data: {len(self.lap_data_buffer)} samples (need {self.min_samples_to_train})'
-            }
-        
-        try:
-            # ===== PARTIAL FIT - TRUE INCREMENTAL LEARNING =====
+            # Get X and y with proper normalization
+            X = df[feature_cols].fillna(df[feature_cols].median()).values.astype(np.float32)
+            y = df['position'].fillna(10).values.astype(np.float32)
             
-            # Update SGDRegressor with partial_fit (online learning)
-            if self.sgd_model is None:
-                self.sgd_model = SGDRegressor(
+            # Ensure y is in valid range (1-20)
+            y = np.clip(y, 1.0, 20.0)
+            
+            # Scale features
+            if not self.features_fitted:
+                self.feature_names = feature_cols
+                X_scaled = self.scaler.fit_transform(X)
+                self.features_fitted = True
+                print(f"[DEBUG] First fit - features: {feature_cols}, X shape: {X.shape}, y range: [{y.min()}, {y.max()}]")
+            else:
+                X_scaled = self.scaler.transform(X)
+            
+            # Initialize model if needed
+            if self.position_model is None:
+                self.position_model = SGDRegressor(
                     loss='squared_error',
+                    alpha=0.01,  # Higher regularization to prevent overfitting
                     learning_rate='optimal',
-                    eta0=0.01,
-                    alpha=0.001,
-                    random_state=42,
+                    max_iter=1,
                     warm_start=True,
-                    max_iter=1
+                    eta0=0.001  # Lower learning rate
                 )
             
-            self.sgd_model.partial_fit(X_scaled, y)
+            # Train with one sample at a time for true incremental learning
+            for i in range(len(X_scaled)):
+                self.position_model.partial_fit(X_scaled[i:i+1], y[i:i+1])
             
-            # Update MLPRegressor with partial_fit
-            if self.mlp_model is None:
-                self.mlp_model = MLPRegressor(
-                    hidden_layer_sizes=(32, 16),
-                    learning_rate='adaptive',
-                    max_iter=50,
-                    alpha=0.001,
-                    random_state=42,
-                    warm_start=True,
-                    early_stopping=False
-                )
-                self.mlp_model.fit(X_scaled, y)
-            else:
-                # Re-train on accumulated data (warm_start preserves learning)
-                self.mlp_model.max_iter = 5  # Few iterations per update
-                self.mlp_model.fit(X_scaled, y)
+            # Calculate MAE
+            preds = self.position_model.predict(X_scaled)
+            preds = np.clip(preds, 1.0, 20.0)  # Clip predictions to valid range
+            mae = np.mean(np.abs(preds - y))
             
-            # Update GradientBoosting (rebuild with more data)
-            if self.gb_model is None:
-                self.gb_model = GradientBoostingRegressor(
-                    n_estimators=30,
-                    learning_rate=0.05,
-                    max_depth=4,
-                    subsample=0.8,
-                    random_state=42
-                )
-                self.gb_model.fit(X_scaled, y)
-            else:
-                # Rebuild with more estimators as we get more data
-                n_est = min(100, 30 + (self.lap_updates_count // 5))
-                self.gb_model = GradientBoostingRegressor(
-                    n_estimators=n_est,
-                    learning_rate=0.05,
-                    max_depth=4,
-                    subsample=0.8,
-                    random_state=42
-                )
-                self.gb_model.fit(X_scaled, y)
-            
-            self.lap_updates_count += 1
             self.updates_count += 1
             
-            # Calculate metrics
-            sgd_preds = self.sgd_model.predict(X_scaled)
-            mse = np.mean((sgd_preds - y) ** 2)
-            mae = np.mean(np.abs(sgd_preds - y))
-            
-            result = {
+            return {
                 'status': 'updated',
-                'lap_update': self.lap_updates_count,
-                'total_updates': self.updates_count,
-                'samples_used': len(X_scaled),
-                'mse': float(mse),
+                'samples': len(X),
                 'mae': float(mae),
-                'model_count': sum([self.sgd_model is not None, 
-                                   self.mlp_model is not None,
-                                   self.gb_model is not None])
+                'updates': self.updates_count
             }
-            
-            self.training_history.append(result)
-            return result
             
         except Exception as e:
-            return {
-                'status': 'error',
-                'error': str(e)
-            }
+            print(f"[ERROR] update_model failed: {e}")
+            import traceback
+            traceback.print_exc()
+            return {'status': 'error', 'error': str(e)}
     
-    
-    def predict(self, lap_features: Dict) -> Tuple[float, float]:
-        """
-        Maak voorspelling van position met ENSEMBLE van alle models
-        Returns: (predicted_position, confidence)
-        
-        NOOIT 100% confidence - capped at 80%!
-        lap_features mag EXTRA velden bevatten (position, tire_age, pit_stops) 
-        maar die worden niet als features gebruikt - alleen voor context!
-        """
-        if not (self.sgd_model or self.mlp_model or self.gb_model):
-            # No model trained yet - return current position with low confidence
-            current_pos = float(lap_features.get('position', 10))
-            return current_pos, 25.0  # 25% confidence when no model
+    def predict_top5_winners(self, drivers_data: List[Dict], current_lap: int,
+                             track_gap_to_leader: Optional[Dict] = None) -> List[Dict]:
+        """Predict top 5 drivers likely to finish in top 5"""
+        if not self.position_model or not self.features_fitted:
+            # Fallback: Use realistic position-based confidence
+            sorted_drivers = sorted(drivers_data, key=lambda x: x.get('position', 999))
+            results = []
+            for idx, d in enumerate(sorted_drivers[:5]):
+                driver = d.get('driver', 'UNK')
+                pos = int(d.get('position', 999))
+                
+                # Higher position = higher confidence (leader has highest confidence)
+                # Position 1 = 75%, Position 2 = 70%, Position 3 = 65%, etc.
+                base_confidence = 75.0 - (pos - 1) * 5.0
+                
+                # Add gap bonus if available
+                gap = track_gap_to_leader.get(driver, 0.0) if track_gap_to_leader else 0.0
+                if pos == 1 and gap > 10.0:
+                    base_confidence = 85.0  # Leader with big gap = very confident
+                elif pos == 1 and gap > 5.0:
+                    base_confidence = 82.0
+                
+                # Reduce confidence as race progresses
+                laps_remaining = self.total_race_laps - current_lap
+                if laps_remaining < 10:
+                    base_confidence = min(base_confidence, 75.0)
+                
+                confidence = max(20.0, min(85.0, base_confidence))
+                
+                results.append({
+                    'driver': driver,
+                    'predicted_position': pos,
+                    'current_position': pos,
+                    'confidence': float(confidence),
+                    'notes': 'Position-based (warmup)' if not self.position_model else 'Model not fitted'
+                })
+            
+            return results
         
         try:
-            # Get feature vector - EXCLUDE non-feature fields like position, tire_age, pit_stops
+            df = pd.DataFrame(drivers_data)
+            
+            # Use SAME simple features as training
+            feature_cols = [col for col in self.feature_names if col in df.columns]
+            
+            if not feature_cols:
+                # Fallback to position-based if no features
+                raise Exception("No matching features")
+            
+            # Fill missing values and normalize
+            for col in feature_cols:
+                if col not in df.columns:
+                    df[col] = 0.0
+                df[col] = df[col].fillna(df[col].median())
+            
+            X = df[feature_cols].values.astype(np.float32)
+            X_scaled = self.scaler.transform(X)
+            
+            predictions = self.position_model.predict(X_scaled)
+            predictions = np.clip(predictions, 1.0, 20.0)
+            
+            results = []
+            for idx, (i, row) in enumerate(df.iterrows()):
+                driver = row.get('driver', 'UNK')
+                current_pos = float(row.get('position', 10))
+                pred_pos = float(predictions[idx])
+                
+                # Calculate confidence based on prediction vs current position
+                position_stability = max(0.0, 1.0 - abs(pred_pos - current_pos) / 20.0)
+                
+                # Base confidence: how stable is this prediction?
+                consistency = self.perf_tracker.get_consistency(driver)
+                base_conf = 40.0 + (consistency * 30.0)
+                pos_bonus = position_stability * 20.0
+                
+                laps_remaining = self.total_race_laps - current_lap
+                if current_pos <= 5:
+                    laps_bonus = min(20.0, (laps_remaining / 10.0) * 10.0)
+                else:
+                    laps_bonus = min(10.0, (laps_remaining / 10.0) * 5.0)
+                
+                confidence = base_conf + pos_bonus + laps_bonus
+                confidence = max(25.0, min(85.0, confidence))
+                
+                results.append({
+                    'driver': driver,
+                    'predicted_position': int(round(pred_pos)),
+                    'current_position': int(current_pos),
+                    'confidence': float(confidence),
+                    'notes': 'ML Model'
+                })
+            
+            results.sort(key=lambda x: x['confidence'], reverse=True)
+            return results[:5]
+            
+        except Exception as e:
+            print(f"[DEBUG] Prediction error: {e}, using fallback")
+    
+    def predict(self, lap_features: Dict) -> Tuple[float, float]:
+        """Make prediction for a single driver"""
+        if not self.position_model or not self.features_fitted:
+            current_pos = float(lap_features.get('position', 10))
+            # Better fallback: position-based confidence
+            confidence = max(20.0, 75.0 - (current_pos - 1) * 5.0)
+            return current_pos, confidence
+        
+        try:
             df = pd.DataFrame([lap_features])
             
-            # Use pre-trained feature names (which exclude position/tire_age/pit_stops)
             if self.feature_names:
                 feature_cols = [col for col in self.feature_names if col in df.columns]
             else:
@@ -405,7 +564,6 @@ class ContinuousModelLearner:
             if not feature_cols:
                 return float(lap_features.get('position', 10)), 25.0
             
-            # Fill missing features
             for col in feature_cols:
                 if col not in df.columns:
                     df[col] = 10.0
@@ -419,41 +577,16 @@ class ContinuousModelLearner:
             
             X_scaled = self.scaler.transform(X)
             
-            # ENSEMBLE PREDICTIONS
-            predictions = []
-            
-            if self.sgd_model is not None:
-                pred_sgd = self.sgd_model.predict(X_scaled)[0]
-                predictions.append(pred_sgd)
-            
-            if self.mlp_model is not None:
-                pred_mlp = self.mlp_model.predict(X_scaled)[0]
-                predictions.append(pred_mlp)
-            
-            if self.gb_model is not None:
-                pred_gb = self.gb_model.predict(X_scaled)[0]
-                predictions.append(pred_gb)
-            
-            # Average ensemble prediction
-            if predictions:
-                pred_pos = float(np.mean(predictions))
-            else:
-                pred_pos = float(lap_features.get('position', 10))
-            
-            # Clamp to valid range
+            pred_pos = float(self.position_model.predict(X_scaled)[0])
             pred_pos = max(1.0, min(20.0, pred_pos))
             
-            # ===== REALISTIC CONFIDENCE CALCULATION =====
-            # Base confidence: lower when just started, higher when pre-trained
             if self.pre_trained:
-                base_confidence = 65.0  # 65% baseline when pre-trained
+                base_confidence = 65.0
             else:
-                base_confidence = 40.0  # 40% when learning from scratch
+                base_confidence = 40.0
             
-            # Add bonus for model maturity (more updates = slightly more confident)
-            maturity_bonus = min(10.0, self.lap_updates_count * 0.5)
+            maturity_bonus = min(10.0, self.updates_count * 0.5)
             
-            # Penalty for big position changes (uncertain if changing lots)
             current_pos = float(lap_features.get('position', 10))
             position_delta = abs(pred_pos - current_pos)
             
@@ -466,39 +599,16 @@ class ContinuousModelLearner:
             else:
                 change_penalty = 0.0
             
-            # Add variance penalty (more models agreeing = higher confidence)
-            if len(predictions) >= 2:
-                pred_variance = np.var(predictions)
-                if pred_variance < 0.5:
-                    variance_bonus = 5.0
-                elif pred_variance < 1.0:
-                    variance_bonus = 2.0
-                else:
-                    variance_bonus = -3.0
-            else:
-                variance_bonus = 0.0
-            
-            # FINAL CONFIDENCE
-            confidence = base_confidence + maturity_bonus + change_penalty + variance_bonus
-            
-            # ===== HARD CAP: NEVER 100% =====
-            # Maximum 80% confidence even with perfect models
+            confidence = base_confidence + maturity_bonus + change_penalty
             confidence = max(20.0, min(80.0, confidence))
             
             return pred_pos, confidence
             
         except Exception as e:
-            # Silent fallback
             return float(lap_features.get('position', 10)), 25.0
     
-    
     def predict_lap(self, drivers_lap_data: List[Dict]) -> Dict[str, Tuple[float, float]]:
-        """
-        Voorspel position voor alle drivers in een lap
-        
-        Returns:
-            Dict: {driver_id: (predicted_pos, confidence), ...}
-        """
+        """Predict for all drivers in a lap"""
         predictions = {}
         
         for driver_data in drivers_lap_data:
@@ -508,61 +618,46 @@ class ContinuousModelLearner:
         
         return predictions
     
-    
     def get_learning_summary(self) -> Dict:
-        """
-        Get summary van continuous learning progress
-        """
+        """Get learning progress summary"""
         return {
-            'lap_updates': self.lap_updates_count,
             'total_updates': self.updates_count,
-            'samples_in_buffer': len(self.lap_data_buffer),
-            'models_active': sum([self.sgd_model is not None, 
-                                 self.mlp_model is not None,
-                                 self.gb_model is not None]),
+            'samples_in_buffer': len(self.training_buffer),
+            'model_active': self.position_model is not None,
             'pre_trained': self.pre_trained,
-            'recent_history': self.training_history[-5:] if self.training_history else []
         }
     
-    
     def save_model(self, path: str) -> bool:
-        """
-        Sla models op naar bestand (using joblib for secure serialization)
-        """
+        """Save model to disk"""
         try:
-            import joblib
             model_data = {
-                'sgd_model': self.sgd_model,
-                'mlp_model': self.mlp_model,
-                'gb_model': self.gb_model,
+                'position_model': self.position_model,
+                'pace_model': self.pace_model,
+                'forest_model': self.forest_model,
                 'scaler': self.scaler,
                 'feature_names': self.feature_names,
                 'updates_count': self.updates_count
             }
             joblib.dump(model_data, path)
-            print(f"[OK] Models saved to: {path}")
+            print(f"[OK] Model saved to {path}")
             return True
         except Exception as e:
-            print(f"[ERROR] Error saving models: {e}")
+            print(f"[ERROR] Failed to save: {e}")
             return False
     
-    
     def load_model(self, path: str) -> bool:
-        """
-        Laad models van bestand (using joblib for secure deserialization)
-        """
+        """Load model from disk"""
         try:
-            import joblib
             model_data = joblib.load(path)
-            self.sgd_model = model_data.get('sgd_model')
-            self.mlp_model = model_data.get('mlp_model')
-            self.gb_model = model_data.get('gb_model')
+            self.position_model = model_data.get('position_model')
+            self.pace_model = model_data.get('pace_model')
+            self.forest_model = model_data.get('forest_model')
             self.scaler = model_data.get('scaler')
             self.feature_names = model_data.get('feature_names', [])
             self.updates_count = model_data.get('updates_count', 0)
             self.features_fitted = True
-            print(f"[OK] Models loaded from: {path}")
+            print(f"[OK] Model loaded from {path}")
             return True
         except Exception as e:
-            print(f"[ERROR] Error loading models: {e}")
+            print(f"[ERROR] Failed to load: {e}")
             return False
