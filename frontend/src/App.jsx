@@ -1,21 +1,21 @@
-import { useState } from 'react'
-import './App.css'
-import Sidebar from './components/Sidebar'
-import Dashboard from './pages/Dashboard'
-import PreRaceAnalysis from './pages/PreRaceAnalysis'
+import { Navigate, Route, Routes } from "react-router-dom";
 
-function App() {
-  const [currentPage, setCurrentPage] = useState('dashboard')
+import AppLayout from "./layouts/AppLayout.jsx";
+import Dashboard from "./pages/Dashboard.jsx";
+import PreRaceAnalysis from "./pages/PreRaceAnalysis.jsx";
+import NotFound from "./pages/NotFound.jsx";
 
+export default function App() {
   return (
-    <div className="app-container">
-      <Sidebar currentPage={currentPage} setCurrentPage={setCurrentPage} />
-      <main className="main-content">
-        {currentPage === 'dashboard' && <Dashboard />}
-        {currentPage === 'pre-race' && <PreRaceAnalysis />}
-      </main>
-    </div>
-  )
-}
+    <Routes>
+      <Route element={<AppLayout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="/pre-race" element={<PreRaceAnalysis />} />
 
-export default App
+        <Route path="/dashboard" element={<Navigate to="/" replace />} />
+
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  );
+}
