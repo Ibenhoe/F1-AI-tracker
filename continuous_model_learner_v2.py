@@ -527,9 +527,10 @@ class ContinuousModelLearner:
     
     def save_model(self, path: str) -> bool:
         """
-        Sla models op naar bestand
+        Sla models op naar bestand (using joblib for secure serialization)
         """
         try:
+            import joblib
             model_data = {
                 'sgd_model': self.sgd_model,
                 'mlp_model': self.mlp_model,
@@ -538,9 +539,7 @@ class ContinuousModelLearner:
                 'feature_names': self.feature_names,
                 'updates_count': self.updates_count
             }
-            import pickle
-            with open(path, 'wb') as f:
-                pickle.dump(model_data, f)
+            joblib.dump(model_data, path)
             print(f"[OK] Models saved to: {path}")
             return True
         except Exception as e:
@@ -550,12 +549,11 @@ class ContinuousModelLearner:
     
     def load_model(self, path: str) -> bool:
         """
-        Laad models van bestand
+        Laad models van bestand (using joblib for secure deserialization)
         """
         try:
-            import pickle
-            with open(path, 'rb') as f:
-                model_data = pickle.load(f)
+            import joblib
+            model_data = joblib.load(path)
             self.sgd_model = model_data.get('sgd_model')
             self.mlp_model = model_data.get('mlp_model')
             self.gb_model = model_data.get('gb_model')

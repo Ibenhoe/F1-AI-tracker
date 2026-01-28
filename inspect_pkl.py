@@ -1,4 +1,4 @@
-import pickle
+import joblib
 import os
 
 # Find first pkl file
@@ -11,7 +11,7 @@ if pkl_files:
     
     try:
         with open(pkl_file, 'rb') as f:
-            data = pickle.load(f)
+            data = joblib.load(f)
         
         print(f"Type: {type(data)}")
         print(f"Attributes/Keys: {dir(data) if not isinstance(data, dict) else list(data.keys())}")

@@ -18,16 +18,69 @@ import pandas as pd
 import fastf1
 from race_simulator import RaceSimulator
 
+# Performance optimization: Rate-limiting for Socket.IO emissions
+class RateLimiter:
+    """Rate limiter for Socket.IO emissions to prevent CPU/network overload"""
+    def __init__(self, min_interval_ms=100):
+        self.min_interval = min_interval_ms / 1000.0  # Convert to seconds
+        self.last_emit_time = 0
+    
+    def should_emit(self):
+        """Check if enough time has passed since last emission"""
+        current_time = time.time()
+        if current_time - self.last_emit_time >= self.min_interval:
+            self.last_emit_time = current_time
+            return True
+        return False
+    
+    def reset(self):
+        """Reset the limiter"""
+        self.last_emit_time = 0
+
 # Setup Flask App
 app = Flask(__name__)
 
-# Configureer CORS
-CORS(app, supports_credentials=True, origins="*")
+# CORS Configuration - Environment-aware for security
+# In development: allow localhost + local network
+# In production: restrict to specific trusted domains
+ENVIRONMENT = os.getenv('FLASK_ENV', 'development')
+
+# Define allowed origins based on environment
+if ENVIRONMENT == 'production':
+    # Production: MUST be configured with actual trusted domains
+    # Update these BEFORE deploying to production
+    ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', '').split(',') if os.getenv('CORS_ALLOWED_ORIGINS') else [
+        # 'https://yourdomain.com',      # TODO: Replace with your actual domain
+        # 'https://www.yourdomain.com',  # TODO: Replace with your actual domain
+    ]
+    if not ALLOWED_ORIGINS or ALLOWED_ORIGINS == ['']:
+        print("⚠️  WARNING: No CORS_ALLOWED_ORIGINS set for production! Set via environment variable.")
+        ALLOWED_ORIGINS = []  # Empty list = no cross-origin requests allowed (safest)
+else:
+    # Development: allow localhost variants + local network
+    ALLOWED_ORIGINS = [
+        'http://localhost:5173',     # Vite dev server (default)
+        'http://localhost:3000',     # Fallback dev port
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:3000',
+        'http://localhost:5000',     # Backend itself (for testing)
+        'http://127.0.0.1:5000'
+    ]
+
+# Configure CORS with restricted origins (more secure than '*')
+# NOTE: supports_credentials=False is correct for stateless apps (no authentication/sessions)
+#       If you add authentication later, change this to True and ensure ALLOWED_ORIGINS is tightly controlled
+CORS(app, 
+     origins=ALLOWED_ORIGINS,
+     supports_credentials=False,
+     methods=['GET', 'POST', 'OPTIONS'],
+     allow_headers=['Content-Type']
+)
 
 # Socket.IO setup - use polling only (avoid werkzeug WebSocket issues)
 socketio = SocketIO(
     app,
-    cors_allowed_origins="*",
+    cors_allowed_origins=ALLOWED_ORIGINS,  # Match Flask CORS configuration
     async_mode='threading',
     logger=True,
     engineio_logger=False,
@@ -53,6 +106,18 @@ race_state = {
         'conditions': 'Dry'
     }
 }
+
+# Race initialization state tracking with thread-safety
+init_state = {
+    'current_race': None,
+    'status': 'idle',  # idle, initializing, ready, error
+    'error_message': None,
+    'progress': 0  # 0-100 for progress tracking
+}
+init_state_lock = threading.Lock()  # Thread-safe access to init_state
+
+# Rate limiter instance for Socket.IO emissions (min 100ms between broadcasts)
+lap_update_limiter = RateLimiter(min_interval_ms=100)
 
 # Model cache
 model_cache = {
@@ -108,7 +173,7 @@ def get_races():
 
 @app.route('/api/race/init', methods=['POST', 'GET'])
 def init_race():
-    """Initialize a race simulation"""
+    """Initialize a race simulation (async, returns immediately)"""
     try:
         # Support both POST (with body) and GET (with query param)
         if request.method == 'POST':
@@ -116,140 +181,239 @@ def init_race():
         else:
             race_num = int(request.args.get('race', 21))
         
-        print(f"[BACKEND] Initializing race {race_num}...")
+        # Validate race_num is within expected range (1-21 for 2024 season)
+        if not isinstance(race_num, int):
+            race_num = int(race_num)
+        if race_num < 1 or race_num > 21:
+            return jsonify({'error': f'Invalid race number {race_num}. Must be between 1-21.', 'status': 'error'}), 400
         
-        # Fetch REAL race data from FastF1
-        drivers = None
-        laps = None
-        weather_data = None
+        print(f"[BACKEND] Race init requested for race {race_num}")
         
-        # Try to fetch real FastF1 data
-        try:
-            fetcher = FastF1DataFetcher()
-            # Use 2024 season as default
-            if fetcher.fetch_race(2024, race_num):
-                # Get qualifying session for grid positions
-                try:
-                    qual_session = fastf1.get_session(2024, race_num, 'Q')
-                    qual_session.load()
-                    qual_results = qual_session.results
-                except:
-                    qual_results = None
-                
-                # Get real drivers from FastF1 race session
-                driver_codes = fetcher.get_drivers_in_race()
-                
-                # Get session data for driver info
-                session = fetcher.session
-                drivers = []
-                
-                # Build driver list from FastF1 session results
-                if hasattr(session, 'results') and session.results is not None:
-                    results = session.results
-                    for idx, (code, row) in enumerate(results.iterrows()):
-                        if pd.notna(row.get('Abbreviation')):
-                            driver_code = str(row.get('Abbreviation', code))
-                            
-                            # Get grid position from qualifying if available
-                            grid_pos = idx + 1  # Default fallback
-                            if qual_results is not None:
-                                try:
-                                    # Find driver in qualifying results
-                                    qual_row = qual_results[qual_results['Abbreviation'] == driver_code]
-                                    if len(qual_row) > 0:
-                                        grid_pos = int(qual_row.iloc[0]['GridPosition'])
-                                except:
-                                    pass
-                            
-                            drivers.append({
-                                'code': driver_code,
-                                'name': str(row.get('FullName', 'Unknown')),
-                                'team': str(row.get('TeamName', 'Unknown')),
-                                'number': int(row.get('DriverNumber', idx + 1)),
-                                'grid_position': grid_pos
-                            })
-                
-                # Get real lap data
-                if hasattr(session, 'laps') and session.laps is not None:
-                    laps = session.laps
-                
-                # Get weather data from session
-                weather_data = None
-                try:
-                    if hasattr(session, 'weather_data') and session.weather_data is not None:
-                        weather_data = session.weather_data
-                        if len(weather_data) > 0:
-                            latest_weather = weather_data.iloc[-1] if isinstance(weather_data, pd.DataFrame) else weather_data[-1]
-                            print(f"[BACKEND] ✅ Weather data loaded")
-                except:
-                    pass
-                
-                if len(drivers) > 0:
-                    print(f"[BACKEND] ✅ Loaded {len(drivers)} drivers from FastF1")
-                else:
-                    raise Exception("No drivers found in FastF1 data")
-                    
+        # Update initialization state (thread-safe)
+        with init_state_lock:
+            init_state['current_race'] = race_num
+            init_state['status'] = 'initializing'
+            init_state['error_message'] = None
+            init_state['progress'] = 0
+        
+        # Return immediate response indicating initialization is in progress
+        response = {
+            'status': 'initializing',
+            'race_id': race_num,
+            'message': f'Race {race_num} initialization in progress. Listen for race/ready event.',
+            'poll_url': f'/api/race/init-status?race={race_num}'
+        }
+        
+        # Start background initialization thread
+        init_thread = threading.Thread(
+            target=_initialize_race_background,
+            args=(race_num,),
+            daemon=True
+        )
+        init_thread.start()
+        
+        return jsonify(response), 202  # 202 Accepted - request is being processed
+        
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[BACKEND] ❌ ERROR in init request: {error_msg}")
+        init_state['status'] = 'error'
+        init_state['error_message'] = error_msg
+        return jsonify({'error': error_msg, 'status': 'error'}), 400
+
+
+@app.route('/api/race/init-status', methods=['GET'])
+def get_init_status():
+    """Poll initialization status"""
+    try:
+        race_num = request.args.get('race')
+        
+        # Thread-safe access to init_state
+        with init_state_lock:
+            # If no race specified or different race, return current status
+            if race_num is None:
+                return jsonify({
+                    'status': init_state['status'],
+                    'current_race': init_state['current_race'],
+                    'progress': init_state['progress'],
+                    'error': init_state['error_message']
+                }), 200
+            
+            # Check if status is for requested race
+            if str(init_state['current_race']) == str(race_num):
+                return jsonify({
+                    'status': init_state['status'],
+                    'race': race_num,
+                    'progress': init_state['progress'],
+                    'error': init_state['error_message']
+                }), 200
             else:
-                raise Exception(f"Failed to fetch race {race_num} from FastF1")
-        except Exception as e:
-            print(f"[BACKEND] ⚠️ Could not load FastF1 data: {e}")
-            print(f"[BACKEND] Falling back to dummy drivers...")
+                return jsonify({
+                    'status': 'idle',
+                    'race': race_num,
+                    'error': 'No initialization in progress for this race'
+                }), 200
             
-            # Fallback to dummy drivers
-            drivers = [
-                {'code': 'VER', 'name': 'Max Verstappen', 'team': 'Red Bull', 'number': 1, 'grid_position': 1},
-                {'code': 'LEC', 'name': 'Charles Leclerc', 'team': 'Ferrari', 'number': 16, 'grid_position': 2},
-                {'code': 'SAI', 'name': 'Carlos Sainz', 'team': 'Ferrari', 'number': 55, 'grid_position': 3},
-                {'code': 'PIA', 'name': 'Oscar Piastri', 'team': 'McLaren', 'number': 81, 'grid_position': 4},
-                {'code': 'NOR', 'name': 'Lando Norris', 'team': 'McLaren', 'number': 4, 'grid_position': 5},
-                {'code': 'HAM', 'name': 'Lewis Hamilton', 'team': 'Mercedes', 'number': 44, 'grid_position': 6},
-                {'code': 'RUS', 'name': 'George Russell', 'team': 'Mercedes', 'number': 63, 'grid_position': 7},
-                {'code': 'ALO', 'name': 'Fernando Alonso', 'team': 'Aston Martin', 'number': 14, 'grid_position': 8},
-                {'code': 'STR', 'name': 'Lance Stroll', 'team': 'Aston Martin', 'number': 18, 'grid_position': 9},
-                {'code': 'GAS', 'name': 'Pierre Gasly', 'team': 'Alpine', 'number': 10, 'grid_position': 10},
-                {'code': 'OCO', 'name': 'Esteban Ocon', 'team': 'Alpine', 'number': 31, 'grid_position': 11},
-                {'code': 'MAG', 'name': 'Kevin Magnussen', 'team': 'Haas', 'number': 20, 'grid_position': 12},
-                {'code': 'HUL', 'name': 'Nico Hulkenberg', 'team': 'Haas', 'number': 27, 'grid_position': 13},
-                {'code': 'BOT', 'name': 'Valtteri Bottas', 'team': 'Sauber', 'number': 77, 'grid_position': 14},
-                {'code': 'ZHO', 'name': 'Zhou Guanyu', 'team': 'Sauber', 'number': 24, 'grid_position': 15},
-                {'code': 'TSU', 'name': 'Yuki Tsunoda', 'team': 'Racing Bulls', 'number': 22, 'grid_position': 16},
-                {'code': 'VER2', 'name': 'TEST Driver 1', 'team': 'Williams', 'number': 23, 'grid_position': 17},
-                {'code': 'NOR2', 'name': 'TEST Driver 2', 'team': 'Kick', 'number': 25, 'grid_position': 18},
-                {'code': 'HAM2', 'name': 'TEST Driver 3', 'team': 'Test Team', 'number': 50, 'grid_position': 19},
-            ]
-        
-        print(f"[BACKEND] ✅ Loaded {len(drivers)} drivers")
-        
-        # Load and train AI model with historical data first
+    except Exception as e:
+        return jsonify({'error': str(e), 'status': 'error'}), 400
+
+
+def _fetch_fastf1_data(race_num):
+    """Fetch race data from FastF1 API with fallback to dummy drivers"""
+    drivers = []
+    laps = None
+    weather_data = None
+    
+    try:
+        print(f"[BACKGROUND] Fetching FastF1 data for race {race_num}...")
+        fetcher = FastF1DataFetcher()
+        # Add timeout to prevent indefinite blocking on slow API
         try:
-            print("[BACKEND] Loading AI model...")
-            model = ContinuousModelLearner()
-            model_cache['model'] = model
+            result = fetcher.fetch_race(2024, race_num)
+        except Exception as timeout_err:
+            print(f"[BACKGROUND] ⚠️ FastF1 API timeout/error: {timeout_err}")
+            result = False
+        
+        if result:
+            # Get qualifying session for grid positions
+            try:
+                qual_session = fastf1.get_session(2024, race_num, 'Q')
+                qual_session.load()
+                qual_results = qual_session.results
+            except:
+                qual_results = None
             
-            # PRE-TRAIN on historical F1 data for better baseline
-            historical_csv = 'f1_historical_5years.csv'
-            if os.path.exists(historical_csv):
-                print(f"[BACKEND] Pre-training model on historical data from {historical_csv}...")
-                model.pretrain_on_historical_data(csv_path=historical_csv)
+            # Get real drivers from FastF1 race session
+            driver_codes = fetcher.get_drivers_in_race()
+            session = fetcher.session
+            drivers = []
+            
+            # Build driver list from FastF1 session results
+            if hasattr(session, 'results') and session.results is not None:
+                results = session.results
+                for idx, (code, row) in enumerate(results.iterrows()):
+                    if pd.notna(row.get('Abbreviation')):
+                        driver_code = str(row.get('Abbreviation', code))
+                        grid_pos = idx + 1
+                        if qual_results is not None:
+                            try:
+                                qual_row = qual_results[qual_results['Abbreviation'] == driver_code]
+                                if len(qual_row) > 0:
+                                    grid_pos = int(qual_row.iloc[0]['GridPosition'])
+                            except:
+                                pass
+                        
+                        drivers.append({
+                            'code': driver_code,
+                            'name': str(row.get('FullName', 'Unknown')),
+                            'team': str(row.get('TeamName', 'Unknown')),
+                            'number': int(row.get('DriverNumber', idx + 1)),
+                            'grid_position': grid_pos
+                        })
+            
+            # Get real lap data
+            if hasattr(session, 'laps') and session.laps is not None:
+                laps = session.laps
+            
+            # Get weather data from session
+            try:
+                if hasattr(session, 'weather_data') and session.weather_data is not None:
+                    weather_data = session.weather_data
+                    if len(weather_data) > 0:
+                        print(f"[BACKGROUND] ✅ Weather data loaded")
+            except:
+                pass
+            
+            if len(drivers) > 0:
+                print(f"[BACKGROUND] ✅ Loaded {len(drivers)} drivers from FastF1")
             else:
-                print(f"[BACKEND] ⚠️ Historical data not found, training from current lap data")
-            
-            # Then fine-tune on current race lap data if available
-            if laps is not None and len(laps) > 0:
-                print(f"[BACKEND] Fine-tuning AI model on {len(laps)} race laps...")
-                # Train model on real lap data to adapt to current race
-                try:
-                    for _ in range(3):  # 3 passes on current race data
-                        model.update_model(target_variable='position')
-                except Exception as train_err:
-                    print(f"[BACKEND] ⚠️ Could not fine-tune model: {train_err}")
-            
-            model_cache['loaded'] = True
-            print("[BACKEND] ✅ AI model ready! (Pre-trained + fine-tuned)")
-        except Exception as e:
-            print(f"[BACKEND] Error loading AI model: {str(e)}")
-            model_cache['model'] = None
-            model_cache['loaded'] = True  # Still allow race to start
+                raise Exception("No drivers found in FastF1 data")
+        else:
+            raise Exception(f"Failed to fetch race {race_num} from FastF1")
+    except Exception as e:
+        print(f"[BACKGROUND] ⚠️ Could not load FastF1 data: {e}")
+        print(f"[BACKGROUND] Falling back to dummy drivers...")
+        
+        # Fallback to dummy drivers
+        drivers = [
+            {'code': 'VER', 'name': 'Max Verstappen', 'team': 'Red Bull', 'number': 1, 'grid_position': 1},
+            {'code': 'LEC', 'name': 'Charles Leclerc', 'team': 'Ferrari', 'number': 16, 'grid_position': 2},
+            {'code': 'SAI', 'name': 'Carlos Sainz', 'team': 'Ferrari', 'number': 55, 'grid_position': 3},
+            {'code': 'PIA', 'name': 'Oscar Piastri', 'team': 'McLaren', 'number': 81, 'grid_position': 4},
+            {'code': 'NOR', 'name': 'Lando Norris', 'team': 'McLaren', 'number': 4, 'grid_position': 5},
+            {'code': 'HAM', 'name': 'Lewis Hamilton', 'team': 'Mercedes', 'number': 44, 'grid_position': 6},
+            {'code': 'RUS', 'name': 'George Russell', 'team': 'Mercedes', 'number': 63, 'grid_position': 7},
+            {'code': 'ALO', 'name': 'Fernando Alonso', 'team': 'Aston Martin', 'number': 14, 'grid_position': 8},
+            {'code': 'STR', 'name': 'Lance Stroll', 'team': 'Aston Martin', 'number': 18, 'grid_position': 9},
+            {'code': 'GAS', 'name': 'Pierre Gasly', 'team': 'Alpine', 'number': 10, 'grid_position': 10},
+            {'code': 'OCO', 'name': 'Esteban Ocon', 'team': 'Alpine', 'number': 31, 'grid_position': 11},
+            {'code': 'MAG', 'name': 'Kevin Magnussen', 'team': 'Haas', 'number': 20, 'grid_position': 12},
+            {'code': 'HUL', 'name': 'Nico Hulkenberg', 'team': 'Haas', 'number': 27, 'grid_position': 13},
+            {'code': 'BOT', 'name': 'Valtteri Bottas', 'team': 'Sauber', 'number': 77, 'grid_position': 14},
+            {'code': 'ZHO', 'name': 'Zhou Guanyu', 'team': 'Sauber', 'number': 24, 'grid_position': 15},
+            {'code': 'TSU', 'name': 'Yuki Tsunoda', 'team': 'Racing Bulls', 'number': 22, 'grid_position': 16},
+            {'code': 'VER2', 'name': 'TEST Driver 1', 'team': 'Williams', 'number': 23, 'grid_position': 17},
+            {'code': 'NOR2', 'name': 'TEST Driver 2', 'team': 'Kick', 'number': 25, 'grid_position': 18},
+            {'code': 'HAM2', 'name': 'TEST Driver 3', 'team': 'Test Team', 'number': 50, 'grid_position': 19},
+        ]
+    
+    return drivers, laps, weather_data
+
+
+def _train_ai_model(laps):
+    """Load and train AI model with historical and race-specific data"""
+    try:
+        print("[BACKGROUND] Loading AI model...")
+        model = ContinuousModelLearner()
+        model_cache['model'] = model
+        
+        # PRE-TRAIN on historical F1 data for better baseline
+        historical_csv = 'f1_historical_5years.csv'
+        if os.path.exists(historical_csv):
+            print(f"[BACKGROUND] Pre-training model on historical data from {historical_csv}...")
+            model.pretrain_on_historical_data(csv_path=historical_csv)
+            print("[BACKGROUND] ✅ Pre-training complete")
+        else:
+            print(f"[BACKGROUND] ⚠️ Historical data not found, training from current lap data")
+        
+        # Then fine-tune on current race lap data if available
+        if laps is not None and len(laps) > 0:
+            print(f"[BACKGROUND] Fine-tuning AI model on {len(laps)} race laps...")
+            try:
+                # Single pass sufficient for incremental learning with `partial_fit`
+                model.update_model(target_variable='position')
+            except Exception as train_err:
+                print(f"[BACKGROUND] ⚠️ Could not fine-tune model: {train_err}")
+        
+        model_cache['loaded'] = True
+        print("[BACKGROUND] ✅ AI model ready! (Pre-trained + fine-tuned)")
+        return model
+    except Exception as e:
+        print(f"[BACKGROUND] Error loading AI model: {str(e)}")
+        model_cache['model'] = None
+        model_cache['loaded'] = True  # Still allow race to start
+        return None
+
+
+def _initialize_race_background(race_num):
+    """Background task for race initialization (calls separate focused functions)"""
+    try:
+        print(f"[BACKGROUND] Starting initialization for race {race_num}")
+        with init_state_lock:
+            init_state['progress'] = 10
+        
+        # Fetch FastF1 data from dedicated function
+        drivers, laps, weather_data = _fetch_fastf1_data(race_num)
+        print(f"[BACKGROUND] ✅ Loaded {len(drivers)} drivers")
+        
+        with init_state_lock:
+            init_state['progress'] = 40
+        
+        # Train AI model from dedicated function
+        model = _train_ai_model(laps)
+        
+        with init_state_lock:
+            init_state['progress'] = 80
         
         # Initialize race simulator - wrapped in try/catch
         try:
@@ -269,30 +433,43 @@ def init_race():
             race_state['current_lap'] = 0
         except Exception as sim_err:
             # Fallback if RaceSimulator fails
-            print(f"[BACKEND] RaceSimulator failed: {sim_err}, using simple state")
+            print(f"[BACKGROUND] RaceSimulator failed: {sim_err}, using simple state")
             race_state['drivers'] = drivers
             race_state['race_name'] = f'Race {race_num}'
             race_state['total_laps'] = 58
             race_state['current_lap'] = 0
             race_state['race_simulator'] = None  # Mark as failed but continue
         
-        print(f"[BACKEND] Race initialized! {len(race_state['drivers'])} drivers")
+        print(f"[BACKGROUND] Race initialized! {len(race_state['drivers'])} drivers")
         
-        return jsonify({
-            'status': 'initialized',
-            'race_id': 1,  # Simple race ID
+        # Thread-safe state update
+        with init_state_lock:
+            init_state['progress'] = 100
+            init_state['status'] = 'ready'
+        
+        # Emit Socket.IO event to all connected clients
+        socketio.emit('race/ready', {
+            'race_id': race_num,
             'race_name': race_state['race_name'],
+            'drivers': race_state['drivers'],
             'total_laps': race_state['total_laps'],
-            'drivers': race_state['drivers']
-        }), 200
+            'message': f'Race {race_num} ready to start!'
+        }, to=None)
+        
+        print(f"[BACKGROUND] ✅ Initialization complete for race {race_num}")
         
     except Exception as e:
-        error_msg = str(e)
-        print(f"[BACKEND] ❌ ERROR initializing race: {error_msg}")
-        import traceback
-        tb = traceback.format_exc()
-        print(tb)
-        return jsonify({'error': error_msg, 'traceback': tb}), 500
+        print(f"[BACKGROUND] ❌ ERROR during background init: {str(e)}")
+        # Thread-safe error state update
+        with init_state_lock:
+            init_state['status'] = 'error'
+            init_state['error_message'] = str(e)
+        
+        # Emit error event to all connected clients
+        socketio.emit('race/init-error', {
+            'error': str(e),
+            'race_id': race_num
+        }, to=None)
 
 
 # HTTP endpoints for race control (instead of Socket.IO)
@@ -425,7 +602,7 @@ def handle_simulation_speed(data):
 
 
 def run_simulation():
-    """Main simulation loop - runs in background thread"""
+    """Main simulation loop - runs in background thread with rate limiting"""
     while race_state['running'] and race_state['current_lap'] <= race_state['total_laps']:
         try:
             # Get next lap state from simulator
@@ -438,23 +615,26 @@ def run_simulation():
             
             print(f"[SIMULATION] Lap {race_state['current_lap']} updated - {len(race_state['drivers'])} drivers")
             
-            # Emit lap update to any Socket.IO clients
-            socketio.emit('lap/update', {
-                'lap_number': race_state['current_lap'],
-                'drivers': lap_state['drivers'],
-                'predictions': lap_state['predictions'],
-                'events': lap_state.get('events', []),
-                'weather': lap_state.get('weather', {})
-            }, to=None)
+            # RATE LIMIT: Only emit to clients if minimum time has passed (100ms)
+            # This prevents network congestion and excessive CPU usage on both server and clients
+            if lap_update_limiter.should_emit():
+                socketio.emit('lap/update', {
+                    'lap_number': race_state['current_lap'],
+                    'drivers': lap_state['drivers'],
+                    'predictions': lap_state['predictions'],
+                    'events': lap_state.get('events', []),
+                    'weather': lap_state.get('weather', {})
+                }, to=None)
             
             # Move to next lap
             race_state['current_lap'] += 1
             
-            # Simulate delay based on speed
+            # Simulate delay based on speed with MINIMUM sleep to prevent busy-waiting
             # Speed 1.0 = 5 seconds per lap (fast initial demo)
             # Speed 2.0 = 2.5 seconds per lap
             # Speed 0.5 = 10 seconds per lap
-            delay = 5.0 / race_state['simulation_speed']
+            # Minimum 0.01s sleep prevents CPU spinning even at very high speeds
+            delay = max(0.01, 5.0 / race_state['simulation_speed'])
             time.sleep(delay)
             
         except Exception as e:

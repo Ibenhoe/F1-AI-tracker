@@ -16,7 +16,7 @@ from sklearn.neural_network import MLPRegressor
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.preprocessing import StandardScaler
 from typing import Dict, List, Tuple, Optional
-import pickle
+import joblib
 import json
 from datetime import datetime
 import os

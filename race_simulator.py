@@ -1,5 +1,32 @@
 """
 Race Simulator - Simulates F1 race lap-by-lap with AI predictions
+
+ARCHITECTURAL NOTE - God Class Issue:
+The current RaceSimulator class has too many responsibilities:
+1. Race state management (driver states, initialization)
+2. Data fetching (lap data, weather data from FastF1)
+3. Lap simulation logic (real data updates vs simulated changes)
+4. Driver state updates (position, tire compound, pit stops, DNF tracking)
+5. Event detection (pit stops, crashes)
+6. AI model integration (training model, generating predictions)
+7. Output formatting (formatting driver data for WebSocket/display)
+
+This violates Single Responsibility Principle and makes testing/maintenance difficult.
+
+RECOMMENDED REFACTORING (Future Enhancement):
+Consider splitting into focused classes:
+- DriverStateManager: Manages driver positions, tires, pit stops, DNF status
+- LapDataFetcher: Handles FastF1 data retrieval and weather data
+- RaceEventDetector: Detects and reports race events (pit stops, crashes)
+- AIModelIntegrator: Handles model training and prediction generation
+- LapSimulator: Orchestrates lap-by-lap simulation logic
+- RaceSimulator (simplified): Acts as orchestrator calling the above components
+
+This would improve:
+- Modularity: Each class has single clear responsibility
+- Testability: Components can be tested in isolation
+- Maintainability: Changes to one concern don't affect others
+- Reusability: Components could be used in other applications
 """
 
 import pandas as pd
@@ -9,7 +36,30 @@ from datetime import timedelta
 
 
 class RaceSimulator:
-    """Simulates an F1 race with lap-by-lap updates and AI predictions"""
+    """Simulates an F1 race with lap-by-lap updates and AI predictions
+    
+    CURRENT RESPONSIBILITIES (God Class - should be refactored):
+    1. Race initialization and state management
+    2. Driver state tracking (positions, tires, pit stops)
+    3. Fetching real lap data from FastF1
+    4. Simulating lap changes when real data unavailable
+    5. AI model training on lap data
+    6. Generating AI predictions for next lap
+    7. Detecting race events
+    8. Retrieving and formatting weather data
+    9. Formatting output data for display
+    
+    METHODS BY RESPONSIBILITY:
+    - Race init: __init__, _init_driver_states, _get_race_name, _get_total_laps
+    - Data fetching: _get_lap_data, _get_weather_for_lap
+    - Lap simulation: simulate_lap, _update_from_real_data, _simulate_lap_changes
+    - Driver updates: _update_from_real_data (tire, position, pit stops tracking)
+    - AI integration: _update_from_real_data (model training), _get_predictions
+    - Event detection: _detect_events
+    - Output formatting: _format_driver_output, get_current_state
+    
+    See module docstring for refactoring recommendations.
+    """
     
     def __init__(self, race_number, model, laps_data, drivers, weather_data=None):
         """
@@ -80,6 +130,19 @@ class RaceSimulator:
         """
         Simulate a single lap by returning real FastF1 data
         
+        ORCHESTRATION NOTE: This is the main orchestrator method that handles:
+        1. Fetching real lap data
+        2. Updating driver states
+        3. Getting AI predictions
+        4. Detecting events
+        5. Retrieving weather
+        
+        Future refactoring: Delegate to focused components:
+        - LapDataFetcher.get_lap_data()
+        - DriverStateManager.update_lap_states()
+        - AIModelIntegrator.get_predictions()
+        - RaceEventDetector.detect_events()
+        
         Args:
             lap_number: Current lap number
             
@@ -137,7 +200,17 @@ class RaceSimulator:
             return None
     
     def _update_from_real_data(self, lap_number, lap_data):
-        """Update driver states from real FastF1 data"""
+        """Update driver states from real FastF1 data
+        
+        RESPONSIBILITY NOTE: This method handles MULTIPLE concerns (God method):
+        1. Driver state updates (position, tire age, pit stops, DNF tracking)
+        2. Lap time conversion and storage
+        3. AI model training on lap data
+        
+        Future refactoring should split this into:
+        - DriverStateManager.update_from_lap_data()
+        - AIModelIntegrator.train_on_lap_data()
+        """
         drivers_out = []
         drivers_in_lap = set()  # Track which drivers appear in this lap
         
@@ -313,7 +386,13 @@ class RaceSimulator:
         }
     
     def _get_predictions(self, lap_number, lap_data):
-        """Get AI predictions for race winner + Top 5 finishers using V2 model"""
+        """Get AI predictions for race winner + Top 5 finishers using V2 model
+        
+        RESPONSIBILITY NOTE: Combines AI prediction generation with output formatting.
+        Future refactoring should split into:
+        - AIModelIntegrator.predict() - pure prediction logic
+        - This method - formatting and aggregation only
+        """
         predictions = []
         
         try:

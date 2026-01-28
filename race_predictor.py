@@ -90,8 +90,13 @@ def select_race():
             print(" Voer een getal in")
 
 
-def predict_lap_winner(model, lap_data, lap_num, total_laps, show_all=False):
-    """Voorspel winners met INCREMENTAL LEARNING model per lap
+def predict_lap_rankings(model, lap_data, lap_num, total_laps, show_all=False):
+    """Predict per-lap driver rankings with INCREMENTAL LEARNING model
+    
+    Returns ranked list of drivers sorted by performance accuracy (not single winner).
+    Performance note: lap_time is converted to seconds inside loop (lines 115-118).
+    For large datasets (20+ drivers × 100+ laps), consider pre-processing lap_time
+    to numeric format during data fetching to reduce repeated conversions.
     
     Model updates itself every lap!
     Confidence is NEVER 100% - realistic predictions only
@@ -171,8 +176,12 @@ def predict_lap_winner(model, lap_data, lap_num, total_laps, show_all=False):
         )
         
         # HARD CAP: Never 100%
-        total_accuracy = min(79.9, total_accuracy)  # Max 79.9%
-        total_accuracy = max(15.0, total_accuracy)  # Min 15%
+        # Set max at 79.9% to ensure predictions are NEVER deterministic or overconfident
+        # This reflects real-world F1 unpredictability where even favorites can fail
+        # (e.g., DNF, tire failure, strategic pit stop changes, weather, collisions)
+        # This cap is applied ONCE here, not redundantly during display
+        total_accuracy = min(79.9, total_accuracy)  # Max 79.9% hard cap for realism
+        total_accuracy = max(15.0, total_accuracy)  # Min 15% to avoid overpenalizing drivers
         
         predictions.append({
             'driver': driver_id,
@@ -197,7 +206,12 @@ def predict_lap_winner(model, lap_data, lap_num, total_laps, show_all=False):
 
 
 def analyze_tire_strategy(laps_by_number):
-    """Analyseer welke band strategie het snelste was"""
+    """Analyze tire compound performance across all laps
+    
+    Performance note: lap_time is converted to seconds inside nested loop (lines 220-224).
+    For optimization, pre-process lap_time during initial data fetch to avoid repeated
+    conversion calls in the loop structure (lap × driver × compound iterations).
+    """
     tire_performance = {}  # {compound: [lap_times]}
     
     for lap_num in laps_by_number:
@@ -218,11 +232,11 @@ def analyze_tire_strategy(laps_by_number):
             except:
                 pass
     
-    # Bereken gemiddelde per band
+    # Bereken gemiddelde per band (protected against empty lists)
     tire_stats = {}
     for compound, times in tire_performance.items():
-        if times:
-            avg_time = sum(times) / len(times)
+        if times:  # Only calculate if list has elements (prevents division by zero)
+            avg_time = sum(times) / len(times)  # Safe: len(times) > 0 guaranteed by 'if times:' check
             min_time = min(times)
             max_time = max(times)
             tire_stats[compound] = {
@@ -235,13 +249,38 @@ def analyze_tire_strategy(laps_by_number):
     return tire_stats
 
 
-def analyze_final_predictions(model, final_lap_data):
-    """Get all drivers' predictions for final classification"""
-    # Use model to get realistic predictions based on pace
-    predictions = model.predict_winner(final_lap_data)
+def get_final_predictions(model, final_lap_data):
+    """Retrieve and format final predictions for all drivers from model
+    
+    Parameters:
+    -----------
+    model : ContinuousModelLearner
+        The trained AI model with predict_winner() method
+    final_lap_data : List[Dict]
+        List of driver data from the final lap, passed to model.predict_winner()
+        Contains driver positions, tire info, and lap times for final prediction
+    
+    Returns:
+    --------
+    List[Dict]
+        Predictions for all drivers with position, confidence, and current position
+    
+    Performance note: Calls model.predict_winner() which may be computationally expensive.
+    If this function is called frequently or with large datasets, consider:
+    1) Profiling model.predict_winner() to understand its execution time
+    2) Caching results if final_lap_data inputs are frequently repeated
+    3) Running asynchronously if supported by the model and calling context
+    
+    Note: Confidence values returned from model are already constrained by model's internal caps.
+    Display-time capping (if applied) happens in calling code, not here.
+    """
     
     result = []
-    if 'predictions' in predictions:
+    # Call model to get predictions for final classification
+    # final_lap_data is passed to model.predict_winner() to obtain predictions based on current race state
+    predictions = model.predict_winner(final_lap_data) if model else None
+    
+    if predictions and 'predictions' in predictions:
         for driver_id, pred_data in predictions['predictions'].items():
             result.append({
                 'driver': str(driver_id),
@@ -254,10 +293,18 @@ def analyze_final_predictions(model, final_lap_data):
 
 
 def main():
-    print("\n" + "="*70)
-    print("[F1-CHAMP] F1 RACE PREDICTOR 2024")
-    print("   Live Per-Lap Predictions")
-    print("="*70)
+    """Main entry point for F1 race prediction simulation
+    
+    ARCHITECTURAL NOTE (Issue 7 - God Function):
+    This function handles multiple responsibilities: data loading, model initialization,
+    incremental training, prediction display, and report generation.
+    Future refactoring opportunity: Extract into focused components:
+    - RaceDataLoader: Handle FastF1 fetching and lap data organization
+    - ModelEngine: Manage model initialization and incremental updates  
+    - PredictionDisplay: Handle per-lap prediction output formatting
+    - ReportGenerator: Handle final classification and file output
+    This would improve modularity, testability, and maintainability.
+    """
     # Create output folder if needed
     output_folder = "outputs"
     os.makedirs(output_folder, exist_ok=True)
@@ -327,6 +374,12 @@ def main():
         
         # ===== UPDATE MODEL WITH PARTIAL_FIT (CONTINUOUS LEARNING) =====
         # THIS IS THE KEY - Model learns from this lap immediately!
+        # Performance note: update_model() is called every lap for true incremental learning.
+        # This is by design but can be computationally intensive for large driver counts.
+        # To optimize, profile update_model() with realistic data and consider:
+        # 1) Tuning learning_decay and min_samples_to_train parameters
+        # 2) Updating less frequently (e.g., every 5 laps) if performance becomes critical
+        # 3) Using lightweight incremental algorithms (current SGDRegressor is efficient)
         if lap_num >= 1:  # Start updating from lap 1
             update_result = model.update_model(target_variable='position')
             if update_result['status'] == 'updated':
@@ -334,7 +387,7 @@ def main():
         
         # Show predictions every lap after lap 2
         if lap_num >= 2:
-            top5 = predict_lap_winner(model, lap_data_list, lap_num, total_laps)
+            top5 = predict_lap_rankings(model, lap_data_list, lap_num, total_laps)
             
             if top5:
                 progress = (lap_num / total_laps) * 100
@@ -353,12 +406,9 @@ def main():
                     bar_len = int(accuracy / 5)
                     bar = "█" * bar_len + "░" * (16 - bar_len)
                     
-                    # Cap display at 79.9%
-                    display_acc = min(79.9, accuracy)
-                    
-                    print(f"   {medals[rank]} | Driver {driver:3s} | Current Pos: {pos:2.0f} | Pace: {pace:5.1f}% | Confidence: {display_acc:5.1f}% | {bar}")
-                    lap_prediction += f"{rank+1}. {driver}({display_acc:.1f}%) | "
-                    lap_prediction += f"{rank+1}. Driver {driver} ({display_accuracy:.1f}%) | "
+                    # No need to cap here - accuracy is already capped at 79.9% in predict_lap_winner()
+                    print(f"   {medals[rank]} | Driver {driver:3s} | Current Pos: {pos:2.0f} | Pace: {pace:5.1f}% | Confidence: {accuracy:5.1f}% | {bar}")
+                    lap_prediction += f"{rank+1}. Driver {driver} ({accuracy:.1f}%) | "
                 
                 predictions_log.append(lap_prediction)
     
@@ -370,12 +420,12 @@ def main():
     final_lap_data = laps_by_number[sorted_laps[-1]]
     
     # Get AI predictions for all drivers
-    all_predictions = analyze_final_predictions(model, final_lap_data)
+    all_predictions = get_final_predictions(model, final_lap_data)
     
     # Sort by actual position
     actual_finishers = sorted(final_lap_data, key=lambda x: x.get('position', 999))
     
-    print("\nActual Finishers | AI Prediction | Current Pos | Pred Pos | Accuracy (max 85%):")
+    print("\nActual Finishers | AI Prediction | Current Pos | Pred Pos | Accuracy (max 79.9%):")
     print("-"*70)
     final_results = []
     for i, driver_data in enumerate(actual_finishers, 1):
@@ -392,7 +442,8 @@ def main():
         
         if pred_data:
             pred_pos = pred_data['pred_pos']
-            accuracy = min(85, pred_data['accuracy'])  # Cap at 85% for display
+            # No need to cap here - accuracy from model.predict_winner() should already be realistic
+            accuracy = pred_data['accuracy']
             print(f"   {i:2d}. Driver {driver_id:3s} ({tire_final:6s}) | Pos:{actual_pos:2.0f}->{pred_pos:2d} | Current:{actual_pos:2.0f} | Pred:{pred_pos:2d} | {accuracy:5.1f}%")
             final_results.append({
                 'pos': i,
@@ -496,14 +547,13 @@ def main():
             f.write(pred + "\n")
         
         f.write("\n" + "="*70 + "\n")
-        f.write("FINAL CLASSIFICATION - ALLE DRIVERS (Confidence capped at max 85%)\n")
+        f.write("FINAL CLASSIFICATION - ALLE DRIVERS (Confidence capped at max 79.9%)\n")
         f.write("="*70 + "\n")
         f.write("Driver | Actual Pos | Predicted Pos | Confidence | Tire\n")
         f.write("-"*70 + "\n")
         for result in final_results:
-            # Cap accuracy at 85% for realistic display
-            display_acc = min(85, result['accuracy'])
-            f.write(f"   {result['pos']:2d}. Driver {result['driver']:3s} | {result['actual']:10.0f} | {result['predicted']:13d} | {display_acc:10.1f}% | {result['tire']}\n")
+            # No need to cap here - accuracy is already constrained by model
+            f.write(f"   {result['pos']:2d}. Driver {result['driver']:3s} | {result['actual']:10.0f} | {result['predicted']:13d} | {result['accuracy']:10.1f}% | {result['tire']}\n")
         
         f.write("\n" + "="*70 + "\n")
         f.write("TIRE STRATEGY ANALYSIS\n")

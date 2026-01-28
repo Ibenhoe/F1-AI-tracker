@@ -28,14 +28,14 @@ for pkl_file in sorted(pkl_files):
         rel_path = os.path.relpath(pkl_file, CACHE_DIR)
         print(f"[READ] {rel_path:60s}", end=" ... ")
         
-        # Try to read pickle file (try both gzip and plain pickle)
+        # Try to read pickle file (try both gzip and plain joblib)
         try:
-            with gzip.open(pkl_file, 'rb') as f:
-                data = pickle.load(f)
+            with gzip.open(cache_file, 'rb') as f:
+                data = joblib.load(f)
         except:
-            # Try plain pickle if gzip fails
-            with open(pkl_file, 'rb') as f:
-                data = pickle.load(f)
+            # Try plain joblib if gzip fails
+            with open(cache_file, 'rb') as f:
+                data = joblib.load(f)
         
         # Try to extract session results
         if hasattr(data, 'results') and data.results is not None and len(data.results) > 0:
