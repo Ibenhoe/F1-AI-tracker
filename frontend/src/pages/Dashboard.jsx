@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [raceData, setRaceData] = useState(null)
   const [weatherData, setWeatherData] = useState(null)
   const [predictions, setPredictions] = useState([])
+  const [modelMetrics, setModelMetrics] = useState(null)
   const [notifications, setNotifications] = useState([])
   const [currentLap, setCurrentLap] = useState(0)
   const [raceRunning, setRaceRunning] = useState(false)
@@ -63,6 +64,12 @@ export default function Dashboard() {
             drivers: data.drivers
           }))
           setPredictions(data.predictions)
+          
+          // Update model metrics if available
+          if (data.model_metrics) {
+            setModelMetrics(data.model_metrics)
+            console.log('[DASHBOARD] Model metrics updated:', data.model_metrics)
+          }
           
           // Update weather data if available
           if (data.weather) {
@@ -180,11 +187,13 @@ export default function Dashboard() {
           <DriversList drivers={raceData?.drivers || []} currentLap={raceData?.currentLap} />
         </div>
 
-        {/* Middle Column: Predictions */}
+        {/* Middle Column: Predictions + Model Metrics */}
         <div className="predictions-column">
           <PredictionsPanel 
             predictions={predictions} 
             currentLap={raceData?.currentLap}
+            modelMetrics={modelMetrics}
+            totalLaps={raceData?.totalLaps}
           />
         </div>
 

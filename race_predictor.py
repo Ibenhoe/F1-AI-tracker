@@ -13,7 +13,7 @@ from datetime import datetime
 if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-from continuous_model_learner import ContinuousModelLearner
+from continuous_model_learner_v2 import ContinuousModelLearner
 from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 
@@ -91,20 +91,20 @@ def select_race():
 
 
 def predict_lap_winner(model, lap_data, lap_num, total_laps, show_all=False):
-    """Voorspel met VERBETERD scoring - kijkt naar werkelijke F1 performance
+    """Voorspel winners met INCREMENTAL LEARNING model per lap
     
-    Scoring factors:
-    - Position (35%): Huidige positie
-    - Pace (35%): Lap time vs average
-    - Tire Strategy (20%): Compound + age + pit impact
-    - Consistency (10%): Pit stop penalty
+    Model updates itself every lap!
+    Confidence is NEVER 100% - realistic predictions only
     """
     if not lap_data:
         return None
     
     predictions = []
     
-    # Bereken lap times gemiddelde om pace gap te bepalen
+    # Get predictions from incremental model
+    model_predictions = model.predict_lap(lap_data)
+    
+    # Bereken lap times voor extra context
     lap_times = []
     for driver_data in lap_data:
         lap_time = driver_data.get('lap_time')
@@ -125,24 +125,21 @@ def predict_lap_winner(model, lap_data, lap_num, total_laps, show_all=False):
         driver_id = driver_data.get('driver', '?')
         actual_pos = driver_data.get('position', 20)
         lap_time = driver_data.get('lap_time')
-        pit_stop = driver_data.get('is_pit_lap', False)
         tire_compound = driver_data.get('tire_compound', 'UNKNOWN')
-        tire_age = driver_data.get('tire_age', 0)
         
-        # Model prediction - DIEPER: predict final position
-        try:
-            pred_pos = model.predict(driver_data)
-            if pred_pos is None:
-                pred_pos = actual_pos
-        except:
+        # Get model prediction (position, confidence)
+        if driver_id in model_predictions:
+            pred_pos, model_confidence = model_predictions[driver_id]
+        else:
             pred_pos = actual_pos
+            model_confidence = 30.0
         
-        # ===== VERBETERD SCORING SYSTEEM =====
+        # ===== SCORING BASED ON CURRENT POSITION & PACE =====
         
-        # 1. Position score (35%) - hoe beter de huidige positie
+        # 1. Position score
         position_score = max(0, (20 - actual_pos) / 20 * 100)
         
-        # 2. Pace score (35%) - hoe dicht bij gemiddelde lap time
+        # 2. Pace score
         pace_score = 0
         if lap_time and avg_lap_time > 0:
             try:
@@ -155,50 +152,37 @@ def predict_lap_winner(model, lap_data, lap_num, total_laps, show_all=False):
             except:
                 pace_score = 0
         
-        # 3. TIRE STRATEGY score (20%) - beter dan voor
-        tire_strategy_score = 50  # baseline
-        
-        # Tire compound factor (SOFT sneller, HARD duurzamer)
+        # 3. Tire strategy bonus
+        tire_strategy_score = 50
         if tire_compound == 'SOFT':
-            tire_strategy_score += 15
-        elif tire_compound == 'MEDIUM':
             tire_strategy_score += 10
-        elif tire_compound == 'HARD':
+        elif tire_compound == 'MEDIUM':
             tire_strategy_score += 5
-        elif tire_compound == 'INTERMEDIATE':
-            tire_strategy_score += 12
-        elif tire_compound == 'WET':
-            tire_strategy_score -= 5
-        
-        # Tire age effect (jong = goed, oud = slecht)
-        if tire_age and tire_age > 0:
-            age_score = max(0, 100 - (tire_age * 5))  # -5% per lap oud
-            tire_strategy_score = (tire_strategy_score * 0.7) + (age_score * 0.3)
         
         tire_strategy_score = max(0, min(100, tire_strategy_score))
         
-        # 4. Consistency score (10%) - pit stop penalty
-        consistency_score = 100 if not pit_stop else 40
-        
-        # ===== GECOMBINEERDE SCORE =====
+        # ===== COMBINE SCORES WITH MODEL CONFIDENCE =====
+        # Weighted combination
         total_accuracy = (
-            position_score * 0.35 +
-            pace_score * 0.35 +
-            tire_strategy_score * 0.20 +
-            consistency_score * 0.10
+            position_score * 0.3 +
+            pace_score * 0.3 +
+            tire_strategy_score * 0.15 +
+            model_confidence * 0.25  # Model confidence has strong weight
         )
+        
+        # HARD CAP: Never 100%
+        total_accuracy = min(79.9, total_accuracy)  # Max 79.9%
+        total_accuracy = max(15.0, total_accuracy)  # Min 15%
         
         predictions.append({
             'driver': driver_id,
             'actual_pos': actual_pos,
-            'pred_pos': int(pred_pos) if pred_pos else actual_pos,
+            'pred_pos': int(pred_pos),
             'accuracy': total_accuracy,
+            'model_confidence': model_confidence,
             'pos_score': position_score,
             'pace_score': pace_score,
-            'tire_score': tire_strategy_score,
-            'pit': pit_stop,
-            'tire_compound': tire_compound,
-            'tire_age': tire_age
+            'tire_score': tire_strategy_score
         })
     
     # Sort by accuracy
@@ -207,13 +191,9 @@ def predict_lap_winner(model, lap_data, lap_num, total_laps, show_all=False):
     if show_all:
         return predictions
     else:
-        # Voor live updates: alleen top realistic tonen
-        top_realistic = []
-        for pred in predictions:
-            if pred['actual_pos'] <= 10 and pred['accuracy'] > 40:
-                top_realistic.append(pred)
-        
-        return (top_realistic[:5] if len(top_realistic) >= 3 else predictions[:5])
+        # Return top realistic predictions
+        top_realistic = [p for p in predictions if p['actual_pos'] <= 15][:5]
+        return top_realistic if len(top_realistic) >= 3 else predictions[:5]
 
 
 def analyze_tire_strategy(laps_by_number):
@@ -318,57 +298,67 @@ def main():
     
     print(f" Georganiseerd in {total_laps} laps")
     
-    # Initialize model
-    model = ContinuousModelLearner(learning_decay=0.85, min_samples_to_train=15)
-    
-    # Pre-train on historical data to improve confidence
+    # Initialize INCREMENTAL model
     print("\n" + "="*70)
-    print("[PRETRAIN] Loading historical F1 race data...")
+    print("[INIT] Initializing Incremental Learning Model")
     print("="*70)
-    model.pretrain_on_historical_data('processed_f1_training_data.csv')
+    model = ContinuousModelLearner(learning_decay=0.9, min_samples_to_train=3)
+    
+    # Pre-train on historical data
+    print("\n[PRETRAIN] Loading 5-year F1 historical data...")
+    model.pretrain_on_historical_data('f1_historical_5years.csv')
     
     print("\n" + "="*70)
     print(f"[RACE-START] LIVE PREDICTION - {race_info['event']}")
     print(f"   Totaal laps: {total_laps}")
+    print(f"   Model updates EVERY LAP with partial_fit (incremental learning)")
+    print(f"   Confidence: NEVER 100% (max 80% - realistic predictions only)")
     print("="*70)
     
     # Initialize output storage
     predictions_log = []
     
-    # Train and predict per lap
+    # ===== TRAIN AND PREDICT PER LAP WITH INCREMENTAL UPDATES =====
     for lap_num in sorted_laps:
         lap_data_list = laps_by_number[lap_num]
+        
+        # ADD lap data to model buffer
         model.add_lap_data(lap_num, lap_data_list)
         
-        # Update model
-        if lap_num >= 2:
-            model.update_model(target_variable='position', epochs=3)
+        # ===== UPDATE MODEL WITH PARTIAL_FIT (CONTINUOUS LEARNING) =====
+        # THIS IS THE KEY - Model learns from this lap immediately!
+        if lap_num >= 1:  # Start updating from lap 1
+            update_result = model.update_model(target_variable='position')
+            if update_result['status'] == 'updated':
+                print(f"[UPDATE] Lap {lap_num}: Model trained on {update_result['samples_used']} samples (MAE: {update_result['mae']:.2f})")
         
-        # Show predictions every lap after lap 5
-        if lap_num >= 5:
+        # Show predictions every lap after lap 2
+        if lap_num >= 2:
             top5 = predict_lap_winner(model, lap_data_list, lap_num, total_laps)
             
             if top5:
                 progress = (lap_num / total_laps) * 100
-                print(f"\n[LAP] {lap_num}/{total_laps} ({progress:.0f}%)")
-                print("   Top Winners (Position + Pace + Tire Strategy):")
-                print("   " + "-"*70)
+                print(f"\n[LAP {lap_num}/{total_laps}] {progress:.0f}% complete - INCREMENTAL PREDICTIONS:")
+                print("   " + "-"*75)
                 
-                medals = ['[1st]', '[2nd]', '[3rd]', '     ', '     ']
+                medals = ['🥇 1st', '🥈 2nd', '🥉 3rd', '  4th', '  5th']
                 lap_prediction = f"LAP {lap_num}: "
                 for rank, pred in enumerate(top5):
                     driver = pred['driver']
                     accuracy = pred['accuracy']
+                    model_conf = pred['model_confidence']
                     pos = pred['actual_pos']
                     pace = pred['pace_score']
-                    tire_score = pred.get('tire_score', 0)
-                    pit = "[PIT]" if pred['pit'] else "     "
                     
                     bar_len = int(accuracy / 5)
-                    bar = "#" * bar_len + "-" * (20 - bar_len)
+                    bar = "█" * bar_len + "░" * (16 - bar_len)
                     
-                    print(f"   {medals[rank]} #{rank+1} | Driver {driver:3s} | P:{pos:2.0f} | Pace:{pace:5.1f}% | Tire:{tire_score:5.1f}% | Score:{accuracy:5.1f}% {pit} | {bar}")
-                    lap_prediction += f"{rank+1}. Driver {driver} ({accuracy:.1f}%) | "
+                    # Cap display at 79.9%
+                    display_acc = min(79.9, accuracy)
+                    
+                    print(f"   {medals[rank]} | Driver {driver:3s} | Current Pos: {pos:2.0f} | Pace: {pace:5.1f}% | Confidence: {display_acc:5.1f}% | {bar}")
+                    lap_prediction += f"{rank+1}. {driver}({display_acc:.1f}%) | "
+                    lap_prediction += f"{rank+1}. Driver {driver} ({display_accuracy:.1f}%) | "
                 
                 predictions_log.append(lap_prediction)
     
@@ -385,7 +375,7 @@ def main():
     # Sort by actual position
     actual_finishers = sorted(final_lap_data, key=lambda x: x.get('position', 999))
     
-    print("\nActual Finishers | AI Prediction | Current Pos | Pred Pos | Accuracy:")
+    print("\nActual Finishers | AI Prediction | Current Pos | Pred Pos | Accuracy (max 85%):")
     print("-"*70)
     final_results = []
     for i, driver_data in enumerate(actual_finishers, 1):
@@ -402,7 +392,7 @@ def main():
         
         if pred_data:
             pred_pos = pred_data['pred_pos']
-            accuracy = pred_data['accuracy']
+            accuracy = min(85, pred_data['accuracy'])  # Cap at 85% for display
             print(f"   {i:2d}. Driver {driver_id:3s} ({tire_final:6s}) | Pos:{actual_pos:2.0f}->{pred_pos:2d} | Current:{actual_pos:2.0f} | Pred:{pred_pos:2d} | {accuracy:5.1f}%")
             final_results.append({
                 'pos': i,
@@ -457,7 +447,7 @@ def main():
     
     # DEEP AI ANALYSIS - All drivers current vs predicted
     print("\n" + "="*70)
-    print("[AI] DEEP AI ANALYSIS - CURRENT vs PREDICTED FINISH")
+    print("[AI] DEEP AI ANALYSIS - REALISTIC CONFIDENCE (max 85%)")
     print("="*70)
     print("\nAll Drivers Position Evolution:")
     print("-"*70)
@@ -471,7 +461,7 @@ def main():
         driver_id = pred['driver']
         current_pos = pred['current_pos']
         pred_pos = pred['pred_pos']
-        accuracy = pred['accuracy']
+        accuracy = min(85, pred['accuracy'])  # Cap at 85% for realistic display
         
         # Determine position change
         if pred_pos < current_pos:
@@ -506,12 +496,14 @@ def main():
             f.write(pred + "\n")
         
         f.write("\n" + "="*70 + "\n")
-        f.write("FINAL CLASSIFICATION - ALLE DRIVERS\n")
+        f.write("FINAL CLASSIFICATION - ALLE DRIVERS (Confidence capped at max 85%)\n")
         f.write("="*70 + "\n")
         f.write("Driver | Actual Pos | Predicted Pos | Confidence | Tire\n")
         f.write("-"*70 + "\n")
         for result in final_results:
-            f.write(f"   {result['pos']:2d}. Driver {result['driver']:3s} | {result['actual']:10.0f} | {result['predicted']:13d} | {result['accuracy']:10.1f}% | {result['tire']}\n")
+            # Cap accuracy at 85% for realistic display
+            display_acc = min(85, result['accuracy'])
+            f.write(f"   {result['pos']:2d}. Driver {result['driver']:3s} | {result['actual']:10.0f} | {result['predicted']:13d} | {display_acc:10.1f}% | {result['tire']}\n")
         
         f.write("\n" + "="*70 + "\n")
         f.write("TIRE STRATEGY ANALYSIS\n")
@@ -524,12 +516,14 @@ def main():
             f.write(f"\nFastest Tire: {fastest['compound']} ({fastest['avg']:.2f}s)\n")
         
         f.write("\n" + "="*70 + "\n")
-        f.write("DEEP AI ANALYSIS - CURRENT vs PREDICTED\n")
+        f.write("DEEP AI ANALYSIS - CURRENT vs PREDICTED (Realistic Confidence)\n")
         f.write("="*70 + "\n")
-        f.write("Driver | Current Pos | Predicted Pos | Confidence\n")
+        f.write("Driver | Current Pos | Predicted Pos | Confidence (max 85%)\n")
         f.write("-"*70 + "\n")
         for pred in all_predictions_sorted:
-            f.write(f"   {pred['driver']:3s} | {pred['current_pos']:11.0f} | {pred['pred_pos']:13.0f} | {pred['accuracy']:10.1f}%\n")
+            # Cap at 85% for realism
+            display_conf = min(85, pred['accuracy'])
+            f.write(f"   {pred['driver']:3s} | {pred['current_pos']:11.0f} | {pred['pred_pos']:13.0f} | {display_conf:10.1f}%\n")
         
         f.write("\n" + "="*70 + "\n")
     

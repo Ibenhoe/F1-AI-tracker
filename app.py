@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 import threading
 import time
-from continuous_model_learner import ContinuousModelLearner
+from continuous_model_learner_v2 import ContinuousModelLearner
 from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 import fastf1
@@ -220,23 +220,32 @@ def init_race():
         
         print(f"[BACKEND] ✅ Loaded {len(drivers)} drivers")
         
-        # Load and train AI model with real data
+        # Load and train AI model with historical data first
         try:
             print("[BACKEND] Loading AI model...")
             model = ContinuousModelLearner()
             model_cache['model'] = model
             
-            # Pre-train on historical data if available
+            # PRE-TRAIN on historical F1 data for better baseline
+            historical_csv = 'f1_historical_5years.csv'
+            if os.path.exists(historical_csv):
+                print(f"[BACKEND] Pre-training model on historical data from {historical_csv}...")
+                model.pretrain_on_historical_data(csv_path=historical_csv)
+            else:
+                print(f"[BACKEND] ⚠️ Historical data not found, training from current lap data")
+            
+            # Then fine-tune on current race lap data if available
             if laps is not None and len(laps) > 0:
-                print(f"[BACKEND] Pre-training AI model on {len(laps)} laps...")
-                # Train model on real lap data
+                print(f"[BACKEND] Fine-tuning AI model on {len(laps)} race laps...")
+                # Train model on real lap data to adapt to current race
                 try:
-                    model.update_model(laps)  # Use update_model, not update_with_lap_data
+                    for _ in range(3):  # 3 passes on current race data
+                        model.update_model(target_variable='position')
                 except Exception as train_err:
-                    print(f"[BACKEND] ⚠️ Could not train model: {train_err}")
+                    print(f"[BACKEND] ⚠️ Could not fine-tune model: {train_err}")
             
             model_cache['loaded'] = True
-            print("[BACKEND] ✅ AI model ready!")
+            print("[BACKEND] ✅ AI model ready! (Pre-trained + fine-tuned)")
         except Exception as e:
             print(f"[BACKEND] Error loading AI model: {str(e)}")
             model_cache['model'] = None
