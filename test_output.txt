@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "C:\Users\ibenv\OneDrive\Bureaublad\Powershell_scripting_Iben_Vanthournout\F1-AI-tracker\race_predictor.py", line 496, in <module>
-    main()
-    ^^^^
-NameError: name 'main' is not defined. Did you mean: 'min'?
