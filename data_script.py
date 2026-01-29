@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 from datetime import datetime
+import os
 
 # 1. DATA LADEN
 # Zorg dat je csv bestanden in dezelfde map staan als dit script
@@ -16,6 +17,14 @@ lap_times = pd.read_csv('../F1_data_mangement/lap_times.csv')
 pit_stops = pd.read_csv('../F1_data_mangement/pit_stops.csv')
 qualifying = pd.read_csv('../F1_data_mangement/qualifying.csv')
 seasons = pd.read_csv('../F1_data_mangement/seasons.csv')
+
+# Weerdata laden (indien beschikbaar)
+if os.path.exists('f1_weather_data.csv'):
+    print("Weerdata gevonden en aan het laden...")
+    weather_data = pd.read_csv('f1_weather_data.csv')
+else:
+    print("LET OP: 'f1_weather_data.csv' niet gevonden. Run eerst 'fetch_weather.py'!")
+    weather_data = pd.DataFrame()
 
 # 2. DATA SAMENVOEGEN (MERGEN)
 # We beginnen met 'results' als basis, want daar staat elke finish in.
@@ -59,6 +68,10 @@ lap_times_agg = lap_times.groupby(['raceId', 'driverId']).agg(
     std_lap_time_ms=('milliseconds', 'std')
 ).reset_index()
 df = pd.merge(df, lap_times_agg, on=['raceId', 'driverId'], how='left')
+
+# Stap J: Weer toevoegen
+if not weather_data.empty:
+    df = pd.merge(df, weather_data, on='raceId', how='left')
 
 # 3. FEATURE ENGINEERING (De data slim maken voor AI)
 
