@@ -1,0 +1,88 @@
+======================================================================
+[F1-CHAMP] F1 RACE PREDICTOR - Chinese Grand Prix
+======================================================================
+
+Race: Chinese Grand Prix
+Totaal laps: 56
+Timestamp: 2026-01-29 21:50:46
+
+PREDICTION EVOLUTION PER LAP:
+----------------------------------------------------------------------
+LAP 2: 1. Driver 1 (73.4%) | 2. Driver 14 (63.1%) | 3. Driver 11 (59.2%) | 4. Driver 4 (55.5%) | 5. Driver 81 (53.9%) | 
+LAP 3: 1. Driver 1 (71.9%) | 2. Driver 14 (62.8%) | 3. Driver 11 (58.3%) | 4. Driver 4 (54.8%) | 5. Driver 81 (52.9%) | 
+LAP 4: 1. Driver 1 (72.3%) | 2. Driver 14 (62.0%) | 3. Driver 11 (57.5%) | 4. Driver 4 (53.9%) | 5. Driver 81 (52.4%) | 
+LAP 5: 1. Driver 1 (72.1%) | 2. Driver 11 (60.5%) | 3. Driver 14 (56.8%) | 4. Driver 4 (54.5%) | 5. Driver 81 (53.0%) | 
+LAP 6: 1. Driver 1 (71.8%) | 2. Driver 11 (60.6%) | 3. Driver 14 (58.5%) | 4. Driver 4 (54.5%) | 5. Driver 81 (52.3%) | 
+LAP 7: 1. Driver 1 (72.3%) | 2. Driver 11 (61.2%) | 3. Driver 4 (55.8%) | 4. Driver 14 (54.4%) | 5. Driver 81 (53.3%) | 
+LAP 8: 1. Driver 1 (74.3%) | 2. Driver 11 (62.9%) | 3. Driver 4 (59.3%) | 4. Driver 14 (57.5%) | 5. Driver 81 (54.7%) | 
+LAP 9: 1. Driver 1 (80.1%) | 2. Driver 11 (68.7%) | 3. Driver 4 (65.4%) | 4. Driver 14 (63.9%) | 5. Driver 81 (59.9%) | 
+LAP 10: 1. Driver 1 (80.0%) | 2. Driver 11 (69.1%) | 3. Driver 4 (66.0%) | 4. Driver 14 (64.2%) | 5. Driver 81 (61.2%) | 
+LAP 11: 1. Driver 1 (71.5%) | 2. Driver 11 (60.7%) | 3. Driver 4 (57.0%) | 4. Driver 16 (53.7%) | 5. Driver 81 (50.9%) | 
+LAP 12: 1. Driver 1 (78.2%) | 2. Driver 11 (66.0%) | 3. Driver 4 (63.1%) | 4. Driver 16 (60.6%) | 5. Driver 81 (58.4%) | 
+LAP 13: 1. Driver 1 (63.0%) | 2. Driver 4 (60.7%) | 3. Driver 16 (54.9%) | 4. Driver 81 (53.2%) | 5. Driver 14 (53.1%) | 
+LAP 14: 1. Driver 4 (69.9%) | 2. Driver 16 (60.9%) | 3. Driver 14 (58.1%) | 4. Driver 81 (55.2%) | 5. Driver 55 (52.2%) | 
+LAP 15: 1. Driver 4 (66.2%) | 2. Driver 1 (64.4%) | 3. Driver 16 (58.0%) | 4. Driver 11 (56.3%) | 5. Driver 14 (55.3%) | 
+LAP 16: 1. Driver 4 (65.3%) | 2. Driver 1 (64.6%) | 3. Driver 11 (55.4%) | 4. Driver 14 (53.3%) | 5. Driver 16 (52.3%) | 
+LAP 17: 1. Driver 1 (68.3%) | 2. Driver 4 (68.0%) | 3. Driver 14 (56.9%) | 4. Driver 16 (56.2%) | 5. Driver 11 (55.8%) | 
+LAP 18: 1. Driver 4 (67.5%) | 2. Driver 1 (67.5%) | 3. Driver 11 (60.7%) | 4. Driver 14 (58.9%) | 5. Driver 81 (58.2%) | 
+LAP 19: 1. Driver 1 (70.9%) | 2. Driver 11 (56.3%) | 3. Driver 4 (54.4%) | 4. Driver 14 (54.2%) | 5. Driver 16 (52.1%) | 
+LAP 20: 1. Driver 1 (71.2%) | 2. Driver 11 (56.0%) | 3. Driver 4 (55.1%) | 4. Driver 14 (54.0%) | 5. Driver 81 (52.5%) | 
+LAP 21: 1. Driver 1 (84.8%) | 2. Driver 4 (73.1%) | 3. Driver 11 (72.3%) | 4. Driver 14 (63.6%) | 5. Driver 16 (58.2%) | 
+LAP 22: 1. Driver 1 (68.5%) | 2. Driver 11 (57.2%) | 3. Driver 14 (57.2%) | 4. Driver 63 (51.7%) | 5. Driver 4 (51.0%) | 
+LAP 23: 1. Driver 1 (64.7%) | 2. Driver 81 (56.7%) | 3. Driver 16 (56.5%) | 4. Driver 11 (55.3%) | 5. Driver 14 (52.1%) | 
+LAP 24: 1. Driver 55 (60.5%) | 2. Driver 16 (59.6%) | 3. Driver 3 (57.7%) | 4. Driver 81 (57.5%) | 5. Driver 18 (56.6%) | 
+LAP 25: 1. Driver 31 (58.2%) | 2. Driver 44 (57.5%) | 3. Driver 20 (56.7%) | 4. Driver 22 (56.6%) | 5. Driver 23 (55.6%) | 
+LAP 26: 1. Driver 10 (54.8%) | 2. Driver 1 (50.8%) | 3. Driver 24 (44.9%) | 4. Driver 2 (40.8%) | 5. Driver 4 (39.7%) | 
+LAP 27: 1. Driver 1 (80.3%) | 2. Driver 4 (66.0%) | 3. Driver 16 (62.5%) | 4. Driver 11 (61.9%) | 5. Driver 14 (61.3%) | 
+LAP 28: 1. Driver 20 (53.1%) | 2. Driver 18 (51.9%) | 3. Driver 4 (51.8%) | 4. Driver 1 (50.8%) | 5. Driver 81 (44.5%) | 
+LAP 29: 1. Driver 1 (61.4%) | 2. Driver 18 (56.3%) | 3. Driver 20 (55.9%) | 4. Driver 14 (50.3%) | 5. Driver 4 (49.4%) | 
+LAP 30: 1. Driver 1 (65.6%) | 2. Driver 18 (56.3%) | 3. Driver 4 (54.9%) | 4. Driver 14 (51.3%) | 5. Driver 16 (50.4%) | 
+LAP 31: 1. Driver 1 (59.6%) | 2. Driver 18 (56.3%) | 3. Driver 14 (52.0%) | 4. Driver 4 (49.5%) | 5. Driver 11 (48.7%) | 
+LAP 32: 1. Driver 1 (72.5%) | 2. Driver 4 (60.7%) | 3. Driver 14 (56.7%) | 4. Driver 16 (55.9%) | 5. Driver 11 (55.6%) | 
+LAP 33: 1. Driver 1 (74.2%) | 2. Driver 4 (62.4%) | 3. Driver 14 (59.6%) | 4. Driver 11 (57.7%) | 5. Driver 16 (57.5%) | 
+LAP 34: 1. Driver 1 (72.2%) | 2. Driver 4 (59.7%) | 3. Driver 14 (57.3%) | 4. Driver 11 (55.4%) | 5. Driver 16 (55.1%) | 
+LAP 35: 1. Driver 1 (71.7%) | 2. Driver 4 (59.9%) | 3. Driver 14 (56.4%) | 4. Driver 11 (55.3%) | 5. Driver 16 (55.1%) | 
+LAP 36: 1. Driver 1 (75.3%) | 2. Driver 4 (63.4%) | 3. Driver 11 (59.1%) | 4. Driver 16 (58.6%) | 5. Driver 14 (57.8%) | 
+LAP 37: 1. Driver 1 (71.4%) | 2. Driver 4 (59.1%) | 3. Driver 11 (54.3%) | 4. Driver 14 (54.0%) | 5. Driver 16 (54.0%) | 
+LAP 38: 1. Driver 1 (71.6%) | 2. Driver 4 (59.6%) | 3. Driver 14 (54.7%) | 4. Driver 11 (54.6%) | 5. Driver 16 (54.4%) | 
+LAP 39: 1. Driver 1 (73.8%) | 2. Driver 4 (61.0%) | 3. Driver 11 (59.8%) | 4. Driver 14 (55.5%) | 5. Driver 16 (52.8%) | 
+LAP 40: 1. Driver 1 (71.7%) | 2. Driver 4 (58.5%) | 3. Driver 11 (57.5%) | 4. Driver 16 (53.7%) | 5. Driver 14 (52.9%) | 
+LAP 41: 1. Driver 1 (73.2%) | 2. Driver 4 (60.7%) | 3. Driver 11 (59.5%) | 4. Driver 16 (55.7%) | 5. Driver 14 (54.0%) | 
+LAP 42: 1. Driver 1 (70.1%) | 2. Driver 11 (56.9%) | 3. Driver 4 (55.6%) | 4. Driver 16 (52.1%) | 5. Driver 14 (51.1%) | 
+LAP 43: 1. Driver 1 (70.8%) | 2. Driver 4 (58.0%) | 3. Driver 11 (57.5%) | 4. Driver 16 (52.8%) | 5. Driver 55 (49.6%) | 
+LAP 44: 1. Driver 1 (71.8%) | 2. Driver 4 (60.3%) | 3. Driver 11 (58.4%) | 4. Driver 16 (54.1%) | 5. Driver 55 (51.3%) | 
+LAP 45: 1. Driver 1 (69.3%) | 2. Driver 4 (57.6%) | 3. Driver 11 (55.3%) | 4. Driver 14 (53.7%) | 5. Driver 16 (50.9%) | 
+LAP 46: 1. Driver 1 (69.3%) | 2. Driver 4 (57.5%) | 3. Driver 11 (55.6%) | 4. Driver 14 (51.6%) | 5. Driver 16 (51.0%) | 
+LAP 47: 1. Driver 1 (69.4%) | 2. Driver 4 (56.6%) | 3. Driver 11 (55.7%) | 4. Driver 14 (51.7%) | 5. Driver 16 (50.8%) | 
+LAP 48: 1. Driver 1 (69.5%) | 2. Driver 4 (57.5%) | 3. Driver 11 (55.5%) | 4. Driver 14 (52.0%) | 5. Driver 16 (51.0%) | 
+LAP 49: 1. Driver 1 (69.3%) | 2. Driver 4 (57.2%) | 3. Driver 11 (55.5%) | 4. Driver 14 (54.8%) | 5. Driver 16 (50.3%) | 
+LAP 50: 1. Driver 1 (68.7%) | 2. Driver 4 (55.8%) | 3. Driver 14 (55.2%) | 4. Driver 11 (54.8%) | 5. Driver 16 (50.2%) | 
+LAP 51: 1. Driver 1 (69.0%) | 2. Driver 4 (56.2%) | 3. Driver 11 (55.1%) | 4. Driver 14 (54.5%) | 5. Driver 16 (50.3%) | 
+LAP 52: 1. Driver 1 (68.3%) | 2. Driver 4 (56.6%) | 3. Driver 14 (55.2%) | 4. Driver 11 (54.9%) | 5. Driver 16 (50.1%) | 
+LAP 53: 1. Driver 1 (68.7%) | 2. Driver 4 (56.2%) | 3. Driver 14 (55.2%) | 4. Driver 11 (55.0%) | 5. Driver 16 (50.6%) | 
+LAP 54: 1. Driver 1 (68.4%) | 2. Driver 4 (56.1%) | 3. Driver 11 (54.8%) | 4. Driver 14 (53.3%) | 5. Driver 16 (51.0%) | 
+LAP 55: 1. Driver 1 (68.3%) | 2. Driver 4 (55.1%) | 3. Driver 14 (54.3%) | 4. Driver 11 (54.0%) | 5. Driver 16 (49.3%) | 
+LAP 56: 1. Driver 1 (67.2%) | 2. Driver 4 (56.0%) | 3. Driver 14 (53.9%) | 4. Driver 11 (53.8%) | 5. Driver 16 (50.0%) | 
+
+======================================================================
+FINAL CLASSIFICATION - ALLE DRIVERS (Confidence capped at max 79.9%)
+======================================================================
+Driver | Actual Pos | Predicted Pos | Confidence | Tire
+----------------------------------------------------------------------
+
+======================================================================
+TIRE STRATEGY ANALYSIS
+======================================================================
+HARD      : Avg 109.63s | Min  98.41s | Max 149.97s | Samples 572
+MEDIUM    : Avg 105.98s | Min  97.81s | Max 146.59s | Samples 363
+SOFT      : Avg 106.08s | Min  98.63s | Max 148.54s | Samples 72
+
+Fastest Tire: MEDIUM (105.98s)
+
+======================================================================
+DEEP AI ANALYSIS - CURRENT vs PREDICTED (Realistic Confidence)
+======================================================================
+Driver | Current Pos | Predicted Pos | Confidence (max 85%)
+----------------------------------------------------------------------
+
+======================================================================

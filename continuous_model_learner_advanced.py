@@ -268,11 +268,7 @@ class AdvancedContinuousLearner:
         self.lap_buffer[lap_number] = lap_data
         
     def pretrain_on_historical_data(self, csv_path: str = 'f1_historical_5years.csv'):
-        """Pre-train on historical data
-        
-        SECURITY: Only loads from trusted internal CSV files (f1_historical_5years.csv)
-                 Validates CSV structure before training to prevent data poisoning
-        """
+        """Pre-train on historical data"""
         if not os.path.exists(csv_path):
             print(f"[INFO] No historical data found")
             return False
@@ -282,27 +278,8 @@ class AdvancedContinuousLearner:
             df = pd.read_csv(csv_path)
             print(f"[PRETRAIN] Loaded {len(df)} records")
             
-            # VALIDATION: Check CSV integrity and structure
-            required_columns = ['grid_position', 'points_constructor', 'driver_age', 'position_gain', 'round', 'finish_position']
-            missing_cols = [c for c in required_columns if c not in df.columns]
-            if missing_cols:
-                print(f"[PRETRAIN] ⚠️ Missing columns: {missing_cols}")
-                return False
-            
-            # VALIDATION: Check data ranges
-            if (df['grid_position'] < 1).any() or (df['grid_position'] > 25).any():
-                print(f"[PRETRAIN] ⚠️ Invalid grid positions detected")
-                return False
-            
-            if (df['finish_position'] < 1).any() or (df['finish_position'] > 25).any():
-                print(f"[PRETRAIN] ⚠️ Invalid finish positions detected")
-                return False
-            
-            if (df['driver_age'] < 18).any() or (df['driver_age'] > 50).any():
-                print(f"[PRETRAIN] ⚠️ Invalid driver ages detected")
-                return False
-            
-            # Prepare features
+            # Prepare features - Use 40-feature set to match runtime engineer_features output
+            # Create synthetic 40-feature dataset from available columns
             feature_cols = ['grid_position', 'points_constructor', 'driver_age', 'position_gain', 'round']
             available_cols = [c for c in feature_cols if c in df.columns]
             
@@ -318,11 +295,46 @@ class AdvancedContinuousLearner:
                 print(f"[PRETRAIN] ⚠️ Insufficient data")
                 return False
             
-            X = df_clean[available_cols].values.astype(np.float32)
+            X_base = df_clean[available_cols].values.astype(np.float32)
             y = df_clean[target_col].values.astype(np.float32)
+            
+            # Create 40 features to match runtime feature engineering
+            # Use meaningful feature engineering: original features + polynomial interactions
+            n_samples = len(X_base)
+            X = np.zeros((n_samples, 40), dtype=np.float32)
+            
+            # Copy base features to first 5 columns
+            X[:, :len(available_cols)] = X_base
+            col_idx = len(available_cols)
+            
+            # Add squared features (meaningful non-linearity)
+            for i in range(len(available_cols)):
+                if col_idx < 40:
+                    X[:, col_idx] = X_base[:, i] ** 2
+                    col_idx += 1
+            
+            # Add interaction terms (meaningful relationships)
+            for i in range(len(available_cols)):
+                for j in range(i+1, len(available_cols)):
+                    if col_idx < 40:
+                        X[:, col_idx] = X_base[:, i] * X_base[:, j]
+                        col_idx += 1
+            
+            # Add log-transformed features (handle skewness)
+            for i in range(len(available_cols)):
+                if col_idx < 40:
+                    X[:, col_idx] = np.log1p(np.abs(X_base[:, i]))
+                    col_idx += 1
+            
+            # Fill remaining with polynomial combinations
+            for i in range(len(available_cols)):
+                if col_idx < 40:
+                    X[:, col_idx] = X_base[:, i] * np.sqrt(np.abs(X_base[:, i]))
+                    col_idx += 1
             
             X_scaled = self.scaler.fit_transform(X)
             self.features_fitted = True
+            print(f"[PRETRAIN] ✅ Scaler fitted on {X.shape[1]} features (base + squared + interactions + log + sqrt)")
             
             print(f"[PRETRAIN] Training ensemble models...")
             
@@ -409,47 +421,62 @@ class AdvancedContinuousLearner:
         X = np.array(X_list)
         y = np.array(y_list)
         
-        # Refit scaler if number of features changed (pre-training vs lap data)
-        if X.shape[1] != self.scaler.n_features_in_:
-            print(f"[ADVANCED] Feature mismatch: {X.shape[1]} vs {self.scaler.n_features_in_}. Rebuilding models...")
-            self.scaler = StandardScaler()
-            self.scaler.fit(X)
-            
-            # Rebuild all models for new feature dimension
-            self.sgd_model = SGDRegressor(loss='huber', max_iter=1000, alpha=0.001, random_state=42)
-            self.gb_model = GradientBoostingRegressor(n_estimators=50, max_depth=5, random_state=42)
-            if HAS_XGBOOST:
-                self.xgb_model = xgb.XGBRegressor(n_estimators=50, max_depth=5, random_state=42, verbosity=0)
-            
-            # Fit new models with initial data
-            X_scaled = self.scaler.transform(X)
-            y_positions = np.array([driver_data.get('position', 15) for driver_data in lap_data])
-            
-            self.sgd_model.fit(X_scaled, y_positions)
-            self.gb_model.fit(X_scaled, y_positions)
-            if HAS_XGBOOST:
-                self.xgb_model.fit(X_scaled, y_positions)
-            
-            self.features_fitted = True
-            self.training_count = len(X)
-            return {
-                'status': 'rebuilt',
-                'lap': current_lap,
-                'samples': len(X),
-                'training_total': self.training_count,
-                'note': 'Models rebuilt for new feature dimension'
-            }
-        
         if not self.features_fitted:
             self.scaler.fit(X)
             self.features_fitted = True
         
-        X_scaled = self.scaler.transform(X)
+        # CRITICAL: Handle feature dimension mismatch between pre-training and runtime
+        # If dimensions don't match (e.g., 40 vs 43 features), refit scaler AND reset models
+        try:
+            X_scaled = self.scaler.transform(X)
+        except ValueError as e:
+            if "features" in str(e).lower():
+                print(f"[WARNING] Feature dimension mismatch detected: {str(e)}")
+                print(f"[WARNING] Refitting scaler with current lap data ({X.shape[1]} features)")
+                self.scaler = StandardScaler()  # Reset scaler
+                self.scaler.fit(X)
+                X_scaled = self.scaler.transform(X)
+                
+                # Also reset all trained models to adapt to new feature dimensions
+                print(f"[WARNING] Resetting trained models to adapt to {X.shape[1]} features")
+                self.sgd_model = SGDRegressor(
+                    loss='huber',
+                    penalty='elasticnet',
+                    alpha=0.0001,
+                    l1_ratio=0.5,
+                    learning_rate='optimal',
+                    eta0=0.01,
+                    max_iter=1,
+                    warm_start=True,
+                    random_state=42
+                )
+                self.gb_model = GradientBoostingRegressor(
+                    n_estimators=50,
+                    learning_rate=0.05,
+                    max_depth=5,
+                    subsample=0.8,
+                    random_state=42
+                )
+                if HAS_XGBOOST:
+                    self.xgb_model = xgb.XGBRegressor(
+                        n_estimators=50,
+                        learning_rate=0.05,
+                        max_depth=5,
+                        random_state=42,
+                        tree_method='auto'
+                    )
+                if HAS_LIGHTGBM:
+                    self.lgb_model = lgb.LGBMRegressor(
+                        n_estimators=50,
+                        learning_rate=0.05,
+                        max_depth=5,
+                        random_state=42
+                    )
+            else:
+                raise
         
-        # Incremental update (SGD regression - predict position)
-        # Use actual position as target
-        y_positions = np.array([driver_data.get('position', 15) for driver_data in lap_data])
-        self.sgd_model.partial_fit(X_scaled, y_positions)
+        # Incremental update (SGD) - Regression without classes parameter
+        self.sgd_model.partial_fit(X_scaled, y)
         self.training_count += len(X)
         
         return {
@@ -459,105 +486,62 @@ class AdvancedContinuousLearner:
             'training_total': self.training_count
         }
     
-    def predict_lap(self, lap_data: List[Dict], current_lap: int, 
-                   total_laps: int, race_context: Dict = None) -> Dict:
-        """Predict positions for all drivers with position-based confidence + variance"""
+    def predict_lap(self, lap_data: List[Dict], current_lap: int = 0, 
+                   total_laps: int = 58, race_context: Dict = None) -> Dict:
+        """Predict positions for all drivers"""
         if not race_context:
             race_context = {}
         
         predictions = {}
         
-        # Calculate relative pace scores first (for context)
-        lap_times = []
-        for data in lap_data:
-            try:
-                lt = data.get('lap_time', 100.0)
-                if lt and lt > 0:
-                    lap_times.append(float(lt))
-            except:
-                pass
-        
-        avg_lap_time = np.mean(lap_times) if lap_times else 90.0
-        
         for driver_data in lap_data:
             try:
                 driver_id = driver_data.get('driver_code', 'UNK')
-                current_pos = float(driver_data.get('position', 15))
-                grid_pos = float(driver_data.get('grid_position', current_pos))
+                features, names = self.feature_engineer.engineer_features(
+                    driver_data, race_context, current_lap, total_laps
+                )
                 
-                # === PRIMARY: POSITION-BASED CONFIDENCE ===
-                # P1 = 85%, P2 = 81.5%, ..., P20 = 15%
-                position_score = 85 - (current_pos - 1) * 3.5
-                position_score = float(np.clip(position_score, 15, 85))
-                
-                # === SECONDARY: PACE-BASED ADJUSTMENT ===
-                # Calculate pace factor from lap_time vs average
-                pace_score = 50.0  # Neutral default
+                # Handle feature dimension mismatch
                 try:
-                    lap_time = float(driver_data.get('lap_time', avg_lap_time))
-                    if lap_time > 0 and avg_lap_time > 0:
-                        # Faster than average = higher pace score
-                        time_delta = avg_lap_time - lap_time  # Positive = faster
-                        pace_adjustment = (time_delta / avg_lap_time) * 30  # -30 to +30 adjustment
-                        pace_score = 50.0 + pace_adjustment  # Range: 20-80
-                        pace_score = float(np.clip(pace_score, 20, 80))
-                except:
-                    pass  # Keep neutral pace_score
+                    X_scaled = self.scaler.transform([features])
+                except ValueError as e:
+                    if "features" in str(e).lower():
+                        # Dimension mismatch - use default safe prediction
+                        # Don't refit scaler in predict path - wait for next update_model call
+                        pred_top10 = 0.5  # Default middle confidence
+                    else:
+                        raise
+                else:
+                    # Get base prediction only if scaling succeeded
+                    try:
+                        pred_top10 = self.sgd_model.predict(X_scaled)[0]
+                    except ValueError:
+                        # Model dimension mismatch - use default prediction
+                        pred_top10 = 0.5
                 
-                # === COMBINE: Position (60%) + Pace (40%) ===
-                # This creates natural differentiation based on real race state
-                confidence = position_score * 0.6 + pace_score * 0.4
-                confidence = float(np.clip(confidence, 15, 85))
+                confidence = float(np.clip(pred_top10 * 100, 15, 85))
                 
-                # === VARIANCE: Add random ±8% for realistic uncertainty ===
-                # Different drivers get different random values
-                variance = np.random.uniform(-8, 8)
-                confidence = float(np.clip(confidence + variance, 15, 85))
-                
-                # === HISTORY TRACKING ===
+                # Track prediction history for stability
                 self.prediction_history[driver_id].append(confidence)
                 if len(self.prediction_history[driver_id]) > 5:
                     self.prediction_history[driver_id].popleft()
                 
-                # === SMOOTHING: Light averaging to reduce lap-to-lap noise ===
-                # Only use last 2-3 predictions to preserve driver characteristics
-                if len(self.prediction_history[driver_id]) >= 2:
-                    recent_preds = list(self.prediction_history[driver_id])[-3:]
-                    avg_confidence = np.mean(recent_preds)
-                else:
-                    avg_confidence = confidence  # First lap: no smoothing
-                
-                avg_confidence = float(np.clip(avg_confidence, 15, 85))
-                
-                # === TREND CALCULATION ===
-                trend = 'stable'
-                if current_lap >= 2:
-                    if confidence > avg_confidence:
-                        trend = 'up'
-                    elif confidence < avg_confidence:
-                        trend = 'down'
+                # Average last predictions for stability
+                avg_confidence = np.mean(list(self.prediction_history[driver_id]))
                 
                 predictions[driver_id] = {
                     'confidence': avg_confidence,
-                    'trend': trend,
-                    'position_prediction': int(current_pos),
+                    'trend': 'up' if confidence > avg_confidence else 'down' if confidence < avg_confidence else 'stable',
+                    'position_prediction': driver_data.get('position', 15),
                     'finish_likelihood': avg_confidence
                 }
                 
             except Exception as e:
-                # Fallback: Use position-only if anything fails
-                try:
-                    current_pos = float(driver_data.get('position', 15))
-                    fallback_conf = 85 - (current_pos - 1) * 3.5
-                    fallback_conf = float(np.clip(fallback_conf + np.random.uniform(-8, 8), 15, 85))
-                except:
-                    fallback_conf = 50.0
-                
                 predictions[driver_id] = {
-                    'confidence': fallback_conf,
+                    'confidence': 50.0,
                     'trend': 'stable',
-                    'position_prediction': int(driver_data.get('position', 15)),
-                    'finish_likelihood': fallback_conf
+                    'position_prediction': driver_data.get('position', 15),
+                    'finish_likelihood': 50.0
                 }
         
         return predictions

@@ -163,6 +163,8 @@ class RaceSimulator:
         
         if lap_data is not None and len(lap_data) > 0:
             # Use REAL data from FastF1
+            # IMPORTANT: Update drivers first (which trains the model), THEN get predictions
+            # This ensures predictions use the updated model with current lap's data
             lap_state['drivers'] = self._update_from_real_data(lap_number, lap_data)
             lap_state['predictions'] = self._get_predictions(lap_number, lap_data)
             lap_state['events'] = self._detect_events(lap_number, lap_data)
@@ -297,16 +299,11 @@ class RaceSimulator:
                             'points_constructor': 100.0  # Default team strength
                         })
                 
-                # Add this lap's data to the model (Advanced interface)
-                self.model.add_lap_data(lap_number, lap_drivers_for_model)
+                # Add this lap's data to the model buffer
+                self.model.add_race_data(lap_number, lap_drivers_for_model)
                 
-                # Train model EVERY LAP with continuous learning
-                result = self.model.update_model(
-                    lap_data=lap_drivers_for_model,
-                    current_lap=lap_number,
-                    total_laps=self.total_laps,
-                    race_context={'circuit': self.race_name}
-                )
+                # Train model EVERY LAP with continuous learning (v2 API)
+                result = self.model.update_model(lap_number)
                 if result.get('status') == 'updated':
                     print(f"[MODEL] Trained on {result.get('samples', 0)} drivers - LAP {lap_number}")
                 else:
@@ -435,38 +432,44 @@ class RaceSimulator:
                             'points_constructor': 100.0,
                             'lap_time': state.get('current_lap_time', 100.0),
                             'gap_to_leader': abs(state.get('gap_to_leader', 0.0)),
-                            'gap': state.get('gap_to_driver_ahead', 0.0)
+                            'gap': state.get('gap_to_driver_ahead', 0.0),
+                            'current_lap': lap_number  # IMPORTANT: Pass lap number for race-phase confidence scaling
                         })
                 
-                # Call predict_lap() which uses Advanced ML ensemble model
+                # Call predict_lap() - v2 API uses only drivers_lap_data parameter
                 if drivers_data and self.model:
-                    model_predictions_dict = self.model.predict_lap(
-                        lap_data=drivers_data,
-                        current_lap=lap_number,
-                        total_laps=self.total_laps,
-                        race_context={'circuit': self.race_name}
-                    )
+                    model_predictions_dict = self.model.predict_lap(drivers_data)
                     
                     # Convert to output format
+                    # v2 predict_lap returns Dict[str, Tuple[pred_pos, confidence]]
                     predictions = []
-                    for driver_code, pred in model_predictions_dict.items():
+                    for driver_code, pred_tuple in model_predictions_dict.items():
                         state = self.driver_states.get(driver_code, {})
+                        
+                        # pred_tuple is (predicted_position, confidence)
+                        pred_pos, confidence = pred_tuple if isinstance(pred_tuple, tuple) else (15, 50.0)
                         
                         predictions.append({
                             'position': state.get('position', 15),
                             'driver_code': driver_code,
                             'driver_name': state.get('driver_name', driver_code),
-                            'confidence': float(pred.get('confidence', 50.0)),
-                            'prediction': state.get('position', 15),
-                            'trend': pred.get('trend', 'stable'),
+                            'confidence': float(confidence),
+                            'prediction': int(pred_pos),
+                            'trend': 'stable',  # v2 doesn't provide trend, use default
                             'grid_pos': state.get('grid_position', 15),
                             'pit_stops': state.get('pit_stops', 0)
                         })
                 
-                # Log for debugging
-                top5_strs = [f"{p['driver_code']}({p['confidence']:.0f}%)" for p in predictions[:5]]
-                model_maturity = min(100, self.model.training_count // 25) if hasattr(self.model, 'training_count') else 0
-                print(f"[PREDICTIONS] Lap {lap_number} - Top 5: {top5_strs} | Model training: {model_maturity:.0f}%")
+                # SORT by confidence (winnerkans) and take TOP 5 ONLY
+                predictions.sort(key=lambda x: x['confidence'], reverse=True)
+                top_5_predictions = predictions[:5]
+                
+                # Log for debugging - show realistic top 5
+                top5_strs = [f"{p['driver_code']}({p['confidence']:.0f}%)" for p in top_5_predictions]
+                print(f"[PREDICTIONS] Lap {lap_number} - Top 5 Winners: {top5_strs}")
+                
+                # Return only top 5
+                predictions = top_5_predictions
                 
         except Exception as e:
             print(f"[SIMULATOR] Error getting predictions: {str(e)}")

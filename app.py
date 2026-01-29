@@ -12,7 +12,7 @@ import json
 from datetime import datetime
 import threading
 import time
-from continuous_model_learner_advanced import AdvancedContinuousLearner
+from continuous_model_learner_v2 import ContinuousModelLearner
 from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 import fastf1
@@ -378,8 +378,8 @@ def _fetch_fastf1_data(race_num):
 def _train_ai_model(laps):
     """Load and train AI model with historical and race-specific data"""
     try:
-        print("[BACKGROUND] Loading Advanced AI model...")
-        model = AdvancedContinuousLearner()
+        print("[BACKGROUND] Loading AI model (v2 - with pit stop analysis)...")
+        model = ContinuousModelLearner()
         model_cache['model'] = model
         
         # PRE-TRAIN on historical F1 data for better baseline
@@ -407,12 +407,8 @@ def _train_ai_model(laps):
                     })
                 
                 if lap_drivers:
-                    model.update_model(
-                        lap_data=lap_drivers,
-                        current_lap=1,
-                        total_laps=69,
-                        race_context={'circuit': 'Unknown'}
-                    )
+                    model.add_race_data(1, lap_drivers)
+                    model.update_model(1)
             except Exception as train_err:
                 print(f"[BACKGROUND] ⚠️ Could not fine-tune model: {train_err}")
         
