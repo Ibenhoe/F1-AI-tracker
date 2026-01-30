@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import './Dashboard.css'
+
 import WeatherWidget from '../components/WeatherWidget'
 import RaceInfo from '../components/RaceInfo'
 import DriversList from '../components/DriversList'
@@ -8,6 +8,9 @@ import NotificationsPanel from '../components/NotificationsPanel'
 import RaceControls from '../components/RaceControls'
 import RaceSelector from '../components/RaceSelector'
 import apiClient from '../services/apiClient'
+
+import Card from '../components/ui/Card'
+import Badge from '../components/ui/Badge'
 
 export default function Dashboard() {
   const [raceData, setRaceData] = useState(null)
@@ -158,50 +161,89 @@ export default function Dashboard() {
     setRaceRunning(false)
   }
 
-  return (
-    <div className="dashboard">
-      {/* Race Selector */}
-      <RaceSelector 
-        selectedRace={selectedRace}
-        onRaceChange={handleRaceChange}
-        disabled={raceRunning}
-      />
+    return (
+    <div className="space-y-6">
+      {/* HEADER */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+          <p className="text-sm text-neutral-400">
+            Live race tracking, model predictions and telemetry summaries.
+          </p>
+        </div>
 
-      {/* Race Controls */}
-      <RaceControls
-        raceInitialized={raceInitialized}
-        raceRunning={raceRunning}
-        connected={connected}
-      />
-
-      {/* Top Section: Weather + Race Info */}
-      <div className="dashboard-top">
-        <WeatherWidget data={weatherData} />
-        <RaceInfo data={raceData} />
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant={connected ? "success" : "danger"}>
+            {connected ? "Connected" : "Disconnected"}
+          </Badge>
+          <Badge variant={raceRunning ? "warning" : "neutral"}>
+            {raceRunning ? "Race running" : "Paused"}
+          </Badge>
+          <Badge variant="neutral">Lap {currentLap}</Badge>
+        </div>
       </div>
 
-      {/* Main Content: 3-Column Layout */}
-      <div className="dashboard-middle">
-        {/* Left Column: Drivers List */}
-        <div className="drivers-column">
-          <DriversList drivers={raceData?.drivers || []} currentLap={raceData?.currentLap} />
+      {/* TOOLBAR (selector + controls) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-5">
+          <Card className="p-4">
+            <RaceSelector
+              selectedRace={selectedRace}
+              onRaceChange={handleRaceChange}
+              disabled={raceRunning}
+            />
+          </Card>
         </div>
 
-        {/* Middle Column: Predictions + Model Metrics */}
-        <div className="predictions-column">
-          <PredictionsPanel 
-            predictions={predictions} 
-            currentLap={raceData?.currentLap}
-            modelMetrics={modelMetrics}
-            totalLaps={raceData?.totalLaps}
-          />
+        <div className="lg:col-span-7">
+          <Card className="p-4">
+            <RaceControls
+              raceInitialized={raceInitialized}
+              raceRunning={raceRunning}
+              connected={connected}
+            />
+          </Card>
+        </div>
+      </div>
+
+      {/* TOP WIDGETS */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
+        <Card>
+          <WeatherWidget data={weatherData} />
+        </Card>
+        <Card>
+          <RaceInfo data={raceData} />
+        </Card>
+      </div>
+
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        <div className="xl:col-span-4">
+          <Card className="h-full">
+            <DriversList
+              drivers={raceData?.drivers || []}
+              currentLap={raceData?.currentLap}
+            />
+          </Card>
         </div>
 
-        {/* Right Column: Notifications */}
-        <div className="notifications-column">
-          <NotificationsPanel notifications={notifications} />
+        <div className="xl:col-span-5">
+          <Card className="h-full">
+            <PredictionsPanel
+              predictions={predictions}
+              currentLap={raceData?.currentLap}
+              modelMetrics={modelMetrics}
+              totalLaps={raceData?.totalLaps}
+            />
+          </Card>
+        </div>
+
+        <div className="xl:col-span-3">
+          <Card className="h-full">
+            <NotificationsPanel notifications={notifications} />
+          </Card>
         </div>
       </div>
     </div>
-  )
+  );
 }
