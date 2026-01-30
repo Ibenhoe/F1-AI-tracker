@@ -17,6 +17,7 @@ from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 import fastf1
 from race_simulator import RaceSimulator
+from prerace_model import ensure_prerace_model_loaded
 
 # Performance optimization: Rate-limiting for Socket.IO emissions
 class RateLimiter:
@@ -54,7 +55,7 @@ if ENVIRONMENT == 'production':
         # 'https://www.yourdomain.com',  # TODO: Replace with your actual domain
     ]
     if not ALLOWED_ORIGINS or ALLOWED_ORIGINS == ['']:
-        print("⚠️  WARNING: No CORS_ALLOWED_ORIGINS set for production! Set via environment variable.")
+        print("WARNING: No CORS_ALLOWED_ORIGINS set for production! Set via environment variable.")
         ALLOWED_ORIGINS = []  # Empty list = no cross-origin requests allowed (safest)
 else:
     # Development: allow localhost variants + local network
@@ -171,6 +172,91 @@ def get_races():
     return jsonify(races), 200
 
 
+
+@app.route('/api/race/prerace-analysis', methods=['POST'])
+def get_prerace_analysis():
+    """Get pre-race analysis and AI predictions for upcoming race
+    
+    Simplified endpoint that delegates ML work to prerace_model module
+    """
+    try:
+        data = request.json or {}
+        race_num = data.get('race_number', 21)
+        grid = data.get('grid', None)
+        
+        print(f"[PRERACE API] Received request for race {race_num}")
+        
+        # Load model (simplified - delegates to prerace_model module)
+        model = ensure_prerace_model_loaded()
+        if not model or not model.loaded:
+            print("[PRERACE API] ERROR: Model failed to load")
+            return jsonify({'error': 'Could not load model'}), 500
+        
+        print(f"[PRERACE API] OK: Model loaded, generating predictions for race {race_num}...")
+        
+        # Use provided grid or default (with race-specific variations for testing)
+        if grid is None:
+            # Base grid - same drivers, but vary positions slightly based on race
+            base_grid = [
+                {'driver': 'LEC', 'number': 16, 'team': 'Ferrari'},
+                {'driver': 'PER', 'number': 11, 'team': 'Red Bull'},
+                {'driver': 'HAM', 'number': 44, 'team': 'Mercedes'},
+                {'driver': 'NOR', 'number': 4, 'team': 'McLaren'},
+                {'driver': 'PIA', 'number': 81, 'team': 'McLaren'},
+                {'driver': 'RUS', 'number': 63, 'team': 'Mercedes'},
+                {'driver': 'SAI', 'number': 55, 'team': 'Ferrari'},
+                {'driver': 'ALO', 'number': 14, 'team': 'Aston Martin'},
+                {'driver': 'OCO', 'number': 31, 'team': 'Alpine'},
+                {'driver': 'ALB', 'number': 23, 'team': 'Williams'},
+            ]
+            
+            # Add race-specific grid variations
+            # This ensures different races produce different predictions
+            race_adjustments = {
+                1: [0, 1, -1, 0, 1, 0, -1, 1, 0, 2],  # Bahrain: mix
+                2: [1, 0, 1, -1, 0, 1, 0, -1, 2, 1],  # Saudi Arabia: different order
+                3: [-1, 1, 0, 1, 0, -1, 1, 0, 1, 0],  # Australia: varied
+                5: [2, -1, 1, 0, -1, 1, 0, 1, -1, 0], # China: big shuffle
+                21: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]    # Abu Dhabi: baseline
+            }
+            
+            # Get adjustments for this race (default to Abu Dhabi baseline)
+            adjustments = race_adjustments.get(race_num, [0]*10)
+            
+            grid = []
+            for i, (driver, adj) in enumerate(zip(base_grid, adjustments)):
+                grid_pos = i + 1 + adj  # Vary position based on race
+                grid_pos = max(1, min(20, grid_pos))  # Keep in valid range
+                grid.append({
+                    'driver': driver['driver'],
+                    'number': driver['number'],
+                    'team': driver['team'],
+                    'grid_pos': grid_pos
+                })
+        
+        # Get predictions from model
+        predictions = model.predict(grid, race_num)
+        
+        print(f"[PRERACE API] OK: Generated {len(predictions)} predictions for race {race_num}")
+        
+        return jsonify({
+            'status': 'success',
+            'race_number': race_num,
+            'predictions': predictions,
+            'analysis': {
+                'model': 'XGBoost Ensemble',
+                'features_used': len(model.feature_cols),
+                'confidence_threshold': 85.0
+            }
+        }), 200
+        
+    except Exception as e:
+        print(f"[PRERACE API] ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e), 'status': 'error'}), 400
+
+
 @app.route('/api/race/init', methods=['POST', 'GET'])
 def init_race():
     """Initialize a race simulation (async, returns immediately)"""
@@ -216,7 +302,7 @@ def init_race():
         
     except Exception as e:
         error_msg = str(e)
-        print(f"[BACKEND] ❌ ERROR in init request: {error_msg}")
+        print(f"[BACKEND] ERROR in init request: {error_msg}")
         init_state['status'] = 'error'
         init_state['error_message'] = error_msg
         return jsonify({'error': error_msg, 'status': 'error'}), 400
@@ -271,7 +357,7 @@ def _fetch_fastf1_data(race_num):
         try:
             result = fetcher.fetch_race(2024, race_num)
         except Exception as timeout_err:
-            print(f"[BACKGROUND] ⚠️ FastF1 API timeout/error: {timeout_err}")
+            print(f"[BACKGROUND] WARNING: FastF1 API timeout/error: {timeout_err}")
             result = False
         
         if result:
@@ -307,12 +393,12 @@ def _fetch_fastf1_data(race_num):
                             })
                             print(f"    Grid P{grid_pos:2d}: {driver_code} - {driver_name}")
                     
-                    print(f"[BACKGROUND] ✅ Loaded {len(drivers)} drivers from QUALIFYING")
+                    print(f"[BACKGROUND] OK: Loaded {len(drivers)} drivers from QUALIFYING")
                 else:
-                    print("[BACKGROUND] ⚠️ No qualifying results found")
+                    print("[BACKGROUND] WARNING: No qualifying results found")
                     
             except Exception as qual_err:
-                print(f"[BACKGROUND] ⚠️ Error loading qualifying: {qual_err}")
+                print(f"[BACKGROUND] WARNING: Error loading qualifying: {qual_err}")
                 # Fallback: get drivers from race session
                 if hasattr(session, 'results') and session.results is not None:
                     for idx, (_, row) in enumerate(session.results.iterrows()):
@@ -335,18 +421,18 @@ def _fetch_fastf1_data(race_num):
                 if hasattr(session, 'weather_data') and session.weather_data is not None:
                     weather_data = session.weather_data
                     if len(weather_data) > 0:
-                        print(f"[BACKGROUND] ✅ Weather data loaded")
+                        print(f"[BACKGROUND] OK: Weather data loaded")
             except:
                 pass
             
             if len(drivers) > 0:
-                print(f"[BACKGROUND] ✅ Loaded {len(drivers)} drivers from FastF1")
+                print(f"[BACKGROUND] OK: Loaded {len(drivers)} drivers from FastF1")
             else:
                 raise Exception("No drivers found in FastF1 data")
         else:
             raise Exception(f"Failed to fetch race {race_num} from FastF1")
     except Exception as e:
-        print(f"[BACKGROUND] ⚠️ Could not load FastF1 data: {e}")
+        print(f"[BACKGROUND] WARNING: Could not load FastF1 data: {e}")
         print(f"[BACKGROUND] Falling back to dummy drivers...")
         
         # Fallback to dummy drivers
@@ -387,9 +473,9 @@ def _train_ai_model(laps):
         if os.path.exists(historical_csv):
             print(f"[BACKGROUND] Pre-training model on historical data from {historical_csv}...")
             model.pretrain_on_historical_data(csv_path=historical_csv)
-            print("[BACKGROUND] ✅ Pre-training complete")
+            print("[BACKGROUND] OK: Pre-training complete")
         else:
-            print(f"[BACKGROUND] ⚠️ Historical data not found, training from current lap data")
+            print(f"[BACKGROUND] WARNING: Historical data not found, training from current lap data")
         
         # Then fine-tune on current race lap data if available
         if laps is not None and len(laps) > 0:
@@ -410,10 +496,10 @@ def _train_ai_model(laps):
                     model.add_race_data(1, lap_drivers)
                     model.update_model(1)
             except Exception as train_err:
-                print(f"[BACKGROUND] ⚠️ Could not fine-tune model: {train_err}")
+                print(f"[BACKGROUND] WARNING: Could not fine-tune model: {train_err}")
         
         model_cache['loaded'] = True
-        print("[BACKGROUND] ✅ AI model ready! (Pre-trained + fine-tuned with 40+ features)")
+        print("[BACKGROUND] OK: AI model ready (Pre-trained + fine-tuned with 40+ features)")
         return model
     except Exception as e:
         print(f"[BACKGROUND] Error loading AI model: {str(e)}")
@@ -431,7 +517,7 @@ def _initialize_race_background(race_num):
         
         # Fetch FastF1 data from dedicated function
         drivers, laps, weather_data = _fetch_fastf1_data(race_num)
-        print(f"[BACKGROUND] ✅ Loaded {len(drivers)} drivers")
+        print(f"[BACKGROUND] OK: Loaded {len(drivers)} drivers")
         
         with init_state_lock:
             init_state['progress'] = 40
@@ -483,10 +569,10 @@ def _initialize_race_background(race_num):
             'message': f'Race {race_num} ready to start!'
         }, to=None)
         
-        print(f"[BACKGROUND] ✅ Initialization complete for race {race_num}")
+        print(f"[BACKGROUND] OK: Initialization complete for race {race_num}")
         
     except Exception as e:
-        print(f"[BACKGROUND] ❌ ERROR during background init: {str(e)}")
+        print(f"[BACKGROUND] ERROR during background init: {str(e)}")
         # Thread-safe error state update
         with init_state_lock:
             init_state['status'] = 'error'
@@ -562,7 +648,7 @@ def set_speed_http():
 def handle_connect():
     """Handle WebSocket connection"""
     print(f"\n{'='*60}")
-    print(f"[SOCKETIO] ✅ CLIENT CONNECTED")
+    print(f"[SOCKETIO] OK: CLIENT CONNECTED")
     print(f"[SOCKETIO] Session ID: {request.sid}")
     print(f"[SOCKETIO] Namespace: {request.namespace}")
     print(f"{'='*60}\n")
@@ -576,7 +662,7 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle WebSocket disconnection"""
-    print(f"[SOCKETIO] ❌ CLIENT DISCONNECTED: {request.sid}")
+    print(f"[SOCKETIO] ERROR: CLIENT DISCONNECTED: {request.sid}")
 
 
 @socketio.on('race/start')

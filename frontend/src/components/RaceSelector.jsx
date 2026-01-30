@@ -25,13 +25,23 @@ const RACES = {
   21: 'Abu Dhabi'
 }
 
-export default function RaceSelector({ selectedRace, onRaceChange, disabled }) {
+export default function RaceSelector({ selectedRace, onRaceChange, onSelectRace, disabled }) {
+  // Support both onRaceChange (original) and onSelectRace (new PreRaceAnalysis)
+  const handleChange = (e) => {
+    const value = parseInt(e.target.value)
+    if (onSelectRace) {
+      onSelectRace(value)
+    } else if (onRaceChange) {
+      onRaceChange(value)
+    }
+  }
+
   return (
     <div className="race-selector">
       <label>Select Race:</label>
       <select 
-        value={selectedRace} 
-        onChange={(e) => onRaceChange(parseInt(e.target.value))}
+        value={selectedRace || 21} 
+        onChange={handleChange}
         disabled={disabled}
         className="race-select"
       >

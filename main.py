@@ -1,8 +1,12 @@
 import pandas as pd
 import xgboost as xgb
-from sklearn.model_selection import GridSearchCV
+from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
+import os
 
 # ---------------------------------------------------------
 # STAP 1: DATA LADEN & FEATURE ENGINEERING
@@ -10,7 +14,8 @@ import numpy as np
 
 try:
     # We laden de ruwe data en passen de slimme features hier toe
-    df = pd.read_csv("unprocessed_f1_training_data.csv")
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    df = pd.read_csv(os.path.join(script_dir, "unprocessed_f1_training_data.csv"))
     print(f"Data geladen! Totaal {len(df)} regels ruwe data.")
 except FileNotFoundError:
     print("FOUT: Run eerst 'data_script.py' om de data te genereren!")
@@ -72,6 +77,48 @@ df['constructor_recent_form'] = df.groupby('constructorId')['positionOrder'].tra
 df['driver_recent_form'] = df['driver_recent_form'].fillna(12.0)
 df['constructor_recent_form'] = df['constructor_recent_form'].fillna(12.0)
 
+# --- NIEUW: PITSTOP FEATURES ---
+# We berekenen hoe snel een coureur/team gemiddeld is in de pitstraat (recente vorm)
+if 'pit_stops_duration_ms' in df.columns and 'pit_stops_count' in df.columns:
+    # Vul nulls (geen stops = 0)
+    df['pit_stops_count'] = df['pit_stops_count'].fillna(0)
+    df['pit_stops_duration_ms'] = df['pit_stops_duration_ms'].fillna(0)
+    
+    # Bereken gemiddelde tijd per stop in die race (voorkom delen door 0)
+    df['avg_pit_duration'] = df.apply(lambda x: x['pit_stops_duration_ms'] / x['pit_stops_count'] if x['pit_stops_count'] > 0 else np.nan, axis=1)
+    
+    # Globaal gemiddelde (fallback voor als er geen data is, ca. 24000ms)
+    global_pit_mean = df['avg_pit_duration'].mean()
+    if pd.isna(global_pit_mean): global_pit_mean = 24000.0
+    
+    # Vul races zonder stops met het gemiddelde (zodat rolling avg niet breekt)
+    df['avg_pit_duration_filled'] = df['avg_pit_duration'].fillna(global_pit_mean)
+
+    # Rolling average berekenen (laatste 5 races)
+    df['driver_recent_pit_avg'] = df.groupby('driverId')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
+    df['constructor_recent_pit_avg'] = df.groupby('constructorId')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
+    
+    # Eerste races vullen met fallback
+    df['driver_recent_pit_avg'] = df['driver_recent_pit_avg'].fillna(global_pit_mean)
+    df['constructor_recent_pit_avg'] = df['constructor_recent_pit_avg'].fillna(global_pit_mean)
+else:
+    print("LET OP: Geen pitstop data gevonden. Features worden standaardwaarden.")
+    global_pit_mean = 24000.0
+    df['driver_recent_pit_avg'] = global_pit_mean
+    df['constructor_recent_pit_avg'] = global_pit_mean
+
+# --- WEERDATA VOORBEREIDEN ---
+# We vullen ontbrekende weerdata op met logische standaardwaarden
+if 'weather_temp_c' in df.columns:
+    df['weather_temp_c'] = df['weather_temp_c'].fillna(df['weather_temp_c'].mean()) # Gemiddelde temp
+    df['weather_precip_mm'] = df['weather_precip_mm'].fillna(0.0) # Geen regen
+    df['weather_cloud_pct'] = df['weather_cloud_pct'].fillna(50.0) # Half bewolkt
+else:
+    # Fallback als kolommen nog niet bestaan (voor de zekerheid)
+    df['weather_temp_c'] = 20.0
+    df['weather_precip_mm'] = 0.0
+    df['weather_cloud_pct'] = 50.0
+
 # 7. TRACK HISTORY (Historie op dit specifieke circuit)
 # We kijken naar hoe de coureur het in het verleden op DIT circuit heeft gedaan.
 
@@ -106,11 +153,16 @@ feature_cols = [
     'is_home_race',
     'grid_bin_code',
     'age_bin_code',
-    'driver_recent_form',      # NIEUW: Vorm van de coureur
-    'constructor_recent_form', # NIEUW: Vorm van de auto
-    'driver_track_avg_grid',   # NIEUW: Historie op deze baan
-    'driver_track_avg_finish', # NIEUW: Historie op deze baan
-    'driver_track_podiums'     # NIEUW: Aantal podiums hier
+    'driver_recent_form',
+    'constructor_recent_form',
+    'driver_track_avg_grid',
+    'driver_track_avg_finish',
+    'driver_track_podiums',
+    'weather_temp_c',
+    'weather_precip_mm',
+    'weather_cloud_pct',
+    'driver_recent_pit_avg',
+    'constructor_recent_pit_avg'
 ]
 
 # Filter data: Alleen rijen met een geldig resultaat
@@ -120,31 +172,43 @@ X = train_df[feature_cols]
 y = train_df['positionOrder']
 
 # ---------------------------------------------------------
-# STAP 2: HET MODEL & GRID SEARCH
+# STAP 2: MODELLEN VERGELIJKEN & TRAINEN
 # ---------------------------------------------------------
 
 print(f"\nStart training met {len(feature_cols)} features...")
 
-model = xgb.XGBRegressor(objective='reg:squarederror', random_state=42)
+# We splitsen in Train en Test (op tijd gebaseerd, niet random, want F1 is tijdreeks)
+# We pakken de laatste 20% van de races als test set om te kijken welk model het beste is
+split_index = int(len(X) * 0.8)
+X_train, X_test = X.iloc[:split_index], X.iloc[split_index:]
+y_train, y_test = y.iloc[:split_index], y.iloc[split_index:]
 
-param_grid = {
-    'n_estimators': [40, 50, 60, 100, 200, 300, 400, 500],
-    'max_depth': [1, 2, 3, 4, 5],
-    'learning_rate': [0.01, 0.05, 0.1, 0.2, 0.3]
+models = {
+    "XGBoost": xgb.XGBRegressor(objective='reg:squarederror', n_estimators=200, learning_rate=0.1, max_depth=3, random_state=42),
+    "Random Forest": RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42),
+    "Gradient Boosting": GradientBoostingRegressor(n_estimators=200, learning_rate=0.1, max_depth=3, random_state=42),
+    "Linear Regression": LinearRegression()
 }
 
-grid_search = GridSearchCV(
-    estimator=model,
-    param_grid=param_grid,
-    cv=5, 
-    scoring='neg_mean_absolute_error',
-    verbose=1
-)
+best_model = None
+best_mae = float('inf')
+best_name = ""
 
-grid_search.fit(X, y)
+print("\n--- Model Resultaten (MAE - Lager is beter) ---")
+for name, model in models.items():
+    model.fit(X_train, y_train)
+    predictions = model.predict(X_test)
+    mae = mean_absolute_error(y_test, predictions)
+    print(f"{name}: {mae:.4f}")
+    
+    if mae < best_mae:
+        best_mae = mae
+        best_model = model
+        best_name = name
 
-print(f"\nBeste parameters: {grid_search.best_params_}")
-best_model = grid_search.best_estimator_
+print(f"\nWINNAAR: {best_name} met MAE {best_mae:.4f}")
+print("Hertrainen van het beste model op ALLE data...")
+best_model.fit(X, y)
 
 # ---------------------------------------------------------
 # STAP 3: VOORSPELLING KOMENDE RACE (SPA 2024)
@@ -158,11 +222,11 @@ def get_experience(driver_id):
     return 0 # Nieuwe coureur
 
 # Hulpfunctie: Haal de recente vorm op (gemiddelde laatste 5 races) uit de historie
-def get_recent_form(id_col, id_val, target_col='positionOrder', window=5):
+def get_recent_form(id_col, id_val, target_col='positionOrder', window=5, default_val=12.0):
     # Pak de laatste N races van deze coureur/team uit de dataset
     history = df[df[id_col] == id_val].sort_values(by='date').tail(window)
     if len(history) == 0:
-        return 12.0 # Geen historie? Dan gokken we middenveld (P12)
+        return default_val # Geen historie? Dan gokken we de default
     
     # Gewogen gemiddelde berekenen voor de voorspelling
     values = history[target_col].values
@@ -189,7 +253,11 @@ upcoming_race_dict = {
     'year':          [2024] * 20,
     'driver_age':    [26, 34, 39, 24, 23, 26, 29, 43, 27, 28, 26, 28, 35, 34, 25, 37, 31, 23, 25, 24],
     'nationality':   ['Monegasque', 'Mexican', 'British', 'British', 'Australian', 'British', 'Spanish', 'Spanish', 'French', 'Thai', 'Dutch', 'French', 'Australian', 'Finnish', 'Canadian', 'German', 'Danish', 'American', 'Chinese', 'Japanese'],
-    'country':       ['Belgium'] * 20
+    'country':       ['Belgium'] * 20,
+    # Weerbericht voor Spa (voorbeeld: 18 graden, lichte regen)
+    'weather_temp_c':    [18.0] * 20,
+    'weather_precip_mm': [0.5] * 20,
+    'weather_cloud_pct': [80.0] * 20
 }
 
 X_next = pd.DataFrame(upcoming_race_dict)
@@ -209,8 +277,12 @@ X_next['grid_bin_code'] = le_grid.transform(X_next['grid_bin'].astype(str))
 X_next['age_bin_code'] = le_age.transform(X_next['age_bin'].astype(str))
 
 # Recent Form toevoegen aan de voorspelling
-X_next['driver_recent_form'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x))
-X_next['constructor_recent_form'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x))
+X_next['driver_recent_form'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, default_val=12.0))
+X_next['constructor_recent_form'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, default_val=12.0))
+
+# Pitstop Form toevoegen (gebruikt de 'avg_pit_duration_filled' kolom uit de historie)
+X_next['driver_recent_pit_avg'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
+X_next['constructor_recent_pit_avg'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
 
 # Track History toevoegen
 track_stats = X_next.apply(lambda x: get_track_history(x['driverId'], x['circuitId']), axis=1)
@@ -235,11 +307,11 @@ X_next['ai_score'] = predictions
 final_ranking = X_next.sort_values(by='ai_score', ascending=True)
 
 # Maak een net dashboard lijstje
-top_10_dashboard = final_ranking[['driver_name', 'grid', 'ai_score', 'driver_recent_form', 'driver_track_podiums']].head(10)
-top_10_dashboard.index = range(1, 11) # Nummers 1 t/m 10 ervoor zetten
+full_dashboard = final_ranking[['driver_name', 'grid', 'ai_score', 'driver_recent_form', 'driver_track_podiums']]
+full_dashboard.index = range(1, len(full_dashboard) + 1) # Nummers 1 t/m N ervoor zetten
 
 print("\n========================================")
 print("   AI PREDICTIE: UITSLAG KOMENDE RACE   ")
 print("========================================")
-print(top_10_dashboard)
+print(full_dashboard)
 print("\nKlaar! Model getraind op echte Ergast data.")

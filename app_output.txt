@@ -1,0 +1,9 @@
+
+============================================================
+[BACKEND] Starting F1 AI Tracker Backend...
+[BACKEND] Server running on http://localhost:5000
+[BACKEND] Socket.IO available at ws://localhost:5000/socket.io/
+============================================================
+
+ * Serving Flask app 'app'
+ * Debug mode: off
