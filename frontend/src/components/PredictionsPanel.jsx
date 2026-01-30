@@ -1,116 +1,214 @@
-import './PredictionsPanel.css'
+import {
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUpRight,
+  Brain,
+  Activity,
+} from "lucide-react";
+import Badge from "./ui/Badge.jsx";
 
-export default function PredictionsPanel({ predictions, currentLap, modelMetrics, totalLaps }) {
-  // Use real predictions if available, fallback to empty
-  const displayPredictions = predictions && predictions.length > 0 ? predictions : []
-
-  // Calculate model status
-  const getModelStatus = () => {
-    if (!modelMetrics) return { status: 'Initializing...', icon: '⏳', color: '#ff6b6b' }
-    
-    const maturity = modelMetrics.model_maturity_percentage || 0
-    if (maturity >= 100) return { status: 'Optimized', icon: '✅', color: '#4caf50' }
-    if (maturity >= 50) return { status: 'Training', icon: '🔄', color: '#ffeb3b' }
-    if (maturity >= 25) return { status: 'Learning', icon: '🔄', color: '#ffa500' }
-    return { status: 'Initializing...', icon: '⏳', color: '#ff6b6b' }
+function modelStatus(metrics) {
+  if (!metrics) {
+    return {
+      label: "Initializing",
+      variant: "warning",
+    };
   }
 
-  const modelStatus = getModelStatus()
+  const maturity = Number(metrics.model_maturity_percentage ?? 0);
 
-  if (displayPredictions.length === 0) {
-    return (
-      <div className="predictions-container">
-        <div className="predictions-header">
-          <div>
-            <h2>🤖 Race Voorspelling</h2>
-            {modelMetrics && (
-              <div className="model-status-badge" style={{ borderColor: modelStatus.color, color: modelStatus.color }}>
-                {modelStatus.icon} Model: {modelStatus.status} | Updates: {modelMetrics.total_updates}
-              </div>
-            )}
-          </div>
-          <span className="lap-indicator">Ronde: {currentLap}</span>
-        </div>
-        <div className="predictions-list">
-          <div className="no-predictions">
-            AI model wordt getraind... ⏳
-            {modelMetrics && (
-              <div className="model-training-info">
-                Maturity: {Math.round(modelMetrics.model_maturity_percentage || 0)}%
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
+  if (maturity >= 100) return { label: "Optimized", variant: "success" };
+  if (maturity >= 50) return { label: "Training", variant: "warning" };
+  if (maturity >= 25) return { label: "Learning", variant: "neutral" };
+  return { label: "Initializing", variant: "warning" };
+}
+
+function TrendIcon({ trend }) {
+  if (trend === "up") return <ArrowUpRight size={16} className="text-emerald-300" />;
+  if (trend === "down") return <ArrowDownRight size={16} className="text-red-300" />;
+  return <ArrowRight size={16} className="text-neutral-400" />;
+}
+
+export default function PredictionsPanel({
+  predictions,
+  currentLap,
+  modelMetrics,
+}) {
+  const list = Array.isArray(predictions) ? predictions : [];
+  const top = list.slice(0, 5);
+
+  const status = modelStatus(modelMetrics);
+  const maturity = Math.round(Number(modelMetrics?.model_maturity_percentage ?? 0));
+  const updates = Number(modelMetrics?.total_updates ?? 0);
+
+  const hasComponents =
+    modelMetrics?.sgd_model_ready ||
+    modelMetrics?.mlp_model_ready ||
+    modelMetrics?.rf_classifier_ready;
+
+  const mae =
+    modelMetrics && modelMetrics.recent_mae_average !== undefined
+      ? Number(modelMetrics.recent_mae_average)
+      : null;
+
+  const maeTrend = String(modelMetrics?.mae_trend ?? "").toLowerCase();
+
+  const maeTrendLabel =
+    maeTrend === "improving" ? "Improving" : maeTrend ? "Stable" : null;
 
   return (
-    <div className="predictions-container">
-      <div className="predictions-header">
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <h2>🤖 Race Voorspelling (Top 5)</h2>
-          {modelMetrics && (
-            <div className="model-status-inline">
-              <div className="status-info">
-                <span className="status-badge" style={{ backgroundColor: modelStatus.color }}>
-                  {modelStatus.icon} {modelStatus.status}
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-semibold tracking-tight">Predictions</h2>
+            <Brain size={16} className="text-neutral-500" />
+          </div>
+          <p className="mt-1 text-xs text-neutral-400">
+            Top 5 expected finishing order (AI)
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-end gap-2">
+          <Badge variant="neutral">Lap {currentLap ?? 0}</Badge>
+          <Badge variant={status.variant}>{status.label}</Badge>
+        </div>
+      </div>
+
+      {/* Model meta */}
+      <div className="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+            <span className="inline-flex items-center gap-2">
+              <Activity size={14} className="text-neutral-500" />
+              <span>
+                Updates:{" "}
+                <span className="font-medium text-neutral-200 tabular-nums">
+                  {updates}
                 </span>
-                <span className="updates-count">Updates: {modelMetrics.total_updates}</span>
-                <span className="maturity-info">Maturity: {Math.round(modelMetrics.model_maturity_percentage || 0)}%</span>
-              </div>
-              {modelMetrics.sgd_model_ready || modelMetrics.mlp_model_ready || modelMetrics.rf_classifier_ready ? (
-                <div className="components-mini">
-                  {modelMetrics.sgd_model_ready && <span className="component-badge">SGD ✅</span>}
-                  {modelMetrics.mlp_model_ready && <span className="component-badge">MLP ✅</span>}
-                  {modelMetrics.rf_classifier_ready && <span className="component-badge">RF ✅</span>}
-                </div>
+              </span>
+            </span>
+
+            <span className="text-neutral-600">•</span>
+
+            <span>
+              Maturity:{" "}
+              <span className="font-medium text-neutral-200 tabular-nums">
+                {maturity}%
+              </span>
+            </span>
+          </div>
+
+          {hasComponents ? (
+            <div className="flex flex-wrap items-center gap-2">
+              {modelMetrics?.sgd_model_ready ? (
+                <Badge variant="neutral">SGD</Badge>
               ) : null}
+              {modelMetrics?.mlp_model_ready ? (
+                <Badge variant="neutral">MLP</Badge>
+              ) : null}
+              {modelMetrics?.rf_classifier_ready ? (
+                <Badge variant="neutral">RF</Badge>
+              ) : null}
+            </div>
+          ) : (
+            <div className="text-xs text-neutral-500">
+              Components warming up…
             </div>
           )}
         </div>
-        <span className="lap-indicator">Ronde: {currentLap}</span>
-      </div>
-      
-      <div className="predictions-list">
-        {displayPredictions.map((pred, idx) => (
-          <div key={idx} className="prediction-row">
-            <div className="pred-position">
-              <span className="pred-rank">#{idx + 1}</span>
-              <span className="pred-change">{pred.trend === 'up' ? '📈' : (pred.trend === 'down' ? '📉' : '→')}</span>
-            </div>
-            <div className="pred-info">
-              <div className="pred-driver">
-                {pred.driver_name || pred.driver_code}
-                <span className="pred-pos-change">
-                  Pos: {Math.round(pred.position)} → {Math.round(pred.prediction)}
-                </span>
-              </div>
-              <div className="pred-strategy">
-                <span className="pred-grid">Start: P{pred.grid_pos}</span>
-                <span className="pred-pits">Pit stops: {pred.pit_stops}</span>
-              </div>
-              <div className="pred-confidence">
-                <div className="confidence-bar">
-                  <div 
-                    className="confidence-fill"
-                    style={{ width: `${pred.confidence}%` }}
-                  ></div>
-                </div>
-                <span className="confidence-text">{Math.round(pred.confidence)}%</span>
-              </div>
-            </div>
-          </div>
-        ))}
+
+        <div className="mt-3 h-2 w-full rounded-full bg-neutral-900">
+          <div
+            className="h-2 rounded-full bg-neutral-100"
+            style={{ width: `${Math.min(100, Math.max(0, maturity))}%` }}
+          />
+        </div>
       </div>
 
-      {modelMetrics && modelMetrics.recent_mae_average !== undefined && (
-        <div className="model-performance-footer">
-          <span className="perf-label">Model Performance:</span>
-          <span className="perf-mae">MAE: {modelMetrics.recent_mae_average.toFixed(2)}</span>
-          <span className="perf-trend">{modelMetrics.mae_trend === 'improving' ? '📈' : '→'} {modelMetrics.mae_trend}</span>
+      {/* Predictions list */}
+      {top.length === 0 ? (
+        <div className="rounded-xl border border-neutral-800 bg-neutral-950/40 px-4 py-10 text-center">
+          <div className="text-sm font-medium text-neutral-200">
+            Model is training…
+          </div>
+          <div className="mt-1 text-xs text-neutral-500">
+            Predictions will appear once enough laps have been processed.
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {top.map((pred, idx) => {
+            const driver = pred.driver_name || pred.driver_code || "Unknown";
+            const fromPos = Math.round(Number(pred.position ?? 0));
+            const toPos = Math.round(Number(pred.prediction ?? 0));
+            const confidence = Math.round(Number(pred.confidence ?? 0));
+
+            return (
+              <div
+                key={`${pred.driver_code ?? driver}-${idx}`}
+                className="rounded-xl border border-neutral-800 bg-neutral-950/40 px-3 py-3"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-12 shrink-0">
+                    <div className="text-xs text-neutral-500">Rank</div>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="text-sm font-semibold text-neutral-100 tabular-nums">
+                        #{idx + 1}
+                      </span>
+                      <TrendIcon trend={pred.trend} />
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="truncate text-sm font-medium text-neutral-100">
+                        {driver}
+                      </div>
+                      <div className="text-xs text-neutral-400 tabular-nums">
+                        Pos {fromPos} → {toPos}
+                      </div>
+                    </div>
+
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500">
+                      <span className="tabular-nums">Start P{pred.grid_pos ?? "—"}</span>
+                      <span className="text-neutral-700">•</span>
+                      <span className="tabular-nums">Pit stops {pred.pit_stops ?? 0}</span>
+                    </div>
+
+                    <div className="mt-3 flex items-center gap-3">
+                      <div className="h-2 flex-1 rounded-full bg-neutral-900">
+                        <div
+                          className="h-2 rounded-full bg-neutral-100"
+                          style={{
+                            width: `${Math.min(100, Math.max(0, confidence))}%`,
+                          }}
+                        />
+                      </div>
+                      <div className="w-12 text-right text-xs font-medium text-neutral-300 tabular-nums">
+                        {confidence}%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
+
+      {/* Footer: performance */}
+      {mae !== null ? (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-800 bg-neutral-950/40 px-3 py-3">
+          <div className="text-xs text-neutral-500">Model performance</div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-300">
+            <span className="tabular-nums">MAE {mae.toFixed(2)}</span>
+            {maeTrendLabel ? (
+              <span className="text-neutral-500">{maeTrendLabel}</span>
+            ) : null}
+          </div>
+        </div>
+      ) : null}
     </div>
-  )
+  );
 }

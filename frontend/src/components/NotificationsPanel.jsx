@@ -1,32 +1,103 @@
-import './NotificationsPanel.css'
+import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
+import Badge from "./ui/Badge.jsx";
+
+function meta(type) {
+  switch (type) {
+    case "success":
+      return {
+        Icon: CheckCircle2,
+        badge: "success",
+        border: "border-emerald-900/40",
+        bg: "bg-emerald-950/30",
+        icon: "text-emerald-300",
+      };
+    case "warning":
+      return {
+        Icon: AlertTriangle,
+        badge: "warning",
+        border: "border-amber-900/40",
+        bg: "bg-amber-950/30",
+        icon: "text-amber-300",
+      };
+    case "error":
+      return {
+        Icon: XCircle,
+        badge: "danger",
+        border: "border-red-900/40",
+        bg: "bg-red-950/30",
+        icon: "text-red-300",
+      };
+    default:
+      return {
+        Icon: Info,
+        badge: "neutral",
+        border: "border-neutral-800",
+        bg: "bg-neutral-950/40",
+        icon: "text-neutral-400",
+      };
+  }
+}
 
 export default function NotificationsPanel({ notifications }) {
+  const count = notifications?.length ?? 0;
+
   return (
-    <div className="notifications-container">
-      <div className="notifications-header">
-        <h2>🔔 Meldingen</h2>
+    <div className="space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold tracking-tight">Notifications</h2>
+          <p className="mt-1 text-xs text-neutral-400">
+            Race events and system messages
+          </p>
+        </div>
+        <Badge variant="neutral">{count}</Badge>
       </div>
-      <div className="notifications-list">
-        {notifications.map((notif) => (
-          <div key={notif.id} className={`notification-item ${notif.type}`}>
-            <div className="notification-icon">
-              {notif.type === 'info' && '📌'}
-              {notif.type === 'warning' && '⚠️'}
-              {notif.type === 'success' && '✅'}
-              {notif.type === 'error' && '❌'}
-            </div>
-            <div className="notification-content">
-              <div className="notification-message">{notif.message}</div>
-              <div className="notification-time">{notif.time}</div>
-            </div>
+
+      {count === 0 ? (
+        <div className="rounded-xl border border-neutral-800 bg-neutral-950/40 px-4 py-10 text-center">
+          <div className="text-sm font-medium text-neutral-200">
+            No notifications yet
           </div>
-        ))}
-      </div>
-      {notifications.length === 0 && (
-        <div className="empty-state">
-          <p>Geen meldingen</p>
+          <div className="mt-1 text-xs text-neutral-500">
+            Events will appear here during the race.
+          </div>
+        </div>
+      ) : (
+        <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
+          {notifications.map((n) => {
+            const m = meta(n.type);
+            const Icon = m.Icon;
+
+            return (
+              <div
+                key={n.id}
+                className={[
+                  "rounded-xl border px-3 py-3",
+                  m.border,
+                  m.bg,
+                ].join(" ")}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="mt-0.5">
+                    <Icon size={16} className={m.icon} />
+                  </div>
+
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm text-neutral-100">{n.message}</div>
+                    <div className="mt-1 text-xs text-neutral-500">{n.time}</div>
+                  </div>
+
+                  <div className="shrink-0">
+                    <Badge variant={m.badge}>
+                      {String(n.type ?? "info").toUpperCase()}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
-  )
+  );
 }

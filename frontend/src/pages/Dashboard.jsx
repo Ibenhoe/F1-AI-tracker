@@ -36,14 +36,14 @@ export default function Dashboard() {
         // Initialize race with selected race number
         const result = await apiClient.initRace(selectedRace)
         console.log('[DASHBOARD] Race initialized:', result)
-        
+
         setRaceData({
           race: result.race_name || `Race ${selectedRace}`,
           totalLaps: result.total_laps || 58,
           currentLap: 0,
           drivers: result.drivers || []
         })
-        
+
         // Set initial weather data
         if (result.weather) {
           setWeatherData({
@@ -54,7 +54,7 @@ export default function Dashboard() {
             condition: result.weather.conditions || 'Dry'
           })
         }
-        
+
         setRaceInitialized(true)
 
         // Setup WebSocket listeners
@@ -67,13 +67,13 @@ export default function Dashboard() {
             drivers: data.drivers
           }))
           setPredictions(data.predictions)
-          
+
           // Update model metrics if available
           if (data.model_metrics) {
             setModelMetrics(data.model_metrics)
             console.log('[DASHBOARD] Model metrics updated:', data.model_metrics)
           }
-          
+
           // Update weather data if available
           if (data.weather) {
             setWeatherData({
@@ -84,7 +84,7 @@ export default function Dashboard() {
               condition: data.weather.conditions || 'Dry'
             })
           }
-          
+
           // Add notifications for events
           if (data.events && data.events.length > 0) {
             setNotifications(prev => [
@@ -161,7 +161,7 @@ export default function Dashboard() {
     setRaceRunning(false)
   }
 
-    return (
+  return (
     <div className="space-y-6">
       {/* HEADER */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -183,10 +183,10 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* TOOLBAR (selector + controls) */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      {/* TOOLBAR */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
         <div className="lg:col-span-5">
-          <Card className="p-4">
+          <Card className="h-full p-4">
             <RaceSelector
               selectedRace={selectedRace}
               onRaceChange={handleRaceChange}
@@ -196,7 +196,7 @@ export default function Dashboard() {
         </div>
 
         <div className="lg:col-span-7">
-          <Card className="p-4">
+          <Card className="h-full p-4">
             <RaceControls
               raceInitialized={raceInitialized}
               raceRunning={raceRunning}
