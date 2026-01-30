@@ -41,9 +41,7 @@ export default function RaceSelector({
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-3">
-        <label className="text-xs font-medium text-neutral-300">
-          Selected race
-        </label>
+        <h3 className="text-sm font-semibold tracking-tight">Race controls</h3>
         <span className="text-xs text-neutral-500">
           Locked while running
         </span>
