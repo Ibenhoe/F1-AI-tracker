@@ -2,7 +2,7 @@ import pandas as pd
 import xgboost as xgb
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
 from sklearn.linear_model import LinearRegression
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 from sklearn.metrics import mean_absolute_error
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
@@ -20,6 +20,10 @@ try:
 except FileNotFoundError:
     print("FOUT: Run eerst 'data_script.py' om de data te genereren!")
     exit()
+
+# --- FILTER: ALLEEN RECENTE GESCHIEDENIS (2010+) ---
+df = df[df['year'] >= 2015].copy()
+print(f"Data gefilterd op seizoen 2015+. Totaal {len(df)} regels over voor training.")
 
 # --- FEATURE ENGINEERING (Dezelfde logica als in je analyse) ---
 
@@ -57,6 +61,35 @@ le_age = LabelEncoder()
 df['grid_bin_code'] = le_grid.fit_transform(df['grid_bin'].astype(str))
 df['age_bin_code'] = le_age.fit_transform(df['age_bin'].astype(str))
 
+# --- NIEUW: TEAM CONTINUÏTEIT (REBRANDING) ---
+# We mappen oude teamnamen naar hun huidige identiteit zodat het model de lijn ziet.
+# Bijv: Renault -> Alpine, Toro Rosso -> RB.
+def get_team_continuity_id(row):
+    # We gebruiken de teamnaam als die bestaat (name_team), anders constructorId
+    name = str(row.get('name_team', '')).lower()
+    cid = row['constructorId']
+    
+    if 'mercedes' in name or 'brawn' in name or 'honda' in name or 'bar' in name: return 131 # Mercedes Lineage
+    if 'red bull' in name or 'jaguar' in name or 'stewart' in name: return 9 # RBR Lineage
+    if 'alpine' in name or 'renault' in name or 'lotus' in name: return 214 # Enstone Lineage
+    if 'aston martin' in name or 'racing point' in name or 'force india' in name or 'spyker' in name or 'jordan' in name: return 117 # Silverstone Lineage
+    if 'rb' in name or 'alphatauri' in name or 'toro rosso' in name or 'minardi' in name: return 213 # Faenza Lineage
+    if 'sauber' in name or 'alfa romeo' in name: return 15 # Sauber Lineage
+    
+    return cid # Geen mapping? Behoud origineel ID
+
+# Pas mapping toe
+df['team_continuity_id'] = df.apply(get_team_continuity_id, axis=1)
+
+# --- NIEUW: OVERTAKING DIFFICULTY (CIRCUIT) ---
+# We berekenen hoeveel posities er gemiddeld veranderen op een circuit.
+# Veel verandering = makkelijk inhalen (of chaos). Weinig = Monaco.
+df['pos_change_abs'] = (df['grid'] - df['positionOrder']).abs()
+# Bereken gemiddelde per circuit en zet terug in kolom
+df['circuit_overtake_index'] = df.groupby('circuitId')['pos_change_abs'].transform('mean')
+# Vul eventuele gaten
+df['circuit_overtake_index'] = df['circuit_overtake_index'].fillna(df['pos_change_abs'].mean())
+
 # 6. RECENT FORM (De belangrijkste toevoeging!)
 # We berekenen het gemiddelde van de laatste 5 races voor coureur en team.
 # Dit vertelt het model wie er NU in vorm is, in plaats van wie er 10 jaar geleden goed was.
@@ -71,7 +104,7 @@ def calculate_rolling_avg(group, window=5):
     return group.shift(1).rolling(window, min_periods=1).apply(weighted_mean, raw=True)
 
 df['driver_recent_form'] = df.groupby('driverId')['positionOrder'].transform(calculate_rolling_avg)
-df['constructor_recent_form'] = df.groupby('constructorId')['positionOrder'].transform(calculate_rolling_avg)
+df['constructor_recent_form'] = df.groupby('team_continuity_id')['positionOrder'].transform(calculate_rolling_avg)
 
 # Vul lege waarden (eerste races van seizoen) met een gemiddelde (bijv. P12)
 df['driver_recent_form'] = df['driver_recent_form'].fillna(12.0)
@@ -96,7 +129,7 @@ if 'pit_stops_duration_ms' in df.columns and 'pit_stops_count' in df.columns:
 
     # Rolling average berekenen (laatste 5 races)
     df['driver_recent_pit_avg'] = df.groupby('driverId')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
-    df['constructor_recent_pit_avg'] = df.groupby('constructorId')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
+    df['constructor_recent_pit_avg'] = df.groupby('team_continuity_id')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
     
     # Eerste races vullen met fallback
     df['driver_recent_pit_avg'] = df['driver_recent_pit_avg'].fillna(global_pit_mean)
@@ -118,7 +151,7 @@ if 'status' in df.columns:
     
     # Rolling average van DNF's (0.0 = altijd finish, 1.0 = altijd crash/pech)
     df['driver_dnf_rate'] = df.groupby('driverId')['is_dnf'].transform(calculate_rolling_avg)
-    df['constructor_dnf_rate'] = df.groupby('constructorId')['is_dnf'].transform(calculate_rolling_avg)
+    df['constructor_dnf_rate'] = df.groupby('team_continuity_id')['is_dnf'].transform(calculate_rolling_avg)
     
     df['driver_dnf_rate'] = df['driver_dnf_rate'].fillna(0.2) # Default 20% kans
     df['constructor_dnf_rate'] = df['constructor_dnf_rate'].fillna(0.2)
@@ -224,12 +257,17 @@ if 'quali_position' in df.columns:
 else:
     df['quali_pos_filled'] = df['grid']
 
+# --- NIEUW: GRID PENALTY ---
+# Verschil tussen Quali en Grid. (Positief = straf, Negatief = winst door andermans straf)
+df['grid_penalty'] = df['grid'] - df['quali_pos_filled']
+
 # --- DEFINIEER FEATURES ---
 feature_cols = [
     'grid', 
-    'quali_pos_filled',
+    'grid_penalty',
     'circuitId', 
     'circuit_speed_index',
+    'circuit_overtake_index',
     'driver_age',
     'driver_experience',
     'is_home_race',
@@ -259,48 +297,10 @@ X = train_df[feature_cols]
 y = train_df['positionOrder']
 
 # ---------------------------------------------------------
-# STAP 2: MODELLEN VERGELIJKEN & TRAINEN
+# STAP 2: VOORSPELLING DATA VOORBEREIDEN (SPA 2024)
 # ---------------------------------------------------------
-
-print(f"\nStart training met {len(feature_cols)} features...")
-
-# We splitsen in Train en Test (op tijd gebaseerd, niet random, want F1 is tijdreeks)
-# We pakken de laatste 20% van de races als test set om te kijken welk model het beste is
-split_index = int(len(X) * 0.8)
-X_train, X_test = X.iloc[:split_index], X.iloc[split_index:]
-y_train, y_test = y.iloc[:split_index], y.iloc[split_index:]
-
-models = {
-    "XGBoost": xgb.XGBRegressor(objective='reg:squarederror', n_estimators=200, learning_rate=0.1, max_depth=3, random_state=42),
-    "Random Forest": RandomForestRegressor(n_estimators=200, max_depth=10, random_state=42),
-    "Gradient Boosting": GradientBoostingRegressor(n_estimators=200, learning_rate=0.1, max_depth=3, random_state=42),
-    "Linear Regression": LinearRegression()
-}
-
-best_model = None
-best_mae = float('inf')
-best_name = ""
-
-print("\n--- Model Resultaten (MAE - Lager is beter) ---")
-for name, model in models.items():
-    model.fit(X_train, y_train)
-    predictions = model.predict(X_test)
-    mae = mean_absolute_error(y_test, predictions)
-    print(f"{name}: {mae:.4f}")
-    
-    if mae < best_mae:
-        best_mae = mae
-        best_model = model
-        best_name = name
-
-print(f"\nWINNAAR: {best_name} met MAE {best_mae:.4f}")
-print("Hertrainen van het beste model op ALLE data...")
-best_model.fit(X, y)
-
-# ---------------------------------------------------------
-# STAP 3: VOORSPELLING KOMENDE RACE (SPA 2024)
-# ---------------------------------------------------------
-print("\nVoorspelling voorbereiden voor komende race...")
+# We bereiden EERST de input voor de komende race voor, zodat we die direct in de loop kunnen gebruiken.
+print("\nInput data voorbereiden voor Spa 2024...")
 
 # Hulpfunctie: Haal de huidige ervaring van een coureur op uit de historie
 def get_experience(driver_id):
@@ -347,6 +347,9 @@ upcoming_race_dict = {
     'weather_cloud_pct': [80.0] * 20
 }
 
+# Voeg teamnamen toe voor mapping (fictief, maar nodig voor de functie)
+upcoming_race_dict['name_team'] = ['Ferrari', 'Red Bull', 'Mercedes', 'McLaren', 'McLaren', 'Mercedes', 'Ferrari', 'Aston Martin', 'Alpine', 'Williams', 'Red Bull', 'Alpine', 'RB', 'Sauber', 'Aston Martin', 'Haas', 'Haas', 'Williams', 'Sauber', 'RB']
+
 # Voeg quali info toe (fictief voor Spa 2024, we nemen grid over)
 upcoming_race_dict['quali_position'] = upcoming_race_dict['grid']
 
@@ -366,16 +369,20 @@ X_next['age_bin'] = pd.cut(X_next['driver_age'], bins=[17, 24, 30, 36, 60], labe
 X_next['grid_bin_code'] = le_grid.transform(X_next['grid_bin'].astype(str))
 X_next['age_bin_code'] = le_age.transform(X_next['age_bin'].astype(str))
 
+# Team Mapping toepassen op voorspelling
+X_next['team_continuity_id'] = X_next.apply(get_team_continuity_id, axis=1)
+
 # Recent Form toevoegen aan de voorspelling
 X_next['driver_recent_form'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, default_val=12.0))
-X_next['constructor_recent_form'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, default_val=12.0))
+# Let op: we gebruiken nu team_continuity_id voor de constructor form
+X_next['constructor_recent_form'] = X_next['team_continuity_id'].apply(lambda x: get_recent_form('team_continuity_id', x, default_val=12.0))
 
 # Teammate comparison voor voorspelling
 X_next['driver_vs_team_form'] = X_next['constructor_recent_form'] - X_next['driver_recent_form']
 
 # Pitstop Form toevoegen (gebruikt de 'avg_pit_duration_filled' kolom uit de historie)
 X_next['driver_recent_pit_avg'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
-X_next['constructor_recent_pit_avg'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
+X_next['constructor_recent_pit_avg'] = X_next['team_continuity_id'].apply(lambda x: get_recent_form('team_continuity_id', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
 
 # Track History toevoegen
 track_stats = X_next.apply(lambda x: get_track_history(x['driverId'], x['circuitId']), axis=1)
@@ -392,12 +399,18 @@ spa_avg_time = df[df['circuitId'] == 13]['fastest_lap_seconds'].mean()
 if pd.isna(spa_avg_time): spa_avg_time = 105.0 # Fallback
 X_next['circuit_speed_index'] = spa_avg_time
 
+# 3. Circuit Overtake Index (Spa is bekend)
+spa_overtake = df[df['circuitId'] == 13]['circuit_overtake_index'].mean()
+if pd.isna(spa_overtake): spa_overtake = 2.5 # Fallback
+X_next['circuit_overtake_index'] = spa_overtake
+
 # 3. DNF Rates
 X_next['driver_dnf_rate'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='is_dnf', default_val=0.2))
-X_next['constructor_dnf_rate'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, target_col='is_dnf', default_val=0.2))
+X_next['constructor_dnf_rate'] = X_next['team_continuity_id'].apply(lambda x: get_recent_form('team_continuity_id', x, target_col='is_dnf', default_val=0.2))
 
 # 4. Quali
 X_next['quali_pos_filled'] = X_next['quali_position']
+X_next['grid_penalty'] = X_next['grid'] - X_next['quali_pos_filled']
 
 # 5. Huidige puntenstand (totaal van dit jaar tot nu toe)
 def get_current_points(driver_id, year):
@@ -409,20 +422,10 @@ X_next['points_before_race'] = X_next.apply(lambda x: get_current_points(x['driv
 X_next_input = X_next[feature_cols]
 
 # ---------------------------------------------------------
-# STAP 4: VOORSPELLEN & RANKING
+# STAP 3: GRID SEARCH, TRAINING & EVALUATIE PER MODEL
 # ---------------------------------------------------------
 
-# Voorspel de 'score' (lagere score is beter)
-predictions = best_model.predict(X_next_input)
-
-# Plak de score terug aan de dataframe zodat we namen kunnen zien
-X_next['ai_score'] = predictions
-
-# Sorteren: Laagste score bovenaan = P1
-final_ranking = X_next.sort_values(by='ai_score', ascending=True)
-
 # --- ACTUAL RESULTS (SPA 2024) ---
-# We maken een dictionary om de echte positie aan de coureur te koppelen
 actual_positions = {
     "Hamilton": 1, "Piastri": 2, "Leclerc": 3, "Verstappen": 4, "Norris": 5,
     "Sainz": 6, "Perez": 7, "Alonso": 8, "Ocon": 9, "Ricciardo": 10,
@@ -430,22 +433,76 @@ actual_positions = {
     "Tsunoda": 16, "Sargeant": 17, "Hulkenberg": 18, "Guanyu": 19, "Russell": 20
 }
 
-# 1. Voeg de echte positie toe op basis van de naam
-final_ranking['actual_pos'] = final_ranking['driver_name'].map(actual_positions)
+# Definieer de modellen en hun Grid Search parameters
+model_configs = {
+    "XGBoost": {
+        "model": xgb.XGBRegressor(objective='reg:squarederror', random_state=42),
+        "params": {
+            'n_estimators': [100, 200],
+            'max_depth': [3, 5],
+            'learning_rate': [0.05, 0.1]
+        }
+    },
+    "Random Forest": {
+        "model": RandomForestRegressor(random_state=42),
+        "params": {
+            'n_estimators': [100, 200],
+            'max_depth': [5, 10]
+        }
+    },
+    "Gradient Boosting": {
+        "model": GradientBoostingRegressor(random_state=42),
+        "params": {
+            'n_estimators': [100, 200],
+            'learning_rate': [0.05, 0.1]
+        }
+    },
+    "Linear Regression": {
+        "model": LinearRegression(),
+        "params": {} # Geen hyperparameters om te tunen
+    }
+}
 
-# 2. Bereken het verschil (Predicted Rank is de huidige rij-index + 1 omdat we gesorteerd hebben)
-final_ranking['predicted_pos'] = range(1, len(final_ranking) + 1)
-final_ranking['error'] = final_ranking['predicted_pos'] - final_ranking['actual_pos']
+print("\n==================================================")
+print(" START GRID SEARCH & EVALUATIE (4 OUTPUTS) ")
+print("==================================================")
 
-# Maak een net dashboard lijstje
-full_dashboard = final_ranking[['predicted_pos', 'driver_name', 'actual_pos', 'error', 'ai_score']]
-full_dashboard = full_dashboard.rename(columns={'driver_name': 'Driver', 'predicted_pos': 'Pred', 'actual_pos': 'Act'})
+for name, config in model_configs.items():
+    print(f"\n>>> MODEL: {name}")
+    print("Bezig met Grid Search voor beste parameters...")
+    
+    # TimeSeriesSplit gebruiken om data leakage te voorkomen (trainen op verleden, testen op toekomst)
+    tscv = TimeSeriesSplit(n_splits=3)
+    
+    grid_search = GridSearchCV(config['model'], config['params'], cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
+    grid_search.fit(X, y)
+    
+    best_model = grid_search.best_estimator_
+    print(f"Beste parameters: {grid_search.best_params_}")
+    
+    # Voorspellen
+    predictions = best_model.predict(X_next_input)
+    
+    # Resultaten verwerken in een tijdelijke dataframe
+    result_df = X_next.copy()
+    result_df['ai_score'] = predictions
+    result_df = result_df.sort_values(by='ai_score', ascending=True)
+    
+    # Dashboard opbouwen
+    result_df['actual_pos'] = result_df['driver_name'].map(actual_positions)
+    result_df['predicted_pos'] = range(1, len(result_df) + 1)
+    result_df['error'] = result_df['predicted_pos'] - result_df['actual_pos']
+    result_df['abs_error'] = result_df['error'].abs()
+    
+    # Totale fout berekenen (hoe lager hoe beter)
+    total_error = result_df['abs_error'].sum()
+    
+    # Output printen
+    print(f"--- UITSLAG {name.upper()} (Totale Fout: {total_error}) ---")
+    dashboard = result_df[['predicted_pos', 'driver_name', 'actual_pos', 'error', 'ai_score']]
+    dashboard = dashboard.rename(columns={'driver_name': 'Driver', 'predicted_pos': 'Pred', 'actual_pos': 'Act'})
+    dashboard.set_index('Pred', inplace=True)
+    print(dashboard)
+    print("-" * 60)
 
-# Zet de index netjes
-full_dashboard.set_index('Pred', inplace=True)
-
-print("\n========================================")
-print("   AI PREDICTIE: UITSLAG KOMENDE RACE   ")
-print("========================================")
-print(full_dashboard)
-print("\nKlaar! Model getraind op echte Ergast data.")
+print("\nKlaar! Alle 4 modellen zijn geoptimaliseerd en geëvalueerd.")
