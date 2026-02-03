@@ -144,6 +144,45 @@ df['driver_track_avg_grid'] = df['driver_track_avg_grid'].fillna(12.0)
 df['driver_track_avg_finish'] = df['driver_track_avg_finish'].fillna(12.0)
 df['driver_track_podiums'] = df['driver_track_podiums'].fillna(0.0)
 
+# --- NIEUW: AGRESSIVITEIT & PUNTEN STAND ---
+# We kijken of coureurs sneller worden (agressiviteit/skill) en hoeveel punten ze hebben (veilig vs risico).
+
+def parse_fastest_lap(t_str):
+    if pd.isna(t_str) or str(t_str).strip() == '\\N': return np.nan
+    try:
+        # Formaat M:SS.mmm (bijv 1:30.123)
+        parts = str(t_str).split(':')
+        if len(parts) == 2:
+            return float(parts[0]) * 60 + float(parts[1])
+        return float(t_str)
+    except:
+        return np.nan
+
+if 'fastestLapTime' in df.columns:
+    # 1. Zet tijd om naar seconden
+    df['fastest_lap_seconds'] = df['fastestLapTime'].apply(parse_fastest_lap)
+    
+    # 2. Normaliseren: Hoe snel t.o.v. de snelste raceronde die dag?
+    # Dit maakt tijden vergelijkbaar tussen circuits (Monaco vs Spa)
+    race_best_times = df.groupby('raceId')['fastest_lap_seconds'].min().reset_index().rename(columns={'fastest_lap_seconds': 'race_best_time'})
+    df = pd.merge(df, race_best_times, on='raceId', how='left')
+    
+    # Ratio: 1.00 = Snelste van de dag. 1.05 = 5% langzamer.
+    df['speed_ratio'] = df['fastest_lap_seconds'] / df['race_best_time']
+    
+    # Vul lege waarden (geen tijd gezet) met een trage ratio
+    df['speed_ratio'] = df['speed_ratio'].fillna(1.10)
+    
+    # 3. Recente Snelheid: Worden ze sneller in de laatste 5 races?
+    df['driver_recent_speed'] = df.groupby('driverId')['speed_ratio'].transform(calculate_rolling_avg)
+    df['driver_recent_speed'] = df['driver_recent_speed'].fillna(1.10)
+else:
+    df['driver_recent_speed'] = 1.10
+
+# 4. Puntenstand voorafgaand aan de race (Strategie context)
+# We berekenen de cumulatieve som min de punten van vandaag = punten bij start.
+df['points_before_race'] = (df.groupby(['year', 'driverId'])['points'].cumsum() - df['points']).fillna(0)
+
 # --- DEFINIEER FEATURES ---
 feature_cols = [
     'grid', 
@@ -162,7 +201,9 @@ feature_cols = [
     'weather_precip_mm',
     'weather_cloud_pct',
     'driver_recent_pit_avg',
-    'constructor_recent_pit_avg'
+    'constructor_recent_pit_avg',
+    'driver_recent_speed',
+    'points_before_race'
 ]
 
 # Filter data: Alleen rijen met een geldig resultaat
@@ -289,6 +330,16 @@ track_stats = X_next.apply(lambda x: get_track_history(x['driverId'], x['circuit
 X_next['driver_track_avg_grid'] = [x[0] for x in track_stats]
 X_next['driver_track_avg_finish'] = [x[1] for x in track_stats]
 X_next['driver_track_podiums'] = [x[2] for x in track_stats]
+
+# Nieuwe features toevoegen aan voorspelling
+# 1. Recente snelheid (gebruikt de historie van fastest laps)
+X_next['driver_recent_speed'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='speed_ratio', default_val=1.10))
+
+# 2. Huidige puntenstand (totaal van dit jaar tot nu toe)
+def get_current_points(driver_id, year):
+    return df[(df['driverId'] == driver_id) & (df['year'] == year)]['points'].sum()
+
+X_next['points_before_race'] = X_next.apply(lambda x: get_current_points(x['driverId'], x['year']), axis=1)
 
 # Selecteer input
 X_next_input = X_next[feature_cols]
