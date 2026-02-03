@@ -357,8 +357,22 @@ X_next['ai_score'] = predictions
 # Sorteren: Laagste score bovenaan = P1
 final_ranking = X_next.sort_values(by='ai_score', ascending=True)
 
+# --- ACTUAL RESULTS (SPA 2024) ---
+# We voegen de daadwerkelijke uitslag toe voor vergelijking in het dashboard
+actual_finishers = [
+    "Hamilton", "Piastri", "Leclerc", "Verstappen", "Norris",
+    "Sainz", "Perez", "Alonso", "Ocon", "Ricciardo",
+    "Stroll", "Albon", "Gasly", "Magnussen", "Bottas",
+    "Tsunoda", "Sargeant", "Hulkenberg", "Guanyu", "Russell"
+]
+
+# Voeg toe aan dataframe (als kolom naast de voorspelling)
+if len(final_ranking) == len(actual_finishers):
+    final_ranking['actual_driver'] = actual_finishers
+
 # Maak een net dashboard lijstje
-full_dashboard = final_ranking[['driver_name', 'grid', 'ai_score', 'driver_recent_form', 'driver_track_podiums']]
+full_dashboard = final_ranking[['driver_name', 'actual_driver', 'grid', 'ai_score', 'driver_recent_form', 'driver_track_podiums']]
+full_dashboard = full_dashboard.rename(columns={'driver_name': 'Predicted Driver', 'actual_driver': 'Actual Driver'})
 full_dashboard.index = range(1, len(full_dashboard) + 1) # Nummers 1 t/m N ervoor zetten
 
 print("\n========================================")
