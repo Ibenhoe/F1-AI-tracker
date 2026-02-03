@@ -101,3 +101,34 @@ print(f"\n--- Aantal starts vanuit pitlane (Grid=0): {len(pitlane_starts)} ---")
 # Check hoeveel data we hebben per jaar (is data uit 1950 nog nuttig?)
 print("\n--- Aantal races per decennium ---")
 print(df_clean['year'].apply(lambda x: (x//10)*10).value_counts().sort_index())
+
+# %%
+# 7. HYPOTHESE CHECK: PUNTEN VS VEILIGHEID
+# Vraag: Rijden coureurs met veel punten voorzichtiger (minder DNF) of juist niet?
+
+print("\n--- Hypothese Check: Punten vs DNF ---")
+
+# 1. Punten voorafgaand aan de race berekenen
+df['points_before_race'] = (df.groupby(['year', 'driverId'])['points'].cumsum() - df['points']).fillna(0)
+
+# 2. DNF bepalen (Status != Finished)
+# We nemen aan dat statusId 1 (Finished) en +Laps statussen 'veilig' zijn.
+# In de ruwe data is statusId 1 meestal finished.
+# Laten we simpelweg kijken naar statusId.
+# (Voor een perfecte check zou je de status tabel moeten joinen en op tekst filteren, 
+# maar hier kijken we even naar 'positionText' == 'R' (Retired) als proxy als statusId niet duidelijk is)
+
+# Als statusId beschikbaar is:
+finished_statuses = [1, 11, 12, 13, 14, 15, 16, 17, 18, 19] # Veelvoorkomende finished statussen
+df['is_dnf'] = ~df['statusId'].isin(finished_statuses)
+
+# 3. Binning van punten (0, 1-20, 20-100, 100+)
+df['points_bin'] = pd.cut(df['points_before_race'], 
+                          bins=[-1, 0, 20, 100, 500], 
+                          labels=['0 Pts', '1-20 Pts', '20-100 Pts', '100+ Pts'])
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x='points_bin', y='is_dnf', data=df)
+plt.title("Kans op DNF per Punten-Categorie (Hypothese Check)")
+plt.ylabel("Kans op DNF (0.0 - 1.0)")
+plt.show()

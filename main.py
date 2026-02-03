@@ -107,6 +107,30 @@ else:
     df['driver_recent_pit_avg'] = global_pit_mean
     df['constructor_recent_pit_avg'] = global_pit_mean
 
+# --- NIEUW: RELIABILITY (DNF KANS) ---
+# We berekenen hoe vaak een coureur of auto de finish NIET haalt.
+# Status 1 = Finished. Status 11, 12 etc = +1 Lap (ook gefinisht).
+# We zoeken naar statussen die NIET 'Finished' of '+X Laps' zijn.
+if 'status' in df.columns:
+    # Regex: Matcht NIET met "Finished" of "+... Laps"
+    df['is_dnf'] = ~df['status'].astype(str).str.match(r'(Finished|\+\d+\sLaps)').fillna(False)
+    df['is_dnf'] = df['is_dnf'].astype(int)
+    
+    # Rolling average van DNF's (0.0 = altijd finish, 1.0 = altijd crash/pech)
+    df['driver_dnf_rate'] = df.groupby('driverId')['is_dnf'].transform(calculate_rolling_avg)
+    df['constructor_dnf_rate'] = df.groupby('constructorId')['is_dnf'].transform(calculate_rolling_avg)
+    
+    df['driver_dnf_rate'] = df['driver_dnf_rate'].fillna(0.2) # Default 20% kans
+    df['constructor_dnf_rate'] = df['constructor_dnf_rate'].fillna(0.2)
+else:
+    df['driver_dnf_rate'] = 0.2
+    df['constructor_dnf_rate'] = 0.2
+
+# --- NIEUW: TEAMMATE COMPARISON (SKILL VS CAR) ---
+# Verschil tussen driver form en constructor form.
+# Positief = Coureur presteert beter dan de auto (gemiddeld).
+df['driver_vs_team_form'] = df['constructor_recent_form'] - df['driver_recent_form']
+
 # --- WEERDATA VOORBEREIDEN ---
 # We vullen ontbrekende weerdata op met logische standaardwaarden
 if 'weather_temp_c' in df.columns:
@@ -176,17 +200,36 @@ if 'fastestLapTime' in df.columns:
     # 3. Recente Snelheid: Worden ze sneller in de laatste 5 races?
     df['driver_recent_speed'] = df.groupby('driverId')['speed_ratio'].transform(calculate_rolling_avg)
     df['driver_recent_speed'] = df['driver_recent_speed'].fillna(1.10)
+    
+    # --- NIEUW: CIRCUIT KARAKTERISTIEKEN ---
+    # We berekenen de gemiddelde rondetijd van een circuit over de historie.
+    # Dit geeft aan of het een 'lang/traag' circuit is of een 'kort/snel' circuit.
+    # Hierdoor snapt het model wat voor type baan het is, ook als het ID onbekend is.
+    df['circuit_speed_index'] = df.groupby('circuitId')['fastest_lap_seconds'].transform('mean')
+    # Vul missende waarden met het globale gemiddelde
+    global_lap_mean = df['fastest_lap_seconds'].mean()
+    df['circuit_speed_index'] = df['circuit_speed_index'].fillna(global_lap_mean)
 else:
     df['driver_recent_speed'] = 1.10
+    df['circuit_speed_index'] = 90.0 # Default 1:30
 
 # 4. Puntenstand voorafgaand aan de race (Strategie context)
 # We berekenen de cumulatieve som min de punten van vandaag = punten bij start.
 df['points_before_race'] = (df.groupby(['year', 'driverId'])['points'].cumsum() - df['points']).fillna(0)
 
+# --- NIEUW: KWALIFICATIE DATA ---
+# Gebruik quali_position als die bestaat, anders grid.
+if 'quali_position' in df.columns:
+    df['quali_pos_filled'] = df['quali_position'].fillna(df['grid'])
+else:
+    df['quali_pos_filled'] = df['grid']
+
 # --- DEFINIEER FEATURES ---
 feature_cols = [
     'grid', 
+    'quali_pos_filled',
     'circuitId', 
+    'circuit_speed_index',
     'driver_age',
     'driver_experience',
     'is_home_race',
@@ -194,6 +237,7 @@ feature_cols = [
     'age_bin_code',
     'driver_recent_form',
     'constructor_recent_form',
+    'driver_vs_team_form',
     'driver_track_avg_grid',
     'driver_track_avg_finish',
     'driver_track_podiums',
@@ -202,6 +246,8 @@ feature_cols = [
     'weather_cloud_pct',
     'driver_recent_pit_avg',
     'constructor_recent_pit_avg',
+    'driver_dnf_rate',
+    'constructor_dnf_rate',
     'driver_recent_speed',
     'points_before_race'
 ]
@@ -286,7 +332,7 @@ def get_track_history(driver_id, circuit_id):
     return avg_grid, avg_finish, podiums
 
 upcoming_race_dict = {
-    'driver_name':   ['Leclerc', 'Perez', 'Hamilton', 'Norris', 'Piastri', 'Russell', 'Sainz', 'Alonso', 'Ocon', 'Albon', 'Verstappen', 'Gasly', 'Ricciardo', 'Bottas', 'Stroll', 'Hulkenberg', 'Magnussen', 'Sargeant', 'Zhou', 'Tsunoda'],
+    'driver_name':   ['Leclerc', 'Perez', 'Hamilton', 'Norris', 'Piastri', 'Russell', 'Sainz', 'Alonso', 'Ocon', 'Albon', 'Verstappen', 'Gasly', 'Ricciardo', 'Bottas', 'Stroll', 'Hulkenberg', 'Magnussen', 'Sargeant', 'Guanyu', 'Tsunoda'],
     'grid':          [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
     'driverId':      [844, 815, 1, 846, 857, 847, 832, 4, 839, 848, 830, 842, 817, 822, 840, 807, 825, 858, 855, 852],
     'constructorId': [6, 9, 131, 1, 1, 131, 6, 117, 214, 3, 9, 214, 213, 15, 117, 210, 210, 3, 15, 213],
@@ -300,6 +346,9 @@ upcoming_race_dict = {
     'weather_precip_mm': [0.5] * 20,
     'weather_cloud_pct': [80.0] * 20
 }
+
+# Voeg quali info toe (fictief voor Spa 2024, we nemen grid over)
+upcoming_race_dict['quali_position'] = upcoming_race_dict['grid']
 
 X_next = pd.DataFrame(upcoming_race_dict)
 
@@ -321,6 +370,9 @@ X_next['age_bin_code'] = le_age.transform(X_next['age_bin'].astype(str))
 X_next['driver_recent_form'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, default_val=12.0))
 X_next['constructor_recent_form'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, default_val=12.0))
 
+# Teammate comparison voor voorspelling
+X_next['driver_vs_team_form'] = X_next['constructor_recent_form'] - X_next['driver_recent_form']
+
 # Pitstop Form toevoegen (gebruikt de 'avg_pit_duration_filled' kolom uit de historie)
 X_next['driver_recent_pit_avg'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
 X_next['constructor_recent_pit_avg'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
@@ -335,7 +387,19 @@ X_next['driver_track_podiums'] = [x[2] for x in track_stats]
 # 1. Recente snelheid (gebruikt de historie van fastest laps)
 X_next['driver_recent_speed'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='speed_ratio', default_val=1.10))
 
-# 2. Huidige puntenstand (totaal van dit jaar tot nu toe)
+# 2. Circuit Speed Index (Spa is bekend in data, dus we pakken het gemiddelde van circuitId 13)
+spa_avg_time = df[df['circuitId'] == 13]['fastest_lap_seconds'].mean()
+if pd.isna(spa_avg_time): spa_avg_time = 105.0 # Fallback
+X_next['circuit_speed_index'] = spa_avg_time
+
+# 3. DNF Rates
+X_next['driver_dnf_rate'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='is_dnf', default_val=0.2))
+X_next['constructor_dnf_rate'] = X_next['constructorId'].apply(lambda x: get_recent_form('constructorId', x, target_col='is_dnf', default_val=0.2))
+
+# 4. Quali
+X_next['quali_pos_filled'] = X_next['quali_position']
+
+# 5. Huidige puntenstand (totaal van dit jaar tot nu toe)
 def get_current_points(driver_id, year):
     return df[(df['driverId'] == driver_id) & (df['year'] == year)]['points'].sum()
 
@@ -358,22 +422,27 @@ X_next['ai_score'] = predictions
 final_ranking = X_next.sort_values(by='ai_score', ascending=True)
 
 # --- ACTUAL RESULTS (SPA 2024) ---
-# We voegen de daadwerkelijke uitslag toe voor vergelijking in het dashboard
-actual_finishers = [
-    "Hamilton", "Piastri", "Leclerc", "Verstappen", "Norris",
-    "Sainz", "Perez", "Alonso", "Ocon", "Ricciardo",
-    "Stroll", "Albon", "Gasly", "Magnussen", "Bottas",
-    "Tsunoda", "Sargeant", "Hulkenberg", "Guanyu", "Russell"
-]
+# We maken een dictionary om de echte positie aan de coureur te koppelen
+actual_positions = {
+    "Hamilton": 1, "Piastri": 2, "Leclerc": 3, "Verstappen": 4, "Norris": 5,
+    "Sainz": 6, "Perez": 7, "Alonso": 8, "Ocon": 9, "Ricciardo": 10,
+    "Stroll": 11, "Albon": 12, "Gasly": 13, "Magnussen": 14, "Bottas": 15,
+    "Tsunoda": 16, "Sargeant": 17, "Hulkenberg": 18, "Guanyu": 19, "Russell": 20
+}
 
-# Voeg toe aan dataframe (als kolom naast de voorspelling)
-if len(final_ranking) == len(actual_finishers):
-    final_ranking['actual_driver'] = actual_finishers
+# 1. Voeg de echte positie toe op basis van de naam
+final_ranking['actual_pos'] = final_ranking['driver_name'].map(actual_positions)
+
+# 2. Bereken het verschil (Predicted Rank is de huidige rij-index + 1 omdat we gesorteerd hebben)
+final_ranking['predicted_pos'] = range(1, len(final_ranking) + 1)
+final_ranking['error'] = final_ranking['predicted_pos'] - final_ranking['actual_pos']
 
 # Maak een net dashboard lijstje
-full_dashboard = final_ranking[['driver_name', 'actual_driver', 'grid', 'ai_score', 'driver_recent_form', 'driver_track_podiums']]
-full_dashboard = full_dashboard.rename(columns={'driver_name': 'Predicted Driver', 'actual_driver': 'Actual Driver'})
-full_dashboard.index = range(1, len(full_dashboard) + 1) # Nummers 1 t/m N ervoor zetten
+full_dashboard = final_ranking[['predicted_pos', 'driver_name', 'actual_pos', 'error', 'ai_score']]
+full_dashboard = full_dashboard.rename(columns={'driver_name': 'Driver', 'predicted_pos': 'Pred', 'actual_pos': 'Act'})
+
+# Zet de index netjes
+full_dashboard.set_index('Pred', inplace=True)
 
 print("\n========================================")
 print("   AI PREDICTIE: UITSLAG KOMENDE RACE   ")
