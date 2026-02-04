@@ -173,6 +173,69 @@ class PreRaceModel:
         
         self.df = df
     
+    def _validate_model_fitted(self):
+        """Validate that the model is properly fitted before use
+        
+        Raises:
+            ValueError: If model is not fitted or not loaded
+        """
+        if not self.loaded or self.model is None:
+            raise ValueError("Model not loaded. Call load() first.")
+        
+        try:
+            # Try to access the booster (internal XGBoost structure) to verify model is fitted
+            _ = self.model.get_booster()
+        except Exception as fit_check_err:
+            error_msg = f"Model validation failed - model is not properly fitted: {str(fit_check_err)}"
+            print(f"[PRERACE] ERROR: {error_msg}")
+            raise ValueError(error_msg)
+    
+    def _validate_training_data(self, X, y):
+        """Validate training data before model fitting
+        
+        Args:
+            X: Feature matrix
+            y: Target vector
+        
+        Returns:
+            bool: True if data is valid, False otherwise
+        """
+        if X.shape[0] == 0 or X.shape[1] == 0:
+            print(f"[PRERACE] ERROR: Invalid training data shape: {X.shape}")
+            return False
+        return True
+    
+    def _validate_model_post_fit(self):
+        """Validate model is fitted and functional after training
+        
+        Returns:
+            bool: True if model passes validation, False otherwise
+        """
+        try:
+            # Get first row from training data for test prediction
+            if self.df is None or len(self.df) == 0:
+                print("[PRERACE] ERROR: Cannot validate model - no training data available")
+                return False
+            
+            # Create test input matching feature columns
+            test_data = self.df[self.feature_cols].dropna().iloc[:1]
+            if len(test_data) == 0:
+                print("[PRERACE] ERROR: Cannot validate model - no valid test data")
+                return False
+            
+            test_pred = self.model.predict(test_data)
+            if test_pred is None or len(test_pred) == 0:
+                print("[PRERACE] ERROR: Model.fit() succeeded but test prediction returned empty")
+                return False
+            
+            print(f"[PRERACE] Model validation successful - test prediction: {test_pred[0]:.2f}")
+            return True
+        except Exception as val_err:
+            print(f"[PRERACE] ERROR: Model validation failed: {str(val_err)}")
+            import traceback
+            traceback.print_exc()
+            return False
+    
     def _train_model(self):
         """Train model - extracted to separate method"""
         try:
@@ -196,12 +259,18 @@ class PreRaceModel:
             train_df = self.df.dropna(subset=['positionOrder'] + self.feature_cols)
             if len(train_df) == 0:
                 print("[PRERACE] ERROR: No valid training data after dropping NaN values")
+                self.model = None
                 return False
             
             X = train_df[self.feature_cols]
             y = train_df['positionOrder']
             
             print(f"[PRERACE] Training on {len(X)} samples with {len(self.feature_cols)} features...")
+            
+            # Validate training data shape
+            if not self._validate_training_data(X, y):
+                self.model = None
+                return False
             
             # Use XGBoost
             self.model = xgb.XGBRegressor(
@@ -211,13 +280,22 @@ class PreRaceModel:
                 max_depth=3, 
                 random_state=42
             )
+            
+            # Train model
             self.model.fit(X, y)
+            
+            # Validate model is fitted and functional
+            if not self._validate_model_post_fit():
+                self.model = None
+                return False
+            
             print(f"[PRERACE] Model trained successfully")
             return True
         except Exception as e:
             print(f"[PRERACE] ERROR in _train_model: {str(e)}")
             import traceback
             traceback.print_exc()
+            self.model = None
             return False
     
     def predict(self, grid_data, race_num):
@@ -231,8 +309,8 @@ class PreRaceModel:
         Returns:
             List of prediction dicts sorted by AI score
         """
-        if not self.loaded or self.model is None:
-            raise ValueError("Model not loaded. Call load() first.")
+        # Validate model is fitted before attempting prediction
+        self._validate_model_fitted()
         
         nationality_map = {
             'British': 'UK', 'German': 'Germany', 'Spanish': 'Spain', 'French': 'France',

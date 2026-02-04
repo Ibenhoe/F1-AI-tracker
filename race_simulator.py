@@ -468,6 +468,11 @@ class RaceSimulator:
                 top5_strs = [f"{p['driver_code']}({p['confidence']:.0f}%)" for p in top_5_predictions]
                 print(f"[PREDICTIONS] Lap {lap_number} - Top 5 Winners: {top5_strs}")
                 
+                # DEBUG: Log confidence for first 3 drivers
+                if lap_number <= 5:
+                    for p in predictions[:3]:
+                        print(f"[TOP5-DEBUG] Lap {lap_number}: {p['driver_code']} confidence={p['confidence']:.1f}% (pos={p['position']}, pred={p['prediction']:.1f})")
+                
                 # Return only top 5
                 predictions = top_5_predictions
                 

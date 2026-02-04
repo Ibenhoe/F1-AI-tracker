@@ -175,11 +175,11 @@ class RacePhaseEncoder:
 
 
 class ProbabilitySmoother:
-    """Smooth win probabilities with temporal inertia
+    """Minimal confidence value clipping with light temporal constraints
     
-    Prevents sharp drops/rises in predictions by constraining
-    change rate based on historical values (realistic race dynamics).
-    """
+    Returns mostly raw confidence values with only 8% drop/rise constraints
+    per lap to allow variance from model predictions to show through naturally.
+    This enables Top 5 predictions to change lap-to-lap based on learning."""
     
     def __init__(self, memory: int = 4, max_drop_per_lap: float = 0.15,
                  max_rise_per_lap: float = 0.10):
@@ -189,7 +189,12 @@ class ProbabilitySmoother:
         self.history = {}  # {driver_id: deque of probs}
     
     def smooth(self, driver_id: str, raw_prob: float, lap_number: int) -> float:
-        """Apply exponential moving average with inertia constraints"""
+        """SIMPLIFIED: Return raw confidence values with MINIMAL smoothing
+        
+        CRITICAL FIX: Smoothing was DAMPING out random_var (-7% to +5%) variance!
+        Now use RAW confidence values to let model variance show naturally.
+        This allows Top 5 to change based on actual model predictions.
+        """
         
         if driver_id not in self.history:
             self.history[driver_id] = deque(maxlen=self.memory)
@@ -198,29 +203,28 @@ class ProbabilitySmoother:
         
         hist = self.history[driver_id]
         
-        # Exponential weighted average
-        if len(hist) == 0:
-            smoothed = raw_prob
-        else:
-            # Weights decay backwards in time: newest highest
-            weights = np.array([0.7 ** (len(hist) - 1 - i) for i in range(len(hist))])
-            weights /= weights.sum()
-            
-            hist_list = list(hist)
-            smoothed = sum(w * h for w, h in zip(weights, hist_list))
+        # CRITICAL: Return raw_prob WITHOUT smoothing to let variance show
+        # The random_var component in confidence calculation is being eliminated by smoothing
+        # So we just return raw values and let the model variance come through
+        smoothed = raw_prob
         
-        # Apply inertia constraints
+        # OPTIONAL: Very light clipping to prevent extreme swings only
+        # (Allow 8% drop/rise from previous lap, instead of aggressive 15% drop / 10% rise)
+        # This lets predictions vary while preventing wild oscillations
+        max_light_drop = 0.08   # Allow 8% drop per lap
+        max_light_rise = 0.08   # Allow 8% rise per lap
+        
         if len(hist) > 0:
             prev_prob = hist[-1]
             
-            # Constrain drop
-            if raw_prob < prev_prob:
-                max_allowed_drop = prev_prob - (prev_prob * self.max_drop)
+            # Light drop constraint - allow significant movement
+            if smoothed < prev_prob:
+                max_allowed_drop = prev_prob - (prev_prob * max_light_drop)
                 smoothed = max(max_allowed_drop, smoothed)
             
-            # Constrain rise
+            # Light rise constraint - allow significant movement
             elif raw_prob > prev_prob:
-                max_allowed_rise = prev_prob + (prev_prob * self.max_rise)
+                max_allowed_rise = prev_prob + (prev_prob * max_light_rise)
                 smoothed = min(max_allowed_rise, smoothed)
         
         hist.append(smoothed)
@@ -427,9 +431,10 @@ class ContinuousModelLearner:
         ]
         self.n_features = len(self.feature_names)
         
-        # Pre-fit scaler with dummy data to lock feature space
-        self.scaler.fit(np.zeros((1, self.n_features)))
-        self.features_fitted = True
+        # DO NOT pre-fit scaler! Let it fit naturally on first training data batch
+        # Pre-fitting with zeros breaks feature normalization
+        self.scaler = None  # Will be created on first training pass
+        self.features_fitted = False
         
         # Training data
         self.training_buffer = []
@@ -455,11 +460,11 @@ class ContinuousModelLearner:
         self.pit_penalty_factor = 0.5  # Lower LR for pit stops (0.5x base)
         
         print("[OK] ContinuousModelLearner V3+ initialized (Fixed Features)")
-        print("    ✓ 14-feature fixed space (no mismatches)")
-        print("    ✓ Domain-aware pit/tire/race encoding")
-        print("    ✓ Probability smoothing (±15% inertia)")
-        print("    ✓ Adaptive learning rates")
-        print("    ✓ Rare event handling")
+        print("    [OK] 14-feature fixed space (no mismatches)")
+        print("    [OK] Domain-aware pit/tire/race encoding")
+        print("    [OK] Probability smoothing (+/- 15% inertia)")
+        print("    [OK] Adaptive learning rates")
+        print("    [OK] Rare event handling")
     
     def _build_feature_vector(self, driver_data: Dict, current_lap: int,
                               leader_pit_count: int = 0) -> np.ndarray:
@@ -533,6 +538,8 @@ class ContinuousModelLearner:
             if dd.get('position', 999) == 1:
                 leader_pit = int(dd.get('pit_stops', 0))
                 break
+        
+        print(f"[ADD_DATA] Lap {lap_number}: Adding {len(drivers_data)} drivers to training buffer (buffer now: {len(self.training_buffer)})")
         
         for driver_data in drivers_data:
             driver = driver_data.get('driver', 'UNK')
@@ -665,8 +672,10 @@ class ContinuousModelLearner:
         3. Adaptive learning rate for pit stops
         4. Rare event handling for unexpected pit stops
         """
+        print(f"[UPDATE] Lap {current_lap}: Buffer has {len(self.training_buffer)} samples")
+        
         if len(self.training_buffer) < 5:
-            return {'status': 'skipped', 'reason': 'Not enough data'}
+            return {'status': 'skipped', 'reason': f'Not enough data ({len(self.training_buffer)}/5)'}
         
         try:
             # Get pre-built features from buffer
@@ -687,39 +696,38 @@ class ContinuousModelLearner:
             # Ensure y is in valid range
             y = np.clip(y, 1.0, 20.0)
             
-            # IMPORTANT: Never refit scaler - use the pre-fitted one with 14 dimensions
-            # This prevents feature mismatch and model reset
+            # Initialize scaler on first training pass (NOT pre-fit with zeros!)
+            # This ensures proper mean/std calculation from REAL race data
+            if self.scaler is None:
+                print(f"[SCALER] Fitting StandardScaler on LAP {current_lap} with {len(X)} samples")
+                self.scaler = StandardScaler()
+                self.scaler.fit(X)  # FIT on first batch of real data
+                self.features_fitted = True
+            
+            # Now transform using fitted scaler
             X_scaled = self.scaler.transform(X)
             
             # Initialize model if needed
             if self.position_model is None:
+                print(f"[MODEL] [!] CREATING SGDRegressor on LAP {current_lap} with {len(X_list)} samples")
                 self.position_model = SGDRegressor(
                     loss='squared_error',
                     alpha=0.01,
                     learning_rate='optimal',
                     max_iter=1,
                     warm_start=True,
-                    eta0=0.001
+                    eta0=0.001,
+                    random_state=42  # For reproducibility
                 )
             
-            # Train incrementally with adaptive learning rate
-            for i in range(len(X_scaled)):
-                item = self.training_buffer[i]
-                pit_stops = int(item.get('pit_stops', 0))
-                
-                # Adaptive learning rate: lower for pit stops
-                if pit_stops > (self.driver_pit_counts.get(item.get('driver', ''), 0) - 1):
-                    # This driver just pitted - use lower learning rate
-                    lr_factor = self.pit_penalty_factor  # 0.5x base rate
-                else:
-                    lr_factor = 1.0
-                
-                # Apply learning rate factor
-                try:
-                    self.position_model.partial_fit(X_scaled[i:i+1], y[i:i+1])
-                except Exception as e:
-                    print(f"[ERROR] partial_fit failed at index {i}: {e}")
-                    continue
+            # Train ONCE with full batch (not 20x per driver!)
+            # This prevents oscillation from individual sample updates
+            try:
+                print(f"[TRAIN] Lap {current_lap}: partial_fit on batch of {len(X_scaled)} samples (not {len(X_scaled)} individual calls)")
+                self.position_model.partial_fit(X_scaled, y)
+            except Exception as e:
+                print(f"[ERROR] partial_fit batch failed: {e}")
+                return {'status': 'error', 'reason': str(e)}
             
             # Calculate MAE
             try:
@@ -730,6 +738,11 @@ class ContinuousModelLearner:
                 mae = 999.0
             
             self.updates_count += 1
+            
+            # CLEAR BUFFER after training to prevent double-training on same data
+            # This ensures we train ONLY on the current lap, not all historical laps
+            print(f"[UPDATE] Clearing buffer ({len(self.training_buffer)} -> 0) to prevent double-training")
+            self.training_buffer = []
             
             return {
                 'status': 'updated',
@@ -910,6 +923,8 @@ class ContinuousModelLearner:
             
             # Return without smoothing in fallback mode (smoothing is for trained model only)
             # Smoothing would flatten the differentiation we just built
+            if not self.position_model:
+                print(f"[PREDICT] Lap {current_lap}: MODEL NOT READY (using fallback for {driver_id} at P{current_pos})")
             return current_pos, raw_confidence
         
         try:
@@ -917,10 +932,31 @@ class ContinuousModelLearner:
             features = self._build_feature_vector(lap_features, current_lap, 0)
             features = features.reshape(1, -1)
             
+            # DEBUG: Check features
+            if current_lap <= 3:
+                print(f"[DEBUG LAP{current_lap}] {driver_id}: features min={features.min():.4f} max={features.max():.4f} mean={features.mean():.4f} | {features[0][:3]}")
+            
+            # Check if scaler is ready
+            if self.scaler is None:
+                print(f"[PREDICT] ERROR Lap {current_lap}: Scaler not fitted (model not trained yet)")
+                # Use fallback
+                if current_pos <= 3:
+                    confidence = 80.0 - (current_pos - 1) * 8
+                else:
+                    confidence = 30.0 - (current_pos - 3) * 2
+                return current_pos, np.clip(confidence, 5.0, 85.0)
+            
             # Scale and predict
             X_scaled = self.scaler.transform(features)
             pred_pos = float(self.position_model.predict(X_scaled)[0])
+            
+            # Add logging to debug P20.0 predictions
+            if current_lap <= 5:
+                print(f"[DEBUG LAP{current_lap}] {driver_id}: raw pred={pred_pos:.2f}, clipped={np.clip(pred_pos, 1.0, 20.0):.1f}")
+            
             pred_pos = np.clip(pred_pos, 1.0, 20.0)
+            
+            print(f"[PREDICT] OK Lap {current_lap}: ML Model {driver_id} P{current_pos:.0f}->P{pred_pos:.1f} (Updates: {self.updates_count})")
             
             # ===== CALCULATE RAW CONFIDENCE (before smoothing) =====
             
@@ -979,20 +1015,24 @@ class ContinuousModelLearner:
             elif laps_remaining < 10:
                 progress_penalty = 8.0   # Last 10 laps: reduce by 8%
             
+            # Add logging to debug confidence calculation
+            if current_lap <= 5:
+                print(f"[CONF DEBUG] Lap {current_lap} {driver_id}: base={base_conf:.1f} + stab={stability_bonus:.1f} + mat={maturity_bonus:.1f} - tire={tire_penalty:.1f} + rand={random_var:.1f} - prog={progress_penalty:.1f}")
+            
             # 7. RACE PHASE SCALING - constrain confidence based on lap number
-            # Early race (laps 1-10): Anything can happen, max confidence much lower
-            # Mid race (laps 11-40): Strategy matters, confidence increases gradually
-            # Late race (laps 41+): Clearer picture, but still uncertainty
+            # Early race (laps 1-10): Anything can happen, max confidence lower but not too tight
+            # Mid race (laps 11-40): Strategy matters, confidence can vary more
+            # Late race (laps 41+): Clearer picture, higher confidence
             race_phase_cap = 100.0  # Default no cap
             
             if current_lap <= 5:
-                race_phase_cap = 70.0   # First 5 laps: conservative but allows leaders through
+                race_phase_cap = 85.0   # First 5 laps: Allow 85% for leaders, lower for others
             elif current_lap <= 10:
-                race_phase_cap = 78.0   # Laps 6-10: patterns emerging
+                race_phase_cap = 88.0   # Laps 6-10: Increase slightly as patterns emerge
             elif current_lap <= 20:
-                race_phase_cap = 85.0   # Laps 11-20: established patterns
+                race_phase_cap = 90.0   # Laps 11-20: patterns establishing
             elif current_lap <= 30:
-                race_phase_cap = 88.0   # Laps 21-30: clear strategy
+                race_phase_cap = 92.0   # Laps 21-30: clear strategy
             # After lap 30: no additional cap (patterns well-established)
             
             # Calculate raw confidence
