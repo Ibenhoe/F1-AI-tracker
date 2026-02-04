@@ -86,16 +86,39 @@ export default function Dashboard() {
           }
 
           // Add notifications for events
+          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: Full data object:`, data)
+          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: data.events =`, data.events)
+          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: typeof data.events =`, typeof data.events)
+          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: Array.isArray(data.events) =`, Array.isArray(data.events))
+          
           if (data.events && data.events.length > 0) {
-            setNotifications(prev => [
-              ...data.events.map((e, i) => ({
-                id: Date.now() + i,
-                type: 'info',
+            console.log(`[FRONTEND] Lap ${data.lap_number}: Received ${data.events.length} event(s)`, data.events)
+            setNotifications(prev => {
+              // Create new notifications from events
+              const newNotifications = data.events.map((e, i) => ({
+                id: `${e.id || Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID with random suffix
+                type: e.type || 'info',
                 message: e.message,
-                time: new Date().toLocaleTimeString()
-              })),
-              ...prev.slice(0, 4)
-            ])
+                time: new Date().toLocaleTimeString(),
+                lapNumber: data.lap_number
+              }))
+              
+              // Combine new + old, avoiding duplicates by checking lapNumber + message
+              // This prevents the same event from appearing twice
+              const allNotifications = [...newNotifications, ...prev]
+              const seen = new Set()
+              const unique = allNotifications.filter(n => {
+                const key = `${n.lapNumber}-${n.message}`
+                if (seen.has(key)) return false
+                seen.add(key)
+                return true
+              })
+              
+              // Keep only recent notifications (max 5)
+              return unique.slice(0, 5)
+            })
+          } else {
+            console.log(`[FRONTEND] Lap ${data.lap_number}: No events (data.events is empty or undefined)`)
           }
         })
 

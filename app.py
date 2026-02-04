@@ -616,6 +616,7 @@ def _initialize_race_background(race_num):
         
         # Initialize race simulator - wrapped in try/catch
         try:
+            print(f"[BACKGROUND] Creating RaceSimulator with {len(drivers)} drivers and model={model_cache['model']}")
             race_state['race_simulator'] = RaceSimulator(
                 race_number=race_num,
                 model=model_cache['model'],
@@ -630,9 +631,13 @@ def _initialize_race_background(race_num):
             race_state['race_name'] = initial_state['race_name']
             race_state['total_laps'] = initial_state['total_laps']
             race_state['current_lap'] = 0
+            print(f"[BACKGROUND] ✓ RaceSimulator created successfully!")
         except Exception as sim_err:
             # Fallback if RaceSimulator fails
-            print(f"[BACKGROUND] RaceSimulator failed: {sim_err}, using simple state")
+            print(f"[BACKGROUND] ERROR: RaceSimulator failed: {sim_err}")
+            import traceback
+            traceback.print_exc()
+            print(f"[BACKGROUND] Using simple state fallback without simulator")
             race_state['drivers'] = drivers
             race_state['race_name'] = f'Race {race_num}'
             race_state['total_laps'] = 58
@@ -674,7 +679,7 @@ def _initialize_race_background(race_num):
 # HTTP endpoints for race control (instead of Socket.IO)
 @app.route('/api/race/state', methods=['GET'])
 def get_race_state():
-    """Get current race state"""
+    """Get current race state - includes events for HTTP polling fallback"""
     return jsonify({
         'lap_number': race_state['current_lap'],
         'current_lap': race_state['current_lap'],
@@ -682,7 +687,8 @@ def get_race_state():
         'drivers': race_state['drivers'],
         'predictions': race_state['predictions'],
         'running': race_state['running'],
-        'weather': race_state.get('weather', {})
+        'weather': race_state.get('weather', {}),
+        'events': []  # Empty for now - SocketIO provides real-time events
     }), 200
 
 
@@ -814,16 +820,39 @@ def run_simulation():
             
             print(f"[SIMULATION] Lap {race_state['current_lap']} updated - {len(race_state['drivers'])} drivers")
             
-            # RATE LIMIT: Only emit to clients if minimum time has passed (100ms)
-            # This prevents network congestion and excessive CPU usage on both server and clients
+            # EMIT EVENTS - Always send, don't rate limit!
+            # Events are critical race information (battles, pit stops, etc.) that must be delivered in real-time
+            # Rate limiting should NOT apply to events, only to routine lap updates
+            events_to_send = lap_state.get('events', [])
+            
+            # Log what we're about to send
+            if events_to_send:
+                print(f"[EVENTS-TO-SEND] Lap {race_state['current_lap']}: {len(events_to_send)} events - {[e.get('type', '?') for e in events_to_send]}")
+            
+            # RATE LIMIT: Only emit driver/prediction updates if minimum time has passed (100ms)
+            # This prevents network congestion while ensuring events always get through
             if lap_update_limiter.should_emit():
                 socketio.emit('lap/update', {
                     'lap_number': race_state['current_lap'],
                     'drivers': lap_state['drivers'],
                     'predictions': lap_state['predictions'],
-                    'events': lap_state.get('events', []),
+                    'events': events_to_send,
                     'weather': lap_state.get('weather', {})
                 }, to=None)
+                
+                if events_to_send:
+                    print(f"[BROADCAST] Emitted lap/update with {len(events_to_send)} event(s)")
+            
+            # If we have events but rate limiter blocked the update, send events separately to ensure delivery
+            elif events_to_send:
+                socketio.emit('lap/update', {
+                    'lap_number': race_state['current_lap'],
+                    'drivers': lap_state['drivers'],
+                    'predictions': lap_state['predictions'],
+                    'events': events_to_send,
+                    'weather': lap_state.get('weather', {})
+                }, to=None)
+                print(f"[BROADCAST] Force-emitted lap/update with {len(events_to_send)} event(s) (bypassed rate limit)")
             
             # Move to next lap
             race_state['current_lap'] += 1

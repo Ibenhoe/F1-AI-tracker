@@ -1,21 +1,62 @@
 const BACKEND_URL = 'http://localhost:5000'
 
+// Import Socket.IO client
+import { io } from 'socket.io-client'
+
 class APIClient {
   constructor() {
     this.listeners = {}
     this.pollingInterval = null
     this.currentRaceId = null
     this.isRaceRunning = false
+    this.socket = null
   }
 
   async connect() {
-    console.log('[API] Connecting to backend...')
+    console.log('[API] Connecting to backend via SocketIO...')
     try {
-      const response = await fetch(`${BACKEND_URL}/api/health`)
-      if (!response.ok) throw new Error('Health check failed')
-      console.log('[API] ✅ Connected to backend')
-      this.startPolling()
-      return Promise.resolve()
+      // Connect via SocketIO
+      this.socket = io(BACKEND_URL, {
+        reconnection: true,
+        reconnectionDelay: 1000,
+        reconnectionDelayMax: 5000,
+        reconnectionAttempts: 5
+      })
+      
+      // Handle connection
+      this.socket.on('connect', () => {
+        console.log('[API] ✅ Connected to backend via SocketIO')
+      })
+      
+      // Handle disconnect
+      this.socket.on('disconnect', () => {
+        console.log('[API] ⚠️ Disconnected from backend')
+      })
+      
+      // Listen for all race events
+      this.socket.on('lap/update', (data) => {
+        console.log('[API-SOCKETIO] Received lap/update:', data)
+        this.triggerListener('lap/update', data)
+      })
+      
+      this.socket.on('race/ready', (data) => {
+        console.log('[API-SOCKETIO] Received race/ready:', data)
+        this.triggerListener('race/ready', data)
+      })
+      
+      this.socket.on('race/finished', (data) => {
+        console.log('[API-SOCKETIO] Received race/finished:', data)
+        this.triggerListener('race/finished', data)
+      })
+      
+      this.socket.on('race/error', (data) => {
+        console.log('[API-SOCKETIO] Received race/error:', data)
+        this.triggerListener('race/error', data)
+      })
+      
+      return new Promise((resolve) => {
+        setTimeout(resolve, 500)
+      })
     } catch (error) {
       console.error('[API] Connection failed:', error)
       throw error
@@ -23,23 +64,8 @@ class APIClient {
   }
 
   startPolling() {
-    // Poll every 1 second when race is running
-    this.pollingInterval = setInterval(async () => {
-      if (this.currentRaceId) {
-        try {
-          const response = await fetch(`${BACKEND_URL}/api/race/state`)
-          if (response.ok) {
-            const data = await response.json()
-            // Always send update if we have race state
-            if (data.drivers !== undefined) {
-              this.triggerListener('lap/update', data)
-            }
-          }
-        } catch (error) {
-          // Silent retry
-        }
-      }
-    }, 1000)  // Poll every 1 second
+    // No longer needed with SocketIO, but keep for compatibility
+    console.log('[API] Polling disabled (using SocketIO instead)')
   }
 
   triggerListener(event, data) {
@@ -126,10 +152,11 @@ class APIClient {
   }
 
   disconnect() {
-    if (this.pollingInterval) {
-      clearInterval(this.pollingInterval)
-      this.pollingInterval = null
+    if (this.socket) {
+      this.socket.disconnect()
+      this.socket = null
     }
+    console.log('[API] Disconnected from backend')
   }
 }
 
