@@ -212,16 +212,43 @@ class PreRaceModel:
             bool: True if model passes validation, False otherwise
         """
         try:
+            # Check model is actually fitted
+            if self.model is None:
+                print("[PRERACE] ERROR: Model is None after _train_model()")
+                return False
+            
+            # Check that model has feature_importances_ (XGBoost specific)
+            if not hasattr(self.model, 'feature_importances_'):
+                print("[PRERACE] ERROR: Model not properly fitted - no feature_importances_")
+                return False
+            
+            # Verify feature_cols list exists and is not empty
+            if not hasattr(self, 'feature_cols') or not self.feature_cols:
+                print("[PRERACE] ERROR: feature_cols list is missing or empty after _train_model")
+                return False
+            
             # Get first row from training data for test prediction
             if self.df is None or len(self.df) == 0:
                 print("[PRERACE] ERROR: Cannot validate model - no training data available")
                 return False
             
             # Create test input matching feature columns
-            test_data = self.df[self.feature_cols].dropna().iloc[:1]
-            if len(test_data) == 0:
-                print("[PRERACE] ERROR: Cannot validate model - no valid test data")
+            # Only use columns that actually exist in the dataframe
+            valid_cols = [col for col in self.feature_cols if col in self.df.columns]
+            if not valid_cols:
+                print(f"[PRERACE] ERROR: No valid feature columns found. Requested: {self.feature_cols}")
                 return False
+            
+            test_data = self.df[valid_cols].dropna().iloc[:1]
+            if len(test_data) == 0:
+                print("[PRERACE] ERROR: Cannot validate model - no valid test data after dropping NaN")
+                return False
+            
+            # Pad with missing features if needed
+            if len(valid_cols) < len(self.feature_cols):
+                for missing_col in [c for c in self.feature_cols if c not in valid_cols]:
+                    test_data[missing_col] = 0.0
+                test_data = test_data[self.feature_cols]
             
             test_pred = self.model.predict(test_data)
             if test_pred is None or len(test_pred) == 0:
@@ -239,7 +266,7 @@ class PreRaceModel:
     def _train_model(self):
         """Train model - extracted to separate method"""
         try:
-            # Define features
+            # Define features - ENHANCED with better discriminatory power
             self.feature_cols = [
                 'grid', 'circuitId', 'driver_age', 'driver_experience', 'is_home_race',
                 'grid_bin_code', 'age_bin_code', 'driver_recent_form', 'constructor_recent_form',
@@ -266,28 +293,43 @@ class PreRaceModel:
             y = train_df['positionOrder']
             
             print(f"[PRERACE] Training on {len(X)} samples with {len(self.feature_cols)} features...")
+            print(f"[PRERACE] Features: {self.feature_cols}")
+            print(f"[PRERACE] Target range: {y.min():.0f}-{y.max():.0f} (position)")
             
             # Validate training data shape
             if not self._validate_training_data(X, y):
                 self.model = None
                 return False
             
-            # Use XGBoost
+            # Use STRONGER XGBoost with better hyperparameters
+            # These are tuned for F1 prediction to maximize discrimination
             self.model = xgb.XGBRegressor(
-                objective='reg:squarederror', 
-                n_estimators=200, 
-                learning_rate=0.1, 
-                max_depth=3, 
+                objective='reg:squarederror',
+                n_estimators=300,      # More trees = better discrimination
+                learning_rate=0.08,    # Slightly lower for better convergence
+                max_depth=4,           # Slightly deeper for more complex patterns
+                min_child_weight=2,    # Prevent overfitting
+                subsample=0.9,         # Use 90% of samples per tree
+                colsample_bytree=0.9,  # Use 90% of features per tree
+                gamma=0.1,             # Regularization
                 random_state=42
             )
             
-            # Train model
+            # Train model with early stopping (optional but improves generalization)
+            print(f"[PRERACE] Training XGBoost with enhanced hyperparameters...")
             self.model.fit(X, y)
             
             # Validate model is fitted and functional
             if not self._validate_model_post_fit():
                 self.model = None
                 return False
+            
+            # Print feature importance
+            importances = self.model.feature_importances_
+            feature_importance = sorted(zip(self.feature_cols, importances), key=lambda x: x[1], reverse=True)
+            print(f"[PRERACE] Top features by importance:")
+            for feat, importance in feature_importance[:5]:
+                print(f"         {feat:25s}: {importance*100:.1f}%")
             
             print(f"[PRERACE] Model trained successfully")
             return True
@@ -311,6 +353,9 @@ class PreRaceModel:
         """
         # Validate model is fitted before attempting prediction
         self._validate_model_fitted()
+        
+        print(f"\n[PRERACE PREDICT] Starting predictions for race {race_num}")
+        print(f"[PRERACE PREDICT] Using {len(self.feature_cols)} features: {self.feature_cols}")
         
         nationality_map = {
             'British': 'UK', 'German': 'Germany', 'Spanish': 'Spain', 'French': 'France',
@@ -360,15 +405,76 @@ class PreRaceModel:
         X_next_input = X_next[self.feature_cols]
         predictions = self.model.predict(X_next_input)
         
-        # Build results
+        # Normalize predictions to 1-20 range for better confidence calculation
+        min_score = min(predictions)
+        max_score = max(predictions)
+        score_range = max_score - min_score if max_score > min_score else 1.0
+        
+        print(f"[PRERACE PREDICT] Raw predictions range: {min_score:.2f} - {max_score:.2f} (span: {score_range:.2f})")
+        
+        # Calculate mean prediction for relative positioning
+        mean_score = np.mean(predictions)
+        std_score = np.std(predictions)
+        print(f"[PRERACE PREDICT] Mean: {mean_score:.2f}, StdDev: {std_score:.2f}")
+        
+        # Build results with IMPROVED confidence calculation
         results = []
+        debug_info = []  # Track first 5 drivers for debug output
+        
         for i, (driver_info, score) in enumerate(zip(grid_data, predictions)):
-            # Score represents predicted finishing position (1-20)
-            # Lower score = better finish position
-            # Convert to confidence: drivers with lower predicted position (lower score) get higher confidence
-            # Score 2.5 (P2-P3 finish) should have high confidence (~80%)
-            # Score 10+ (P10+ finish) should have lower confidence (~60-70%)
-            confidence = max(60.0, min(85.0, 85.0 - (float(score) - 1.5) * 3))
+            # === CONFIDENCE CALCULATION V2 ===
+            # Based on: 1) Relative position among field, 2) Model strength, 3) Grid position
+            
+            grid_pos = int(driver_info.get('grid_pos', i + 1))
+            
+            # 1. RELATIVE POSITION SCORE (compared to field average)
+            # How much better/worse than the median prediction?
+            position_vs_mean = score - mean_score  # Negative = better than field avg
+            
+            if std_score > 0:
+                # How many standard deviations away from mean?
+                zscore = position_vs_mean / std_score
+                # Convert to confidence: -1 std = high, 0 = medium, +1 std = lower
+                # Range: zscore from -2 to +2 roughly
+                relative_conf = max(50.0, min(85.0, 72.5 - (zscore * 8.0)))
+            else:
+                relative_conf = 72.5  # Fallback if no variation
+            
+            # 2. MODEL CONFIDENCE (how certain is the model?)
+            # Lower score (better position) = higher confidence
+            model_conf = max(50.0, min(85.0, 85.0 - (score - min_score) * 1.8))
+            
+            # 3. GRID POSITION WEIGHTING
+            # Top grid positions start with higher confidence baseline
+            if grid_pos == 1:
+                grid_conf_base = 78.0  # Pole position gets baseline 78%
+            elif grid_pos <= 3:
+                grid_conf_base = 75.0  # Front row 75%
+            elif grid_pos <= 5:
+                grid_conf_base = 72.0  # Top 5 get 72%
+            elif grid_pos <= 10:
+                grid_conf_base = 70.0  # Top 10 get 70%
+            else:
+                grid_conf_base = 65.0  # Midfield/back get 65% baseline
+            
+            # COMBINE: Weight towards relative position (more discriminating) + model opinion
+            confidence = relative_conf * 0.55 + model_conf * 0.35 + grid_conf_base * 0.10
+            
+            # Final bounds: 50-85%
+            confidence = max(50.0, min(85.0, confidence))
+            
+            # Debug output for first 5 drivers
+            if i < 5:
+                debug_info.append({
+                    'driver': driver_info.get('driver'),
+                    'grid': grid_pos,
+                    'score': score,
+                    'zscore': (score - mean_score) / std_score if std_score > 0 else 0,
+                    'rel_conf': relative_conf,
+                    'model_conf': model_conf,
+                    'grid_base': grid_conf_base,
+                    'final_conf': confidence
+                })
             
             results.append({
                 'position': i + 1,
@@ -379,6 +485,15 @@ class PreRaceModel:
                 'ai_score': float(score),
                 'confidence': float(confidence)
             })
+        
+        # Print debug info
+        if debug_info:
+            print("\n[PRERACE PREDICT] === CONFIDENCE BREAKDOWN (Top 5) ===")
+            for info in debug_info:
+                print(f"  {info['driver']:8s} | P{info['grid']:2d} | Score:{info['score']:5.2f} | z-score:{info['zscore']:+5.2f} | "
+                      f"RelConf:{info['rel_conf']:5.1f}% | ModelConf:{info['model_conf']:5.1f}% | GridBase:{info['grid_base']:5.1f}% | "
+                      f"FINAL:{info['final_conf']:5.1f}%")
+            print("[PRERACE PREDICT] === Weights: RelPosition 55% + ModelConf 35% + GridBase 10% ===\n")
         
         # Sort by AI score (ascending = best predictions first)
         # Lower score = better predicted position

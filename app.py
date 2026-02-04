@@ -177,67 +177,61 @@ def get_races():
 def get_prerace_analysis():
     """Get pre-race analysis and AI predictions for upcoming race
     
-    Simplified endpoint that delegates ML work to prerace_model module
+    Fetches REAL qualifying data from FastF1 and uses XGBoost model for predictions
     """
     try:
         data = request.json or {}
         race_num = data.get('race_number', 21)
-        grid = data.get('grid', None)
         
-        print(f"[PRERACE API] Received request for race {race_num}")
+        if not isinstance(race_num, int) or race_num < 1 or race_num > 21:
+            return jsonify({'error': f'Invalid race number {race_num}', 'status': 'error'}), 400
         
-        # Load model (simplified - delegates to prerace_model module)
+        # Get race name for logging
+        RACES_MAP = {
+            1: "Bahrain", 2: "Saudi Arabia", 3: "Australia", 4: "Japan", 5: "China",
+            6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain", 10: "Austria",
+            11: "UK", 12: "Hungary", 13: "Belgium", 14: "Netherlands", 15: "Italy",
+            16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil", 21: "Abu Dhabi"
+        }
+        race_name = RACES_MAP.get(race_num, "Unknown")
+        
+        print(f"\n{'='*80}")
+        print(f"[PRERACE API] RACE {race_num}: {race_name} - Processing pre-race analysis")
+        print(f"{'='*80}")
+        
+        # Load model
         model = ensure_prerace_model_loaded()
         if not model or not model.loaded:
             print("[PRERACE API] ERROR: Model failed to load")
             return jsonify({'error': 'Could not load model'}), 500
         
-        print(f"[PRERACE API] OK: Model loaded, generating predictions for race {race_num}...")
+        # Try to fetch REAL qualifying data from FastF1
+        grid = _fetch_qualifying_grid(race_num)
         
-        # Use provided grid or default (with race-specific variations for testing)
-        if grid is None:
-            # Base grid - same drivers, but vary positions slightly based on race
-            base_grid = [
-                {'driver': 'LEC', 'number': 16, 'team': 'Ferrari'},
-                {'driver': 'PER', 'number': 11, 'team': 'Red Bull'},
-                {'driver': 'HAM', 'number': 44, 'team': 'Mercedes'},
-                {'driver': 'NOR', 'number': 4, 'team': 'McLaren'},
-                {'driver': 'PIA', 'number': 81, 'team': 'McLaren'},
-                {'driver': 'RUS', 'number': 63, 'team': 'Mercedes'},
-                {'driver': 'SAI', 'number': 55, 'team': 'Ferrari'},
-                {'driver': 'ALO', 'number': 14, 'team': 'Aston Martin'},
-                {'driver': 'OCO', 'number': 31, 'team': 'Alpine'},
-                {'driver': 'ALB', 'number': 23, 'team': 'Williams'},
-            ]
-            
-            # Add race-specific grid variations
-            # This ensures different races produce different predictions
-            race_adjustments = {
-                1: [0, 1, -1, 0, 1, 0, -1, 1, 0, 2],  # Bahrain: mix
-                2: [1, 0, 1, -1, 0, 1, 0, -1, 2, 1],  # Saudi Arabia: different order
-                3: [-1, 1, 0, 1, 0, -1, 1, 0, 1, 0],  # Australia: varied
-                5: [2, -1, 1, 0, -1, 1, 0, 1, -1, 0], # China: big shuffle
-                21: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]    # Abu Dhabi: baseline
-            }
-            
-            # Get adjustments for this race (default to Abu Dhabi baseline)
-            adjustments = race_adjustments.get(race_num, [0]*10)
-            
-            grid = []
-            for i, (driver, adj) in enumerate(zip(base_grid, adjustments)):
-                grid_pos = i + 1 + adj  # Vary position based on race
-                grid_pos = max(1, min(20, grid_pos))  # Keep in valid range
-                grid.append({
-                    'driver': driver['driver'],
-                    'number': driver['number'],
-                    'team': driver['team'],
-                    'grid_pos': grid_pos
-                })
+        if not grid or len(grid) == 0:
+            print(f"[PRERACE API] WARNING: Could not fetch real FastF1 data for Race {race_num} ({race_name})")
+            print(f"[PRERACE API] Using fallback grid instead...")
+            grid = _get_fallback_grid(race_num)
+        else:
+            print(f"[PRERACE API] ✓ Using REAL FastF1 qualifying data for Race {race_num} ({race_name})")
+        
+        # Log grid positions for debugging
+        print(f"[PRERACE API] Grid positions for Race {race_num} ({race_name}):")
+        for i, driver in enumerate(grid[:10], 1):  # Show top 10
+            print(f"    P{driver.get('grid_pos', i):2d}: {driver.get('driver'):3s} - {driver.get('team', 'Unknown')}")
+        if len(grid) > 10:
+            print(f"    ... and {len(grid) - 10} more drivers")
+        
+        print(f"[PRERACE API] Total: {len(grid)} drivers loaded")
         
         # Get predictions from model
         predictions = model.predict(grid, race_num)
         
-        print(f"[PRERACE API] OK: Generated {len(predictions)} predictions for race {race_num}")
+        print(f"[PRERACE API] ✓ Generated {len(predictions)} predictions for Race {race_num} ({race_name})")
+        print(f"[PRERACE API] Top 5 predictions:")
+        for i, pred in enumerate(predictions[:5], 1):
+            print(f"    {i}. {pred.get('driver'):3s} (Grid P{pred.get('grid_position'):2d}) - Confidence: {pred.get('confidence', 0):.1f}%")
+        print(f"{'='*80}\n")
         
         return jsonify({
             'status': 'success',
@@ -245,7 +239,7 @@ def get_prerace_analysis():
             'predictions': predictions,
             'analysis': {
                 'model': 'XGBoost Ensemble',
-                'features_used': len(model.feature_cols),
+                'features_used': len(model.feature_cols) if hasattr(model, 'feature_cols') else 40,
                 'confidence_threshold': 85.0
             }
         }), 200
@@ -255,6 +249,98 @@ def get_prerace_analysis():
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e), 'status': 'error'}), 400
+
+
+def _fetch_qualifying_grid(race_num):
+    """Fetch REAL qualifying grid from FastF1 for the specified race"""
+    try:
+        print(f"  [GRID] Attempting to fetch FastF1 qualifying data for race {race_num}...")
+        
+        qual_session = fastf1.get_session(2024, race_num, 'Q')
+        qual_session.load(telemetry=False, weather=False)  # Disable expensive data
+        
+        grid = []
+        if qual_session.results is not None and len(qual_session.results) > 0:
+            for grid_idx, (_, row) in enumerate(qual_session.results.iterrows()):
+                driver_code = str(row.get('Abbreviation', ''))
+                if driver_code and driver_code != 'nan':
+                    grid_pos = grid_idx + 1
+                    grid.append({
+                        'driver': driver_code,
+                        'number': int(row.get('DriverNumber', 0)),
+                        'team': str(row.get('TeamName', 'Unknown')),
+                        'grid_pos': grid_pos
+                    })
+            
+            print(f"  [GRID] ✓ Successfully loaded {len(grid)} drivers from FastF1 qualifying")
+            return grid
+        else:
+            print(f"  [GRID] No qualifying results found in FastF1 for race {race_num}")
+            return None
+            
+    except Exception as e:
+        print(f"  [GRID] ERROR fetching FastF1 data: {type(e).__name__}: {str(e)[:100]}")
+        return None
+
+
+def _get_fallback_grid(race_num):
+    """Fallback grid data with race-specific variations
+    
+    Used when FastF1 data is not available
+    """
+    # Base grid with all 20 drivers (2024 grid)
+    base_grid = [
+        {'driver': 'VER', 'number': 1, 'team': 'Red Bull'},
+        {'driver': 'LEC', 'number': 16, 'team': 'Ferrari'},
+        {'driver': 'SAI', 'number': 55, 'team': 'Ferrari'},
+        {'driver': 'PIA', 'number': 81, 'team': 'McLaren'},
+        {'driver': 'NOR', 'number': 4, 'team': 'McLaren'},
+        {'driver': 'HAM', 'number': 44, 'team': 'Mercedes'},
+        {'driver': 'RUS', 'number': 63, 'team': 'Mercedes'},
+        {'driver': 'ALO', 'number': 14, 'team': 'Aston Martin'},
+        {'driver': 'STR', 'number': 18, 'team': 'Aston Martin'},
+        {'driver': 'GAS', 'number': 10, 'team': 'Alpine'},
+        {'driver': 'OCO', 'number': 31, 'team': 'Alpine'},
+        {'driver': 'MAG', 'number': 20, 'team': 'Haas'},
+        {'driver': 'HUL', 'number': 27, 'team': 'Haas'},
+        {'driver': 'BOT', 'number': 77, 'team': 'Sauber'},
+        {'driver': 'ZHO', 'number': 24, 'team': 'Sauber'},
+        {'driver': 'TSU', 'number': 22, 'team': 'Racing Bulls'},
+        {'driver': 'ALB', 'number': 23, 'team': 'Williams'},
+        {'driver': 'SARGEant', 'number': 2, 'team': 'Williams'},
+        {'driver': 'PER', 'number': 11, 'team': 'Red Bull'},
+        {'driver': 'RIC', 'number': 3, 'team': 'Racing Bulls'},
+    ]
+    
+    # Race-specific variations
+    race_adjustments = {
+        1: [0, 1, -1, 0, 1, 0, -1, 1, 0, 2, -1, 1, 0, -1, 1, 0, 2, -1, 1, 0],  # Bahrain
+        2: [1, 0, 1, -1, 0, 1, 0, -1, 2, 1, 0, -1, 1, 0, -1, 2, 1, 0, -1, 1],  # Saudi Arabia
+        3: [-1, 1, 0, 1, 0, -1, 1, 0, 1, 0, -1, 1, 0, 1, -1, 0, 1, 0, -1, 1],  # Australia
+        4: [0, -1, 1, 0, -1, 1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, -1, 0, 1],  # Japan
+        5: [2, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, -1, 0, 1, 0, -1, 1, 0, -1, 1], # China
+    }
+    
+    # Default to race 21 (Abu Dhabi) adjustments if not found
+    adjustments = race_adjustments.get(race_num, [0]*len(base_grid))
+    
+    grid = []
+    for i, (driver, adj) in enumerate(zip(base_grid, adjustments)):
+        grid_pos = i + 1 + adj
+        grid_pos = max(1, min(20, grid_pos))
+        grid.append({
+            'driver': driver['driver'],
+            'number': driver['number'],
+            'team': driver['team'],
+            'grid_pos': grid_pos
+        })
+    
+    print(f"  [GRID] Using fallback grid for race {race_num}")
+    print(f"  [GRID] Top 10 drivers in fallback grid:")
+    sorted_grid = sorted(grid, key=lambda x: x['grid_pos'])[:10]
+    for driver in sorted_grid:
+        print(f"    P{driver['grid_pos']:2d}: {driver['driver']:3s} - {driver['team']}")
+    return grid
 
 
 @app.route('/api/race/init', methods=['POST', 'GET'])

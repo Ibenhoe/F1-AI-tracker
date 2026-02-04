@@ -78,7 +78,10 @@ export default function PreRaceAnalysis() {
       <div className="pre-race-content">
         <div className="race-selector-section">
           <h2>Kies een race</h2>
-          <RaceSelector onSelectRace={handleRaceSelect} />
+          <RaceSelector 
+            selectedRace={raceNumber}
+            onSelectRace={handleRaceSelect} 
+          />
         </div>
 
         {error && (

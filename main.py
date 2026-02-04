@@ -261,8 +261,8 @@ else:
 # Verschil tussen Quali en Grid. (Positief = straf, Negatief = winst door andermans straf)
 df['grid_penalty'] = df['grid'] - df['quali_pos_filled']
 
-# --- DEFINIEER FEATURES ---
-feature_cols = [
+# --- DEFINIEER FEATURES (met ERROR CHECKING) ---
+all_feature_cols = [
     'grid', 
     'grid_penalty',
     'circuitId', 
@@ -290,8 +290,22 @@ feature_cols = [
     'points_before_race'
 ]
 
+# Filter: Alleen features die ECHT bestaan in de DataFrame
+feature_cols = [f for f in all_feature_cols if f in df.columns]
+missing_features = [f for f in all_feature_cols if f not in df.columns]
+
+print(f"\nFeatures beschikbaar voor training: {len(feature_cols)}/{len(all_feature_cols)}")
+if missing_features:
+    print(f"  WAARSCHUWING: ONTBREKENDE FEATURES ({len(missing_features)}):")
+    for f in missing_features:
+        print(f"     - {f}")
+else:
+    print("  OK: Alle features zijn beschikbaar!")
+
 # Filter data: Alleen rijen met een geldig resultaat
 train_df = df.dropna(subset=['positionOrder'] + feature_cols)
+
+print(f"Training data: {len(train_df)}/{len(df)} rijen ({(len(train_df)/len(df))*100:.1f}%)")
 
 X = train_df[feature_cols]
 y = train_df['positionOrder']
