@@ -191,7 +191,7 @@ class PreRaceModel:
             raise ValueError(error_msg)
     
     def _validate_training_data(self, X, y):
-        """Validate training data before model fitting
+        """Validate training data before model fitting (optimized for performance)
         
         Args:
             X: Feature matrix
@@ -200,10 +200,42 @@ class PreRaceModel:
         Returns:
             bool: True if data is valid, False otherwise
         """
+        # Check shape first (fastest operation)
         if X.shape[0] == 0 or X.shape[1] == 0:
             print(f"[PRERACE] ERROR: Invalid training data shape: {X.shape}")
             return False
-        return True
+        
+        # Combined validation: check NaN, Inf, and numeric types in single pass
+        try:
+            # Check for NaN or Inf more efficiently using pandas methods
+            if X.isnull().values.any():
+                nan_cols = X.columns[X.isnull().any()].tolist()
+                print(f"[PRERACE] ERROR: Training data contains NaN in: {nan_cols}")
+                return False
+            
+            # Check if all values are numeric and finite
+            # Using values.any() reduces memory overhead compared to column-by-column checks
+            inf_mask = np.isinf(X.select_dtypes(include=[np.number]).values)
+            if inf_mask.any():
+                print(f"[PRERACE] ERROR: Training data contains Inf values")
+                return False
+            
+            # Target validation (fast)
+            if y.isnull().any() or np.isinf(y.values).any():
+                print(f"[PRERACE] ERROR: Target contains NaN or Inf values")
+                return False
+            
+            # Verify all features are numeric (single dtype check per column is O(n) not O(n*m))
+            non_numeric = X.select_dtypes(exclude=[np.number]).columns.tolist()
+            if non_numeric:
+                print(f"[PRERACE] ERROR: Non-numeric features found: {non_numeric}")
+                return False
+            
+            print(f"[PRERACE] Data validation successful: {X.shape[0]} samples, {X.shape[1]} features, all numeric")
+            return True
+        except Exception as val_err:
+            print(f"[PRERACE] ERROR during validation: {str(val_err)}")
+            return False
     
     def _validate_model_post_fit(self):
         """Validate model is fitted and functional after training
@@ -317,7 +349,53 @@ class PreRaceModel:
             
             # Train model with early stopping (optional but improves generalization)
             print(f"[PRERACE] Training XGBoost with enhanced hyperparameters...")
-            self.model.fit(X, y)
+            
+            # Explicitly train the model with error checking
+            try:
+                print(f"[PRERACE] Fitting model with X shape {X.shape} and y shape {y.shape}...")
+                # Convert to numpy arrays to ensure compatibility with XGBoost
+                X_np = X.values if hasattr(X, 'values') else X
+                y_np = y.values if hasattr(y, 'values') else y
+                
+                print(f"[PRERACE] X dtype: {X_np.dtype}, y dtype: {y_np.dtype}")
+                print(f"[PRERACE] X min/max: {X_np.min()}/{X_np.max()}, y min/max: {y_np.min()}/{y_np.max()}")
+                
+                # Fit model with numpy arrays
+                self.model.fit(X_np, y_np)
+                print(f"[PRERACE] Model fit completed successfully")
+                print(f"[PRERACE] Model type: {type(self.model)}")
+                print(f"[PRERACE] Model object id: {id(self.model)}")
+                
+                # Immediately check if model has feature_importances_ after fit
+                has_attr = hasattr(self.model, 'feature_importances_')
+                print(f"[PRERACE] Has feature_importances_ attribute: {has_attr}")
+                
+                if has_attr:
+                    feat_imp = self.model.feature_importances_
+                    print(f"[PRERACE] feature_importances_ value: {feat_imp}")
+                    print(f"[PRERACE] feature_importances_ type: {type(feat_imp)}")
+                    print(f"[PRERACE] feature_importances_ length: {len(feat_imp) if feat_imp is not None else 'None'}")
+                    if feat_imp is None or len(feat_imp) == 0:
+                        print(f"[PRERACE] ERROR: feature_importances_ is None or empty")
+                        self.model = None
+                        return False
+                else:
+                    print(f"[PRERACE] ERROR: Model.fit() returned but feature_importances_ attribute not found")
+                    # Try to access booster to see if model trained
+                    try:
+                        booster = self.model.get_booster()
+                        print(f"[PRERACE] Booster exists: {booster is not None}")
+                    except Exception as e:
+                        print(f"[PRERACE] Cannot get booster: {e}")
+                    self.model = None
+                    return False
+                    
+            except Exception as fit_err:
+                print(f"[PRERACE] ERROR: Model.fit() failed: {str(fit_err)}")
+                import traceback
+                traceback.print_exc()
+                self.model = None
+                return False
             
             # Validate model is fitted and functional
             if not self._validate_model_post_fit():
@@ -533,28 +611,46 @@ class PreRaceModel:
             return default_val
 
 
-# Global instance with lazy loading
+# Global instance with lazy loading (thread-safe)
 _prerace_model_instance = None
-_model_lock = threading.Lock() if hasattr(__import__('threading'), 'Lock') else None
+_model_lock = threading.Lock()  # Always create lock, threading module is imported
+
 
 def get_prerace_model():
-    """Get or create global model instance (thread-safe)"""
+    """Get or create global model instance (thread-safe with double-checked locking)"""
     global _prerace_model_instance
-    if _prerace_model_instance is None:
-        _prerace_model_instance = PreRaceModel()
-    return _prerace_model_instance
+    
+    # First check without lock (optimization to avoid lock contention)
+    if _prerace_model_instance is not None:
+        return _prerace_model_instance
+    
+    # Acquire lock for actual initialization
+    with _model_lock:
+        # Double-check inside lock in case another thread initialized it
+        if _prerace_model_instance is None:
+            _prerace_model_instance = PreRaceModel()
+        return _prerace_model_instance
 
 
 def ensure_prerace_model_loaded():
-    """Ensure model is loaded (with error handling and retry)"""
+    """Ensure model is loaded (with error handling and retry, thread-safe)
+    
+    Note: get_prerace_model() already implements thread-safe double-checked locking
+    for instance creation. This function only needs to protect the .load() call.
+    """
     try:
+        # get_prerace_model() is already thread-safe for instance creation
         model = get_prerace_model()
-        if not model.loaded:
-            print("[PRERACE] Attempting to load model...")
-            if not model.load():
-                print("[PRERACE] ERROR: Model load() returned False")
-                return None
-            print("[PRERACE] Model successfully loaded and cached")
+        
+        # Only lock around model loading to prevent duplicate training
+        with _model_lock:
+            if not model.loaded:
+                print("[PRERACE] Attempting to load model...")
+                if not model.load():
+                    print("[PRERACE] ERROR: Model load() returned False")
+                    return None
+                print("[PRERACE] Model successfully loaded and cached")
+        
         return model
     except Exception as e:
         print(f"[PRERACE] ERROR in ensure_prerace_model_loaded: {str(e)}")
