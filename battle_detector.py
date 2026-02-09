@@ -15,7 +15,7 @@ class BattleDetector:
         
     def detect_battles(self, lap_num, drivers_data):
         """
-        Detecteer battles ONLY in TOP 5 POSITIONS voor minder spam!
+        Detecteer battles ONLY in TOP 5 POSITIONS 
         
         Args:
             lap_num: Current lap number
