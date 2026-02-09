@@ -1,11 +1,12 @@
 import pandas as pd
 import xgboost as xgb
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
-from sklearn.metrics import mean_absolute_error
+from sklearn.metrics import mean_absolute_error, accuracy_score, classification_report
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
+from sklearn.neural_network import MLPRegressor, MLPClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.impute import SimpleImputer
 import os
 
 # ---------------------------------------------------------
@@ -54,12 +55,12 @@ df['grid_bin'] = pd.cut(df['grid'], bins=[-1, 1, 3, 10, 15, 25], labels=['Pole',
 df['age_bin'] = pd.cut(df['driver_age'], bins=[17, 24, 30, 36, 60], labels=['Rookie', 'Prime', 'Experienced', 'Veteran'])
 
 # 5. Encoding (Tekst naar getallen voor XGBoost)
-le_grid = LabelEncoder()
-le_age = LabelEncoder()
+# PROFESSOR FIX: LabelEncoder sorteert alfabetisch (Back=0, Pole=3). We willen logische volgorde!
+grid_mapping = {'Pole': 0, 'Top3': 1, 'Points': 2, 'Midfield': 3, 'Back': 4}
+age_mapping = {'Rookie': 0, 'Prime': 1, 'Experienced': 2, 'Veteran': 3}
 
-# .astype(str) zorgt dat we geen crashes krijgen op lege waarden
-df['grid_bin_code'] = le_grid.fit_transform(df['grid_bin'].astype(str))
-df['age_bin_code'] = le_age.fit_transform(df['age_bin'].astype(str))
+df['grid_bin_code'] = df['grid_bin'].map(grid_mapping).fillna(4).astype(int)
+df['age_bin_code'] = df['age_bin'].map(age_mapping).fillna(1).astype(int)
 
 # --- NIEUW: TEAM CONTINUÏTEIT (REBRANDING) ---
 # We mappen oude teamnamen naar hun huidige identiteit zodat het model de lijn ziet.
@@ -85,9 +86,10 @@ df['team_continuity_id'] = df.apply(get_team_continuity_id, axis=1)
 # We berekenen hoeveel posities er gemiddeld veranderen op een circuit.
 # Veel verandering = makkelijk inhalen (of chaos). Weinig = Monaco.
 df['pos_change_abs'] = (df['grid'] - df['positionOrder']).abs()
-# Bereken gemiddelde per circuit en zet terug in kolom
-df['circuit_overtake_index'] = df.groupby('circuitId')['pos_change_abs'].transform('mean')
-# Vul eventuele gaten
+# PROFESSOR FIX: Data Leakage! Gebruik geen mean() over de hele dataset (toekomstkennis).
+# Gebruik expanding mean (alleen historie).
+df['circuit_overtake_index'] = df.groupby('circuitId')['pos_change_abs'].transform(lambda x: x.expanding().mean().shift(1))
+# Vul eventuele gaten (eerste race op circuit)
 df['circuit_overtake_index'] = df['circuit_overtake_index'].fillna(df['pos_change_abs'].mean())
 
 # 6. RECENT FORM (De belangrijkste toevoeging!)
@@ -140,6 +142,17 @@ else:
     df['driver_recent_pit_avg'] = global_pit_mean
     df['constructor_recent_pit_avg'] = global_pit_mean
 
+# --- NIEUW: TIRE STRATEGY FEATURES ---
+# 1. Circuit Degradation (Hoeveel stops zijn normaal op dit circuit?)
+# We gebruiken expanding mean om data leakage te voorkomen.
+df['circuit_avg_stops'] = df.groupby('circuitId')['pit_stops_count'].transform(lambda x: x.expanding().mean().shift(1))
+df['circuit_avg_stops'] = df['circuit_avg_stops'].fillna(1.5) # Default 1-2 stops
+
+# 2. Driver Tire Management (Rijdt deze coureur lange of korte stints?)
+# We gebruiken de berekende 'avg_stint_length' uit data_script.py
+df['driver_tire_management'] = df.groupby('driverId')['avg_stint_length'].transform(calculate_rolling_avg)
+df['driver_tire_management'] = df['driver_tire_management'].fillna(20.0) # Default 20 laps/stint
+
 # --- NIEUW: RELIABILITY (DNF KANS) ---
 # We berekenen hoe vaak een coureur of auto de finish NIET haalt.
 # Status 1 = Finished. Status 11, 12 etc = +1 Lap (ook gefinisht).
@@ -167,7 +180,8 @@ df['driver_vs_team_form'] = df['constructor_recent_form'] - df['driver_recent_fo
 # --- WEERDATA VOORBEREIDEN ---
 # We vullen ontbrekende weerdata op met logische standaardwaarden
 if 'weather_temp_c' in df.columns:
-    df['weather_temp_c'] = df['weather_temp_c'].fillna(df['weather_temp_c'].mean()) # Gemiddelde temp
+    # UPDATE: Median is robuuster tegen uitschieters (smoother) dan Mean
+    df['weather_temp_c'] = df['weather_temp_c'].fillna(df['weather_temp_c'].median())
     df['weather_precip_mm'] = df['weather_precip_mm'].fillna(0.0) # Geen regen
     df['weather_cloud_pct'] = df['weather_cloud_pct'].fillna(50.0) # Half bewolkt
 else:
@@ -236,15 +250,40 @@ if 'fastestLapTime' in df.columns:
     
     # --- NIEUW: CIRCUIT KARAKTERISTIEKEN ---
     # We berekenen de gemiddelde rondetijd van een circuit over de historie.
-    # Dit geeft aan of het een 'lang/traag' circuit is of een 'kort/snel' circuit.
-    # Hierdoor snapt het model wat voor type baan het is, ook als het ID onbekend is.
-    df['circuit_speed_index'] = df.groupby('circuitId')['fastest_lap_seconds'].transform('mean')
+    # FIX: Gebruik expanding().mean() om data leakage te voorkomen (geen toekomstkennis)
+    # We groeperen per circuit en kijken alleen naar voorgaande races op dat circuit
+    df['circuit_speed_index'] = df.groupby('circuitId')['fastest_lap_seconds'].transform(lambda x: x.expanding().mean().shift(1))
+    
     # Vul missende waarden met het globale gemiddelde
     global_lap_mean = df['fastest_lap_seconds'].mean()
     df['circuit_speed_index'] = df['circuit_speed_index'].fillna(global_lap_mean)
+
+    # --- NIEUW: AGGRESSION INDEX (Snelheid vs Resultaat) ---
+    # Als je de snelste auto hebt (Rank 1) maar P10 finisht, ben je agressief/foutgevoelig.
+    # Stap 1: Hoe snel was je in de race t.o.v. de rest? (Rank 1 = Snelste)
+    df['fastest_lap_rank'] = df.groupby('raceId')['fastest_lap_seconds'].rank(method='min')
+    
+    # Stap 2: Verschil tussen snelheid en finish.
+    # Positief getal (bv. Finish 15 - SpeedRank 1 = +14) = Veel snelheid, slecht resultaat (Agressief/Pech)
+    # Negatief getal (bv. Finish 5 - SpeedRank 15 = -10) = Weinig snelheid, goed resultaat (Consistent/Geluk)
+    df['aggression_score'] = df['positionOrder'] - df['fastest_lap_rank']
+    
+    # Stap 3: Dit is een eigenschap van de coureur, dus we nemen het gemiddelde van de laatste 5 races
+    df['driver_aggression'] = df.groupby('driverId')['aggression_score'].transform(calculate_rolling_avg)
+    df['driver_aggression'] = df['driver_aggression'].fillna(0.0)
+
+    # --- NIEUW: CONSISTENCY (BATTLE DETECTOR) ---
+    # We gebruiken de standaardafwijking van rondetijden (std_lap_time_ms).
+    # Laag = Consistent (Vrije lucht). Hoog = Gevecht/Verkeer/Fouten.
+    if 'std_lap_time_ms' in df.columns:
+        df['driver_consistency'] = df.groupby('driverId')['std_lap_time_ms'].transform(calculate_rolling_avg)
+        df['driver_consistency'] = df['driver_consistency'].fillna(5000.0) # Default onrustig
+    else:
+        df['driver_consistency'] = 5000.0
 else:
     df['driver_recent_speed'] = 1.10
     df['circuit_speed_index'] = 90.0 # Default 1:30
+    df['driver_consistency'] = 5000.0
 
 # 4. Puntenstand voorafgaand aan de race (Strategie context)
 # We berekenen de cumulatieve som min de punten van vandaag = punten bij start.
@@ -260,6 +299,33 @@ else:
 # --- NIEUW: GRID PENALTY ---
 # Verschil tussen Quali en Grid. (Positief = straf, Negatief = winst door andermans straf)
 df['grid_penalty'] = df['grid'] - df['quali_pos_filled']
+
+# --- NIEUW: WEATHER CONFIDENCE (Nat vs Droog Talent) ---
+# We berekenen de gemiddelde finish in natte races apart van droge races.
+
+# 1. Definieer wat 'Nat' is (meer dan 0.1mm regen)
+df['is_wet_race'] = df['weather_precip_mm'] > 0.1
+
+# 2. Bereken historisch gemiddelde voor NAT en DROOG (Expanding mean om toekomstkennis te voorkomen)
+# We gebruiken transform zodat de index gelijk blijft aan de originele df
+wet_avg = df[df['is_wet_race']].groupby('driverId')['positionOrder'].transform(lambda x: x.expanding().mean().shift(1))
+dry_avg = df[~df['is_wet_race']].groupby('driverId')['positionOrder'].transform(lambda x: x.expanding().mean().shift(1))
+
+# We zetten deze waarden terug in de hoofdtabel (dit is even puzzelen met indexen)
+df['avg_finish_wet'] = wet_avg
+df['avg_finish_dry'] = dry_avg
+
+# Vul lege waarden (als je nog nooit in regen reed, is je regen-skill gelijk aan je droog-skill)
+df['avg_finish_dry'] = df['avg_finish_dry'].fillna(12.0)
+df['avg_finish_wet'] = df['avg_finish_wet'].fillna(df['avg_finish_dry'])
+
+# 3. Het verschil: Negatief betekent BETER in regen (lagere positie is beter)
+df['weather_confidence_diff'] = df['avg_finish_wet'] - df['avg_finish_dry']
+
+# --- NIEUW: OVERTAKE RATE (INHAAL SKILL) ---
+# Hoeveel plekken wint deze coureur gemiddeld? (Grid - Finish)
+df['positions_gained'] = df['grid'] - df['positionOrder']
+df['driver_overtake_rate'] = df.groupby('driverId')['positions_gained'].transform(calculate_rolling_avg).fillna(0.0)
 
 # --- DEFINIEER FEATURES ---
 feature_cols = [
@@ -282,10 +348,16 @@ feature_cols = [
     'weather_temp_c',
     'weather_precip_mm',
     'weather_cloud_pct',
+    'weather_confidence_diff', # <--- Nieuw: Is coureur beter in regen?
+    'driver_aggression',       # <--- Nieuw: Rijdt coureur sneller dan zijn finish?
+    'driver_overtake_rate',    # <--- Nieuw: Inhaalmachine?
+    'driver_consistency',      # <--- Nieuw: Stabiele rondetijden?
     'driver_recent_pit_avg',
     'constructor_recent_pit_avg',
     'driver_dnf_rate',
     'constructor_dnf_rate',
+    'circuit_avg_stops',      # <--- Nieuw
+    'driver_tire_management', # <--- Nieuw
     'driver_recent_speed',
     'points_before_race'
 ]
@@ -295,6 +367,8 @@ train_df = df.dropna(subset=['positionOrder'] + feature_cols)
 
 X = train_df[feature_cols]
 y = train_df['positionOrder']
+y_pos = train_df['positionOrder'] # Target voor Regressie (Positie)
+y_dnf = train_df['is_dnf']        # Target voor Classificatie (Crash/Pech)
 
 # ---------------------------------------------------------
 # STAP 2: VOORSPELLING DATA VOORBEREIDEN (SPA 2024)
@@ -366,8 +440,9 @@ X_next['is_home_race'] = np.where(X_next['mapped_nationality'] == X_next['countr
 X_next['grid_bin'] = pd.cut(X_next['grid'], bins=[-1, 1, 3, 10, 15, 25], labels=['Pole', 'Top3', 'Points', 'Midfield', 'Back'])
 X_next['age_bin'] = pd.cut(X_next['driver_age'], bins=[17, 24, 30, 36, 60], labels=['Rookie', 'Prime', 'Experienced', 'Veteran'])
 
-X_next['grid_bin_code'] = le_grid.transform(X_next['grid_bin'].astype(str))
-X_next['age_bin_code'] = le_age.transform(X_next['age_bin'].astype(str))
+# PROFESSOR FIX: Pas dezelfde handmatige mapping toe op de voorspelling
+X_next['grid_bin_code'] = X_next['grid_bin'].map(grid_mapping).fillna(4).astype(int)
+X_next['age_bin_code'] = X_next['age_bin'].map(age_mapping).fillna(1).astype(int)
 
 # Team Mapping toepassen op voorspelling
 X_next['team_continuity_id'] = X_next.apply(get_team_continuity_id, axis=1)
@@ -384,11 +459,22 @@ X_next['driver_vs_team_form'] = X_next['constructor_recent_form'] - X_next['driv
 X_next['driver_recent_pit_avg'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
 X_next['constructor_recent_pit_avg'] = X_next['team_continuity_id'].apply(lambda x: get_recent_form('team_continuity_id', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
 
+# Tire Strategy Features voor voorspelling
+# 1. Circuit Avg Stops (Spa = Circuit 13)
+spa_avg_stops = df[df['circuitId'] == 13]['circuit_avg_stops'].mean()
+X_next['circuit_avg_stops'] = spa_avg_stops if not pd.isna(spa_avg_stops) else 2.0
+# 2. Driver Management (Historie)
+X_next['driver_tire_management'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='avg_stint_length', default_val=20.0))
+
 # Track History toevoegen
 track_stats = X_next.apply(lambda x: get_track_history(x['driverId'], x['circuitId']), axis=1)
 X_next['driver_track_avg_grid'] = [x[0] for x in track_stats]
 X_next['driver_track_avg_finish'] = [x[1] for x in track_stats]
 X_next['driver_track_podiums'] = [x[2] for x in track_stats]
+
+# Recente Podiums (Vormpiek)
+# We berekenen hoe vaak ze in de laatste 5 races podium haalden (Top 3)
+X_next['recent_podium_rate'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='is_podium', default_val=0.0))
 
 # Nieuwe features toevoegen aan voorspelling
 # 1. Recente snelheid (gebruikt de historie van fastest laps)
@@ -404,6 +490,14 @@ spa_overtake = df[df['circuitId'] == 13]['circuit_overtake_index'].mean()
 if pd.isna(spa_overtake): spa_overtake = 2.5 # Fallback
 X_next['circuit_overtake_index'] = spa_overtake
 
+# 4. Aggression (Historie van verschil tussen snelheid en finish)
+# We gebruiken de eerder berekende 'aggression_score' kolom uit de historie
+X_next['driver_aggression'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='aggression_score', default_val=0.0))
+
+# 5. Overtake Rate & Consistency
+X_next['driver_overtake_rate'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='positions_gained', default_val=0.0))
+X_next['driver_consistency'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='std_lap_time_ms', default_val=5000.0))
+
 # 3. DNF Rates
 X_next['driver_dnf_rate'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='is_dnf', default_val=0.2))
 X_next['constructor_dnf_rate'] = X_next['team_continuity_id'].apply(lambda x: get_recent_form('team_continuity_id', x, target_col='is_dnf', default_val=0.2))
@@ -411,6 +505,11 @@ X_next['constructor_dnf_rate'] = X_next['team_continuity_id'].apply(lambda x: ge
 # 4. Quali
 X_next['quali_pos_filled'] = X_next['quali_position']
 X_next['grid_penalty'] = X_next['grid'] - X_next['quali_pos_filled']
+
+# 5. Weather Confidence (Voor Spa voorspelling)
+# We halen het historische verschil op tussen nat en droog
+X_next['weather_confidence_diff'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='weather_confidence_diff', default_val=0.0))
+
 
 # 5. Huidige puntenstand (totaal van dit jaar tot nu toe)
 def get_current_points(driver_id, year):
@@ -422,7 +521,7 @@ X_next['points_before_race'] = X_next.apply(lambda x: get_current_points(x['driv
 X_next_input = X_next[feature_cols]
 
 # ---------------------------------------------------------
-# STAP 3: GRID SEARCH, TRAINING & EVALUATIE PER MODEL
+# STAP 3: TRAINING & EVALUATIE
 # ---------------------------------------------------------
 
 # --- ACTUAL RESULTS (SPA 2024) ---
@@ -433,76 +532,190 @@ actual_positions = {
     "Tsunoda": 16, "Sargeant": 17, "Hulkenberg": 18, "Guanyu": 19, "Russell": 20
 }
 
-# Definieer de modellen en hun Grid Search parameters
-model_configs = {
-    "XGBoost": {
-        "model": xgb.XGBRegressor(objective='reg:squarederror', random_state=42),
-        "params": {
-            'n_estimators': [100, 200],
-            'max_depth': [3, 5],
-            'learning_rate': [0.05, 0.1]
-        }
-    },
-    "Random Forest": {
-        "model": RandomForestRegressor(random_state=42),
-        "params": {
-            'n_estimators': [100, 200],
-            'max_depth': [5, 10]
-        }
-    },
-    "Gradient Boosting": {
-        "model": GradientBoostingRegressor(random_state=42),
-        "params": {
-            'n_estimators': [100, 200],
-            'learning_rate': [0.05, 0.1]
-        }
-    },
-    "Linear Regression": {
-        "model": LinearRegression(),
-        "params": {} # Geen hyperparameters om te tunen
-    }
-}
-
+# --- MODEL 1: POSITIE VOORSPELLEN (REGRESSIE) ---
 print("\n==================================================")
-print(" START GRID SEARCH & EVALUATIE (4 OUTPUTS) ")
+print(" 1. TRAINING POSITION MODEL (XGBRegressor) ")
 print("==================================================")
 
-for name, config in model_configs.items():
-    print(f"\n>>> MODEL: {name}")
-    print("Bezig met Grid Search voor beste parameters...")
-    
-    # TimeSeriesSplit gebruiken om data leakage te voorkomen (trainen op verleden, testen op toekomst)
-    tscv = TimeSeriesSplit(n_splits=3)
-    
-    grid_search = GridSearchCV(config['model'], config['params'], cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
-    grid_search.fit(X, y)
-    
-    best_model = grid_search.best_estimator_
-    print(f"Beste parameters: {grid_search.best_params_}")
-    
-    # Voorspellen
-    predictions = best_model.predict(X_next_input)
-    
-    # Resultaten verwerken in een tijdelijke dataframe
-    result_df = X_next.copy()
-    result_df['ai_score'] = predictions
-    result_df = result_df.sort_values(by='ai_score', ascending=True)
-    
-    # Dashboard opbouwen
-    result_df['actual_pos'] = result_df['driver_name'].map(actual_positions)
-    result_df['predicted_pos'] = range(1, len(result_df) + 1)
-    result_df['error'] = result_df['predicted_pos'] - result_df['actual_pos']
-    result_df['abs_error'] = result_df['error'].abs()
-    
-    # Totale fout berekenen (hoe lager hoe beter)
-    total_error = result_df['abs_error'].sum()
-    
-    # Output printen
-    print(f"--- UITSLAG {name.upper()} (Totale Fout: {total_error}) ---")
-    dashboard = result_df[['predicted_pos', 'driver_name', 'actual_pos', 'error', 'ai_score']]
-    dashboard = dashboard.rename(columns={'driver_name': 'Driver', 'predicted_pos': 'Pred', 'actual_pos': 'Act'})
-    dashboard.set_index('Pred', inplace=True)
-    print(dashboard)
-    print("-" * 60)
+# NIEUW: Filter op finishers. We willen snelheid leren van mensen die finishen.
+# Dit voorkomt dat het model denkt dat P1 starten leidt tot P20 (door een crash).
+print("   -> Filteren: Trainen op alleen finishers (crashes negeren voor positiemodel)...")
+mask_finishers = y_dnf == 0
+X_reg = X[mask_finishers]
+y_reg = y_pos[mask_finishers]
 
-print("\nKlaar! Alle 4 modellen zijn geoptimaliseerd en geëvalueerd.")
+# PROFESSOR FIX: Weighted Regression.
+# We care MUCH more about predicting P1 correctly than P18.
+# Weight = 22 - Position. (P1 gets weight 21, P20 gets weight 2).
+train_weights = (22 - y_reg).clip(lower=1)
+
+reg_params = {
+    'n_estimators': [100, 200, 300], # More trees to find subtle patterns
+    'max_depth': [3, 4, 5], 
+    'learning_rate': [0.01, 0.05, 0.1],
+    'colsample_bytree': [0.8, 1.0] # Randomly hide columns to prevent overfitting
+}
+tscv = TimeSeriesSplit(n_splits=3)
+
+reg_model = xgb.XGBRegressor(objective='reg:squarederror', random_state=42)
+grid_reg = GridSearchCV(reg_model, reg_params, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
+# PROFESSOR FIX: Train with weights!
+grid_reg.fit(X_reg, y_reg, sample_weight=train_weights)
+
+best_reg_model = grid_reg.best_estimator_
+print(f"Beste Positie Parameters: {grid_reg.best_params_}")
+print(f"Beste MAE Score (Foutmarge): {-grid_reg.best_score_:.2f} posities")
+
+# --- MODEL 1.5: NEURAL NETWORK (MLPRegressor) ---
+print("\n==================================================")
+print(" 1.5 TRAINING NEURAL NETWORK (MLPRegressor) ")
+print("==================================================")
+
+scaler = StandardScaler()
+imputer = SimpleImputer(strategy='median')
+
+# Pipeline: Impute -> Scale
+X_reg_scaled = scaler.fit_transform(imputer.fit_transform(X_reg))
+
+nn_params = {
+    'hidden_layer_sizes': [(64, 32), (32, 16), (100, 50)], # Verschillende netwerk groottes
+    'activation': ['relu', 'tanh'],
+    'alpha': [0.0001, 0.001, 0.01], # Regularisatie (voorkomt overfitting)
+    'learning_rate_init': [0.001, 0.01] 
+}
+
+nn_base = MLPRegressor(solver='adam', max_iter=2000, random_state=42)
+grid_nn = GridSearchCV(nn_base, nn_params, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
+grid_nn.fit(X_reg_scaled, y_reg)
+
+nn_model = grid_nn.best_estimator_
+print(f"Beste NN Parameters: {grid_nn.best_params_}")
+print(f"Beste NN MAE Score: {-grid_nn.best_score_:.2f} posities")
+
+# --- MODEL 1.6: NEURAL NETWORK CRASH MODEL (MLPClassifier) ---
+# We trainen ook een NN om crashes te herkennen, net als XGBoost.
+print("   -> Training Neural Network Crash Model...")
+
+# Voor classificatie gebruiken we de hele dataset (X), niet alleen finishers
+X_scaled = scaler.transform(imputer.transform(X)) # Gebruik dezelfde scaler/imputer logic
+
+nn_class_model = MLPClassifier(
+    hidden_layer_sizes=(32, 16), # Iets kleiner netwerk voor simpele Ja/Nee vraag
+    activation='relu',
+    max_iter=1000,
+    random_state=42
+)
+nn_class_model.fit(X_scaled, y_dnf)
+
+# --- MODEL 2: CRASH/DNF VOORSPELLEN (CLASSIFICATIE) ---
+print("\n==================================================")
+print(" 2. TRAINING CRASH MODEL (XGBClassifier) ")
+print("==================================================")
+
+class_params = {
+    'n_estimators': [100], 'max_depth': [3, 5],
+    'scale_pos_weight': [3, 5] # Belangrijk! Geeft extra gewicht aan de zeldzame 'crash' klasse.
+}
+
+class_model = xgb.XGBClassifier(eval_metric='logloss', random_state=42)
+grid_class = GridSearchCV(class_model, class_params, cv=tscv, scoring='accuracy', n_jobs=-1)
+grid_class.fit(X, y_dnf)
+
+best_class_model = grid_class.best_estimator_
+print(f"Beste Crash Parameters: {grid_class.best_params_}")
+print(f"Beste Accuracy: {grid_class.best_score_ * 100:.1f}%")
+
+# NIEUW: Precision & Recall tonen om de 'Accuracy Paradox' te checken
+print("\n   -> Gedetailleerd Rapport (Precision/Recall):")
+y_pred_full = best_class_model.predict(X)
+print(classification_report(y_dnf, y_pred_full, target_names=['Finish', 'DNF']))
+
+print("\n==================================================")
+print(" 3. VOORSPELLING SPA 2024 (GECOMBINEERD MODEL) ")
+print("==================================================")
+
+# 1. Voorspel Posities (Snelheid)
+pred_pos = best_reg_model.predict(X_next_input)
+
+# 1.5 Voorspel Posities (Neural Network)
+X_next_scaled = scaler.transform(imputer.transform(X_next_input))
+pred_pos_nn = nn_model.predict(X_next_scaled)
+
+# 1.6 Voorspel Crashes (Neural Network)
+pred_dnf_prob_nn = nn_class_model.predict_proba(X_next_scaled)[:, 1]
+pred_dnf_label_nn = (pred_dnf_prob_nn > 0.5).astype(int)
+
+# 2. Voorspel Crashes (Betrouwbaarheid)
+pred_dnf_prob = best_class_model.predict_proba(X_next_input)[:, 1] # Kans op DNF
+pred_dnf_label = (pred_dnf_prob > 0.5).astype(int) # 0 = Finish, 1 = DNF
+
+# Resultaten samenvoegen
+result_df = X_next.copy()
+result_df['actual_pos'] = result_df['driver_name'].map(actual_positions)
+
+# --- 1. XGBOOST UITSLAG (Met DNF Logic) ---
+print("\n" + "="*50)
+print(" UITSLAG 1: XGBOOST (Inclusief DNF Model)")
+print("="*50)
+
+xgb_df = result_df.copy()
+xgb_df['Score'] = pred_pos
+xgb_df['DNF_Pred'] = pred_dnf_label
+
+# Sorteren: DNF's onderaan (999), anders op score
+xgb_df['Sort'] = np.where(xgb_df['DNF_Pred'] == 1, 999, xgb_df['Score'])
+xgb_df = xgb_df.sort_values(by='Sort')
+
+xgb_df['Rank'] = range(1, len(xgb_df) + 1)
+xgb_df['Error'] = (xgb_df['Rank'] - xgb_df['actual_pos']).abs()
+xgb_df['Status'] = np.where(xgb_df['DNF_Pred'] == 1, "DNF", "Finish")
+
+print(f"Totale Fout XGBoost: {xgb_df['Error'].sum()}")
+print(xgb_df[['Rank', 'driver_name', 'actual_pos', 'Error', 'Status', 'Score']].to_string(index=False))
+
+# --- 2. NEURAL NETWORK UITSLAG (Puur Regressie) ---
+print("\n" + "="*50)
+print(" UITSLAG 2: NEURAL NETWORK (Puur Snelheid)")
+print("="*50)
+
+nn_df = result_df.copy()
+nn_df['Score'] = pred_pos_nn
+nn_df['DNF_Pred'] = pred_dnf_label_nn # Nu gebruiken we ook de NN crash voorspelling
+
+# Sorteren: DNF's onderaan (999), anders op score
+nn_df['Sort'] = np.where(nn_df['DNF_Pred'] == 1, 999, nn_df['Score'])
+nn_df = nn_df.sort_values(by='Sort')
+
+nn_df['Rank'] = range(1, len(nn_df) + 1)
+nn_df['Error'] = (nn_df['Rank'] - nn_df['actual_pos']).abs()
+nn_df['Status'] = np.where(nn_df['DNF_Pred'] == 1, "DNF", "Finish")
+
+print(f"Totale Fout Neural Network: {nn_df['Error'].sum()}")
+print(nn_df[['Rank', 'driver_name', 'actual_pos', 'Error', 'Status', 'Score']].to_string(index=False))
+
+# --- 3. ENSEMBLE UITSLAG (Gemiddelde) ---
+print("\n" + "="*50)
+print(" UITSLAG 3: ENSEMBLE (XGB + NN Gecombineerd)")
+print("="*50)
+
+ens_df = result_df.copy()
+# We nemen het gemiddelde van de ruwe scores (Ensemble Averaging)
+ens_df['Score'] = (pred_pos + pred_pos_nn) / 2
+
+# We nemen ook het gemiddelde van de crash-kans!
+ens_prob_dnf = (pred_dnf_prob + pred_dnf_prob_nn) / 2
+ens_df['DNF_Pred'] = (ens_prob_dnf > 0.5).astype(int)
+
+# Sorteren: DNF's onderaan (999), anders op score
+ens_df['Sort'] = np.where(ens_df['DNF_Pred'] == 1, 999, ens_df['Score'])
+ens_df = ens_df.sort_values(by='Sort')
+
+ens_df['Rank'] = range(1, len(ens_df) + 1)
+ens_df['Error'] = (ens_df['Rank'] - ens_df['actual_pos']).abs()
+ens_df['Status'] = np.where(ens_df['DNF_Pred'] == 1, "DNF", "Finish")
+
+print(f"Totale Fout Ensemble: {ens_df['Error'].sum()}")
+print(ens_df[['Rank', 'driver_name', 'actual_pos', 'Error', 'Status', 'Score']].to_string(index=False))
+
+print("-" * 60)
+print("\nKlaar! Drie modellen geëvalueerd: XGBoost, Neural Network en Ensemble.")

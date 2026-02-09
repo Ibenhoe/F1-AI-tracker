@@ -90,6 +90,12 @@ df['driver_age'] = (df['date'] - df['dob']).dt.days / 365.25
 # B. 'Null' waarden opschonen (in Ergast is \N vaak een lege waarde)
 df = df.replace(r'\\N', np.nan, regex=True)
 
+# C. TIRE STRATEGY (STINT LENGTHS)
+# We berekenen gemiddelde rondes per stint. (Totaal rondes / (Stops + 1))
+df['laps'] = pd.to_numeric(df['laps'], errors='coerce').fillna(0)
+df['pit_stops_count'] = df['pit_stops_count'].fillna(0)
+df['avg_stint_length'] = df['laps'] / (df['pit_stops_count'] + 1)
+
 # 4. SELECTEREN VAN KOLOMMEN VOOR XGBOOST
 # We hebben alleen getallen nodig. Tekst (zoals 'Dutch') moeten we later nog omzetten.
 

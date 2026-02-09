@@ -1,198 +1,185 @@
 # %% [markdown]
-# # F1 Advanced Feature Engineering & Analysis
-# Based on the Titanic Data Science workflow.
-# This script performs advanced cleaning, feature creation (binning), and preparation for AI models.
+# # F1 Data Science Laboratorium 🧪
+# Dit script analyseert welke data-strategie het beste werkt.
+# 1. Vergelijking van Imputatie (Null waarden vullen)
+# 2. Feature Importance (Welke data telt echt?)
+# 3. Feature Selectie (Wat kan weg?)
 
 # %%
 import pandas as pd
 import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import StandardScaler, LabelEncoder
+import xgboost as xgb
+from sklearn.model_selection import TimeSeriesSplit, cross_val_score
+from sklearn.preprocessing import LabelEncoder
+from sklearn.impute import SimpleImputer
+from sklearn.metrics import mean_absolute_error
 import warnings
 warnings.filterwarnings("ignore")
 
 # %%
-# 1. LOAD DATA
-# We use the unprocessed data because we want to engineer features from scratch
-print("Loading data...")
+# 1. DATA LADEN & BASIS VOORBEREIDING
+print("--- 1. DATA LADEN ---")
 df = pd.read_csv('unprocessed_f1_training_data.csv')
 
-# Ensure 'country' column exists (in case data_script.py wasn't re-run)
-if 'country' not in df.columns:
-    print("'country' column missing. Merging from circuits.csv...")
-    circuits = pd.read_csv('../F1_data_mangement/circuits.csv')
-    df = pd.merge(df, circuits[['circuitId', 'country']], on='circuitId', how='left')
-
-# Ensure 'driverRef' column exists (for readability in analysis)
-if 'driverRef' not in df.columns:
-    print("'driverRef' column missing. Merging from drivers.csv...")
-    drivers = pd.read_csv('../F1_data_mangement/drivers.csv')
-    df = pd.merge(df, drivers[['driverId', 'driverRef']], on='driverId', how='left')
-
-# Sort by date to ensure 'Experience' calculations are correct later
+# Sorteren op datum is cruciaal voor Time Series
 df['date'] = pd.to_datetime(df['date'])
 df = df.sort_values(by='date')
 
-# Split into Train (Historic) and Test (Recent/Future)
-# In F1, we don't split randomly; we split by time. Let's say 2023+ is our "Test" set.
-train_df = df[df['year'] < 2023].copy()
-test_df = df[df['year'] >= 2023].copy()
-combined_df = pd.concat([train_df, test_df], axis=0)
-
-print(f"Train shape: {train_df.shape}")
-print(f"Test shape: {test_df.shape}")
-print(combined_df.columns.values)
+# Filter op modern tijdperk (2015+) voor relevantere analyse
+df = df[df['year'] >= 2015].copy()
+print(f"Analyse dataset: {len(df)} races (2015-heden)")
 
 # %%
-# 2. EXPLORATORY DATA ANALYSIS (EDA)
-#
-# Check correlations with the target (positionOrder)
-# We want to see what correlates with a LOWER position (1 is better than 20)
-numeric_df = train_df.select_dtypes(include=[np.number])
-corr = numeric_df.corr()
-print("\n--- Correlation with Finishing Position ---")
-print(corr["positionOrder"].sort_values(ascending=True).head(10))
+# 2. EXPERIMENT: IMPUTATIE STRATEGIEËN (Null waarden vullen)
+# We testen wat het beste werkt voor 'weather_temp_c' (vaak null): Mean, Median of Zero.
 
-# Visualization: Grid Position vs Survival (Finishing in Top 10)
-# In Titanic this was 'Survived'. In F1, let's call 'Points Finish' (Top 10) our 'Survival'.
-train_df['is_points_finish'] = train_df['positionOrder'].apply(lambda x: 1 if x <= 10 else 0)
+print("\n--- 2. EXPERIMENT: IMPUTATIE (Mean vs Median) ---")
 
-print("\n--- Grid Position vs Points Finish Chance ---")
-print(train_df[['grid', 'is_points_finish']].groupby(['grid'], as_index=False).mean().head(10))
+# Maak een test-set met alleen rijen waar we wél weerdata hebben om te valideren
+valid_weather_df = df.dropna(subset=['weather_temp_c']).copy()
 
-g = sns.FacetGrid(train_df, col='is_points_finish')
-g.map(plt.hist, 'grid', bins=20)
-plt.show()
+# Simuleer gaten in de data (we verwijderen random 20% van de temp)
+np.random.seed(42)
+mask = np.random.rand(len(valid_weather_df)) < 0.2
+valid_weather_df.loc[mask, 'temp_missing'] = np.nan
+valid_weather_df.loc[~mask, 'temp_missing'] = valid_weather_df['weather_temp_c']
 
-# %%
-# 3. FEATURE ENGINEERING
+strategies = ['mean', 'median', 'constant'] # constant = 0
+results = {}
 
-# A. DRIVER EXPERIENCE (Similar to 'Age' or 'Family Size')
-# Calculate how many races the driver had entered BEFORE this one.
-print("\nGenerating 'Driver Experience' feature...")
-combined_df['driver_experience'] = combined_df.groupby('driverId').cumcount()
+for strat in strategies:
+    imputer = SimpleImputer(strategy=strat, fill_value=0)
+    # Reshape omdat imputer 2D array verwacht
+    filled = imputer.fit_transform(valid_weather_df[['temp_missing']])
+    
+    # Bereken hoe ver we er naast zitten t.o.v. de echte waarde
+    mae = mean_absolute_error(valid_weather_df['weather_temp_c'], filled)
+    results[strat] = mae
 
-# Update Train/Test
-train_df = combined_df[combined_df['year'] < 2023]
-test_df = combined_df[combined_df['year'] >= 2023]
+print("Foutmarge per strategie (lager is beter):")
+for strat, score in results.items():
+    print(f" - {strat.capitalize()}: {score:.4f} graden afwijking")
 
-# Visualize Experience vs Success
-sns.lineplot(data=train_df, x='driver_experience', y='positionOrder')
-plt.title("Driver Experience vs Finishing Position (Lower is Better)")
-plt.show()
-
-# B. HOME RACE (Similar to 'Title' extraction or 'Is_Alone')
-# Does the driver's nationality match the circuit country?
-print("Generating 'Home Race' feature...")
-
-# Simple mapping for common F1 nations (expand this list for better accuracy)
-nationality_map = {
-    'British': 'UK', 'German': 'Germany', 'Spanish': 'Spain', 'French': 'France',
-    'Italian': 'Italy', 'Dutch': 'Netherlands', 'Australian': 'Australia', 
-    'Monegasque': 'Monaco', 'American': 'USA', 'Japanese': 'Japan', 'Canadian': 'Canada'
-}
-
-combined_df['mapped_nationality'] = combined_df['nationality'].map(nationality_map).fillna(combined_df['nationality'])
-combined_df['is_home_race'] = np.where(combined_df['mapped_nationality'] == combined_df['country'], 1, 0)
-
-print(combined_df[['driverRef', 'country', 'is_home_race']].tail(5))
-
-# C. BINNING (Similar to AgeBin and FareBin)
-
-# 1. Grid Bins
-# Grid position is crucial. Let's group them: Pole, Front Row, Top 10, Midfield, Backmarker.
-combined_df['grid_bin'] = pd.cut(combined_df['grid'], 
-                                 bins=[-1, 1, 3, 10, 15, 25], 
-                                 labels=['Pole', 'Top3', 'Points', 'Midfield', 'Back'])
-
-# 2. Age Bins
-combined_df['age_bin'] = pd.cut(combined_df['driver_age'], 
-                                bins=[17, 24, 30, 36, 60], 
-                                labels=['Rookie', 'Prime', 'Experienced', 'Veteran'])
-
-# Check the impact of Bins
-print("\n--- Age Bin vs Average Finish Position ---")
-print(combined_df[['age_bin', 'positionOrder']].groupby(['age_bin'], as_index=False).mean().sort_values(by='positionOrder'))
+best_strat = min(results, key=results.get)
+print(f"CONCLUSIE: '{best_strat.upper()}' is de beste methode om gaten te vullen!")
 
 # %%
-# 4. ENCODING CATEGORICAL FEATURES
-# Machine Learning models need numbers, not words like 'Prime' or 'McLaren'.
+# 3. FEATURE IMPORTANCE & SELECTIE
+# We trainen een XGBoost model om te zien welke features écht tellen.
 
-print("\nEncoding features...")
-label = LabelEncoder()
+print("\n--- 3. FEATURE IMPORTANCE ANALYSE ---")
 
-combined_df['grid_bin_code'] = label.fit_transform(combined_df['grid_bin'])
-combined_df['age_bin_code'] = label.fit_transform(combined_df['age_bin'])
-combined_df['constructor_code'] = label.fit_transform(combined_df['constructorId'])
-combined_df['circuit_code'] = label.fit_transform(combined_df['circuitId'])
+# Eerst even snel de features bouwen (zoals in main.py)
+df['grid_penalty'] = df['grid'] - df['quali_position'].fillna(df['grid'])
+df['driver_experience'] = df.groupby('driverId').cumcount()
 
-# %%
-# 5. PREPARING FOR MODEL (SCALING)
-# Similar to the Titanic 'StandardScaler' step.
+# Rolling averages (Form)
+def calculate_rolling_avg(group):
+    return group.shift(1).rolling(5, min_periods=1).mean()
 
-# Define the features we want to use for training
+df['driver_recent_form'] = df.groupby('driverId')['positionOrder'].transform(calculate_rolling_avg).fillna(12)
+
+# --- NIEUWE FEATURES VOOR ANALYSE ---
+# 1. Aggression (Snelheid vs Finish)
+if 'fastestLapTime' in df.columns:
+    # Parse tijd naar seconden (simpel voor analyse)
+    df['fastest_lap_seconds'] = pd.to_numeric(df['fastestLapTime'].str.replace(r'.*:', '', regex=True), errors='coerce')
+    df['fastest_lap_rank'] = df.groupby('raceId')['fastest_lap_seconds'].rank(method='min')
+    df['aggression_score'] = df['positionOrder'] - df['fastest_lap_rank']
+    df['driver_aggression'] = df.groupby('driverId')['aggression_score'].transform(calculate_rolling_avg).fillna(0)
+else:
+    df['driver_aggression'] = 0
+
+# 2. Weather Confidence (Nat vs Droog)
+df['is_wet'] = df['weather_precip_mm'] > 0.1
+df['weather_confidence'] = df.groupby('driverId')['positionOrder'].transform(lambda x: x.rolling(10, min_periods=1).mean()) # Simpele proxy voor analyse
+
+# --- NIEUW: BATTLE & CONSISTENCY FEATURES ---
+# 1. Overtake Rate: Gemiddeld aantal posities gewonnen per race
+df['positions_gained'] = df['grid'] - df['positionOrder']
+df['driver_overtake_rate'] = df.groupby('driverId')['positions_gained'].transform(calculate_rolling_avg).fillna(0)
+
+# 2. Consistency: Hoe stabiel zijn de rondetijden? (std_lap_time_ms)
+# Lager is beter (stabieler). Als dit hoog is, is er vaak een gevecht of probleem.
+if 'std_lap_time_ms' in df.columns:
+    df['driver_consistency'] = df.groupby('driverId')['std_lap_time_ms'].transform(calculate_rolling_avg).fillna(5000)
+else:
+    df['driver_consistency'] = 5000
+
+# 3. Punten voorafgaand aan race (ipv punten van VANDAAG, want dat is valsspelen!)
+df['points_before_race'] = (df.groupby(['year', 'driverId'])['points'].cumsum() - df['points']).fillna(0)
+
+# Features selecteren voor analyse
 features = [
-    'grid', 
-    'driver_experience', 
-    'is_home_race', 
-    'grid_bin_code', 
-    'age_bin_code', 
-    'constructor_code', 
-    'circuit_code',
-    'driver_age'
+    'grid', 'grid_penalty', 'driver_age', 'driver_experience',
+    'driver_recent_form', 'driver_aggression', 'weather_confidence',
+    'weather_precip_mm', 'points_before_race', 
+    'driver_overtake_rate', 'driver_consistency'
 ]
 
-target = 'positionOrder'
+# Data opschonen voor het model
+analysis_df = df.dropna(subset=['positionOrder'] + features).copy()
 
-# Separate Train and Test again
-train_df = combined_df[combined_df['year'] < 2023].copy()
-test_df = combined_df[combined_df['year'] >= 2023].copy()
+X = analysis_df[features]
+y = analysis_df['positionOrder']
 
-# Drop rows where target or features might be NaN
-train_df = train_df.dropna(subset=features + [target])
-test_df = test_df.dropna(subset=features + [target])
+# Model trainen
+model = xgb.XGBRegressor(objective='reg:squarederror', n_estimators=100, max_depth=4, random_state=42)
+model.fit(X, y)
 
-X_train = train_df[features]
-y_train = train_df[target]
-X_test = test_df[features]
+# Belangrijkheid ophalen
+importance = model.feature_importances_
+feat_imp = pd.DataFrame({'Feature': features, 'Importance': importance}).sort_values(by='Importance', ascending=False)
 
-# Scale the data
-# We fit the scaler ONLY on the training data to avoid data leakage
-scaler = StandardScaler()
-X_train_scaled = scaler.fit_transform(X_train)
-X_test_scaled = scaler.transform(X_test)
+print("\nTop Features (Invloed op voorspelling):")
+print(feat_imp)
 
-# Convert back to DataFrame for nice viewing
-X_train_final = pd.DataFrame(X_train_scaled, columns=features)
-X_test_final = pd.DataFrame(X_test_scaled, columns=features)
-
-print("\n--- Final Training Data (First 5 rows) ---")
-print(X_train_final.head())
+# Visualisatie
+plt.figure(figsize=(10, 6))
+sns.barplot(x='Importance', y='Feature', data=feat_imp, palette='viridis')
+plt.title('Welke data vindt het AI model het belangrijkst?')
+plt.show()
 
 # %%
-# 6. QUICK MODEL TEST (Logistic Regression - Classification)
-# Just like the Titanic example used LogisticRegression, let's try to predict if a driver finishes in Top 10.
+# 4. DROP CANDIDATES (Wat kan weg?)
+# Features met < 0.01 importance voegen vaak alleen maar ruis toe.
 
-from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+threshold = 0.01
+drop_candidates = feat_imp[feat_imp['Importance'] < threshold]['Feature'].tolist()
 
-# Create a binary target: 1 if Top 10, 0 if not
-y_train_class = (y_train <= 10).astype(int)
-y_test_class = (test_df[target] <= 10).astype(int)
+print("\n--- 4. ADVIES: TE VERWIJDEREN FEATURES ---")
+if drop_candidates:
+    print(f"De volgende features hebben nauwelijks invloed (< {threshold}):")
+    print(drop_candidates)
+    print("-> Overweeg deze uit 'main.py' te halen voor een sneller en schoner model.")
+else:
+    print("Alle features lijken relevant genoeg (> 1% invloed). Goed bezig!")
 
-logreg = LogisticRegression()
-logreg.fit(X_train_final, y_train_class)
-y_pred = logreg.predict(X_test_final)
-
-acc = accuracy_score(y_test_class, y_pred)
-print(f"\nLogistic Regression Accuracy (Predicting Top 10 Finish): {acc * 100:.2f}%")
-
-# Feature Importance (Coefficient)
-coeff_df = pd.DataFrame(train_df.columns.delete(0))
-coeff_df.columns = ['Feature']
-coeff_df["Correlation"] = pd.Series(logreg.coef_[0])
-
-print("\n--- Feature Coefficients (Positive = More likely to be Top 10) ---")
-print(pd.DataFrame({'Feature': features, 'Coefficient': logreg.coef_[0]}).sort_values(by='Coefficient', ascending=False))
 # %%
+# 5. SMOOTHNESS CHECK (Rolling Windows)
+# Testen of een window van 3, 5 of 10 races beter werkt voor 'Recent Form'.
+
+print("\n--- 5. EXPERIMENT: BESTE WINDOW SIZE (Form) ---")
+
+windows = [3, 5, 10]
+correlations = {}
+
+for w in windows:
+    col_name = f'form_w{w}'
+    # Bereken rolling mean
+    df[col_name] = df.groupby('driverId')['positionOrder'].transform(
+        lambda x: x.shift(1).rolling(w, min_periods=1).mean()
+    )
+    # Bereken correlatie met de daadwerkelijke finish positie
+    # We willen een HOGE correlatie (dicht bij 1.0)
+    corr = df[[col_name, 'positionOrder']].corr().iloc[0, 1]
+    correlations[w] = corr
+
+print("Correlatie met uitslag (Hoger is beter):")
+for w, corr in correlations.items():
+    print(f" - Window {w} races: {corr:.4f}")
+
+best_window = max(correlations, key=correlations.get)
+print(f"CONCLUSIE: Een terugblik van {best_window} races geeft de beste voorspelling.")
