@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pause, Play, Gauge } from "lucide-react";
+import { Pause, Play, Gauge, Flag } from "lucide-react";
 
 import apiClient from "../services/apiClient";
 import Button from "./ui/Button.jsx";
@@ -19,7 +19,17 @@ function statusFor({ connected, raceInitialized, raceRunning }) {
   return { label: "Running", variant: "warning" };
 }
 
-export default function RaceControls({ raceInitialized, raceRunning, connected }) {
+function clamp01(n) {
+  if (!Number.isFinite(n)) return 0;
+  return Math.min(1, Math.max(0, n));
+}
+
+export default function RaceControls({
+  raceInitialized,
+  raceRunning,
+  connected,
+  raceData, // <-- NEW (optional): { race, currentLap, totalLaps }
+}) {
   const [speed, setSpeed] = useState(1.0);
 
   const status = useMemo(
@@ -48,11 +58,21 @@ export default function RaceControls({ raceInitialized, raceRunning, connected }
     if (connected) apiClient.setSimulationSpeed(newSpeed);
   };
 
+  const total = Number(raceData?.totalLaps ?? 0);
+  const current = Number(raceData?.currentLap ?? 0);
+  const progress = clamp01(total > 0 ? current / total : 0);
+  const progressPct = Math.round(progress * 100);
+
   return (
     <div className="space-y-4">
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-semibold tracking-tight">Race controls</h3>
+          {raceData?.race ? (
+            <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+              {raceData.race}
+            </div>
+          ) : null}
         </div>
         <Badge variant={status.variant}>{status.label}</Badge>
       </div>
@@ -95,10 +115,8 @@ export default function RaceControls({ raceInitialized, raceRunning, connected }
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Gauge size={16} className="text-neutral-500" />
-            <div>
-              <div className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-                Simulation speed
-              </div>
+            <div className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+              Simulation speed
             </div>
           </div>
 
@@ -123,7 +141,41 @@ export default function RaceControls({ raceInitialized, raceRunning, connected }
         </div>
       </div>
 
-      {/* Connection hint */}
+      {/* Lap progress (moved here) */}
+      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Flag size={16} className="text-neutral-500" />
+            <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
+              Lap progress
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Badge variant="neutral">
+              <span className="tabular-nums">
+                {current}/{total || "—"}
+              </span>
+            </Badge>
+            <span className="text-xs text-neutral-700 dark:text-neutral-300 tabular-nums">
+              {total > 0 ? `${progressPct}%` : "—"}
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-3 h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-900">
+          <div
+            className="h-2 rounded-full bg-neutral-900 dark:bg-neutral-100"
+            style={{ width: `${total > 0 ? progressPct : 0}%` }}
+          />
+        </div>
+
+        <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-600 dark:text-neutral-500">
+          <span>Start</span>
+          <span>Finish</span>
+        </div>
+      </div>
+
       {!connected ? (
         <div className="text-xs text-neutral-600 dark:text-neutral-500">
           Waiting for backend connection…

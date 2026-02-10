@@ -90,7 +90,7 @@ export default function Dashboard() {
           console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: data.events =`, data.events)
           console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: typeof data.events =`, typeof data.events)
           console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: Array.isArray(data.events) =`, Array.isArray(data.events))
-          
+
           if (data.events && data.events.length > 0) {
             console.log(`[FRONTEND] Lap ${data.lap_number}: Received ${data.events.length} event(s)`, data.events)
             setNotifications(prev => {
@@ -102,7 +102,7 @@ export default function Dashboard() {
                 time: new Date().toLocaleTimeString(),
                 lapNumber: data.lap_number
               }))
-              
+
               // Combine new + old, avoiding duplicates by checking lapNumber + message
               // This prevents the same event from appearing twice
               const allNotifications = [...newNotifications, ...prev]
@@ -113,7 +113,7 @@ export default function Dashboard() {
                 seen.add(key)
                 return true
               })
-              
+
               // Keep only recent notifications (max 5)
               return unique.slice(0, 5)
             })
@@ -224,6 +224,7 @@ export default function Dashboard() {
               raceInitialized={raceInitialized}
               raceRunning={raceRunning}
               connected={connected}
+              raceData={raceData}
             />
           </Card>
         </div>
