@@ -1,188 +1,182 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect } from "react";
 
-import WeatherWidget from '../components/WeatherWidget'
-import RaceInfo from '../components/RaceInfo'
-import DriversList from '../components/DriversList'
-import PredictionsPanel from '../components/PredictionsPanel'
-import NotificationsPanel from '../components/NotificationsPanel'
-import RaceControls from '../components/RaceControls'
-import RaceSelector from '../components/RaceSelector'
-import apiClient from '../services/apiClient'
+import WeatherWidget from "../components/WeatherWidget";
+import DriversList from "../components/DriversList";
+import PredictionsPanel from "../components/PredictionsPanel";
+import NotificationsPanel from "../components/NotificationsPanel";
+import RaceControls from "../components/RaceControls";
+import RaceSelector from "../components/RaceSelector";
+import apiClient from "../services/apiClient";
 
-import Card from '../components/ui/Card'
-import Badge from '../components/ui/Badge'
+import Card from "../components/ui/Card";
+import Badge from "../components/ui/Badge";
 
 export default function Dashboard() {
-  const [raceData, setRaceData] = useState(null)
-  const [weatherData, setWeatherData] = useState(null)
-  const [predictions, setPredictions] = useState([])
-  const [modelMetrics, setModelMetrics] = useState(null)
-  const [notifications, setNotifications] = useState([])
-  const [currentLap, setCurrentLap] = useState(0)
-  const [raceRunning, setRaceRunning] = useState(false)
-  const [connected, setConnected] = useState(false)
-  const [raceInitialized, setRaceInitialized] = useState(false)
-  const [selectedRace, setSelectedRace] = useState(21)
+  const [raceData, setRaceData] = useState(null);
+  const [weatherData, setWeatherData] = useState(null);
+  const [predictions, setPredictions] = useState([]);
+  const [modelMetrics, setModelMetrics] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [currentLap, setCurrentLap] = useState(0);
+  const [raceRunning, setRaceRunning] = useState(false);
+  const [connected, setConnected] = useState(false);
+  const [raceInitialized, setRaceInitialized] = useState(false);
+  const [selectedRace, setSelectedRace] = useState(21);
 
-  // Initialize connection and race
   useEffect(() => {
     const initializeApp = async () => {
       try {
-        // Connect to backend
-        await apiClient.connect()
-        setConnected(true)
-        console.log('[DASHBOARD] Connected to backend')
+        await apiClient.connect();
+        setConnected(true);
+        console.log("[DASHBOARD] Connected to backend");
 
-        // Initialize race with selected race number
-        const result = await apiClient.initRace(selectedRace)
-        console.log('[DASHBOARD] Race initialized:', result)
+        const result = await apiClient.initRace(selectedRace);
+        console.log("[DASHBOARD] Race initialized:", result);
 
         setRaceData({
           race: result.race_name || `Race ${selectedRace}`,
           totalLaps: result.total_laps || 58,
           currentLap: 0,
-          drivers: result.drivers || []
-        })
+          drivers: result.drivers || [],
+        });
 
-        // Set initial weather data
         if (result.weather) {
           setWeatherData({
             temp: result.weather.air_temp || 25,
             humidity: result.weather.humidity || 50,
             trackTemp: result.weather.track_temp || 35,
             windSpeed: result.weather.wind_speed || 0,
-            condition: result.weather.conditions || 'Dry'
-          })
+            condition: result.weather.conditions || "Dry",
+          });
         }
 
-        setRaceInitialized(true)
+        setRaceInitialized(true);
 
-        // Setup WebSocket listeners
-        apiClient.on('lap/update', (data) => {
-          console.log('[DASHBOARD] Lap update:', data.lap_number)
-          setCurrentLap(data.lap_number)
-          setRaceData(prev => ({
+        apiClient.on("lap/update", (data) => {
+          console.log("[DASHBOARD] Lap update:", data.lap_number);
+
+          setCurrentLap(data.lap_number);
+
+          setRaceData((prev) => ({
             ...prev,
             currentLap: data.lap_number,
-            drivers: data.drivers
-          }))
-          setPredictions(data.predictions)
+            drivers: data.drivers,
+          }));
 
-          // Update model metrics if available
+          setPredictions(data.predictions);
+
           if (data.model_metrics) {
-            setModelMetrics(data.model_metrics)
-            console.log('[DASHBOARD] Model metrics updated:', data.model_metrics)
+            setModelMetrics(data.model_metrics);
+            console.log("[DASHBOARD] Model metrics updated:", data.model_metrics);
           }
 
-          // Update weather data if available
           if (data.weather) {
             setWeatherData({
               temp: data.weather.air_temp || 25,
               humidity: data.weather.humidity || 50,
               trackTemp: data.weather.track_temp || 35,
               windSpeed: data.weather.wind_speed || 0,
-              condition: data.weather.conditions || 'Dry'
-            })
+              condition: data.weather.conditions || "Dry",
+            });
           }
-
-          // Add notifications for events
-          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: Full data object:`, data)
-          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: data.events =`, data.events)
-          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: typeof data.events =`, typeof data.events)
-          console.log(`[FRONTEND-DEBUG] Lap ${data.lap_number}: Array.isArray(data.events) =`, Array.isArray(data.events))
 
           if (data.events && data.events.length > 0) {
-            console.log(`[FRONTEND] Lap ${data.lap_number}: Received ${data.events.length} event(s)`, data.events)
-            setNotifications(prev => {
-              // Create new notifications from events
+            setNotifications((prev) => {
               const newNotifications = data.events.map((e, i) => ({
-                id: `${e.id || Date.now()}-${i}-${Math.random().toString(36).substr(2, 9)}`, // Unique ID with random suffix
-                type: e.type || 'info',
+                id: `${e.id || Date.now()}-${i}-${Math.random()
+                  .toString(36)
+                  .substr(2, 9)}`,
+                type: e.type || "info",
                 message: e.message,
                 time: new Date().toLocaleTimeString(),
-                lapNumber: data.lap_number
-              }))
+                lapNumber: data.lap_number,
+              }));
 
-              // Combine new + old, avoiding duplicates by checking lapNumber + message
-              // This prevents the same event from appearing twice
-              const allNotifications = [...newNotifications, ...prev]
-              const seen = new Set()
-              const unique = allNotifications.filter(n => {
-                const key = `${n.lapNumber}-${n.message}`
-                if (seen.has(key)) return false
-                seen.add(key)
-                return true
-              })
+              const allNotifications = [...newNotifications, ...prev];
+              const seen = new Set();
+              const unique = allNotifications.filter((n) => {
+                const key = `${n.lapNumber}-${n.message}`;
+                if (seen.has(key)) return false;
+                seen.add(key);
+                return true;
+              });
 
-              // Keep only recent notifications (max 5)
-              return unique.slice(0, 5)
-            })
-          } else {
-            console.log(`[FRONTEND] Lap ${data.lap_number}: No events (data.events is empty or undefined)`)
+              return unique.slice(0, 5);
+            });
           }
-        })
+        });
 
-        apiClient.on('race/started', (data) => {
-          setRaceRunning(true)
-          setNotifications(prev => [{
-            id: Date.now(),
-            type: 'success',
-            message: 'Race started!',
-            time: new Date().toLocaleTimeString()
-          }, ...prev])
-        })
+        apiClient.on("race/started", () => {
+          setRaceRunning(true);
+          setNotifications((prev) => [
+            {
+              id: Date.now(),
+              type: "success",
+              message: "Race started!",
+              time: new Date().toLocaleTimeString(),
+            },
+            ...prev,
+          ]);
+        });
 
-        apiClient.on('race/paused', () => {
-          setRaceRunning(false)
-        })
+        apiClient.on("race/paused", () => {
+          setRaceRunning(false);
+        });
 
-        apiClient.on('race/resumed', () => {
-          setRaceRunning(true)
-        })
+        apiClient.on("race/resumed", () => {
+          setRaceRunning(true);
+        });
 
-        apiClient.on('race/finished', (data) => {
-          setRaceRunning(false)
-          setNotifications(prev => [{
-            id: Date.now(),
-            type: 'success',
-            message: 'Race finished!',
-            time: new Date().toLocaleTimeString()
-          }, ...prev])
-        })
+        apiClient.on("race/finished", () => {
+          setRaceRunning(false);
+          setNotifications((prev) => [
+            {
+              id: Date.now(),
+              type: "success",
+              message: "Race finished!",
+              time: new Date().toLocaleTimeString(),
+            },
+            ...prev,
+          ]);
+        });
 
-        apiClient.on('race/error', (data) => {
-          setNotifications(prev => [{
-            id: Date.now(),
-            type: 'error',
-            message: data.error,
-            time: new Date().toLocaleTimeString()
-          }, ...prev])
-        })
-
+        apiClient.on("race/error", (data) => {
+          setNotifications((prev) => [
+            {
+              id: Date.now(),
+              type: "error",
+              message: data.error,
+              time: new Date().toLocaleTimeString(),
+            },
+            ...prev,
+          ]);
+        });
       } catch (error) {
-        console.error('[DASHBOARD] Initialization error:', error)
-        setNotifications([{
-          id: Date.now(),
-          type: 'error',
-          message: `Connection error: ${error.message}`,
-          time: new Date().toLocaleTimeString()
-        }])
+        console.error("[DASHBOARD] Initialization error:", error);
+        setNotifications([
+          {
+            id: Date.now(),
+            type: "error",
+            message: `Connection error: ${error.message}`,
+            time: new Date().toLocaleTimeString(),
+          },
+        ]);
       }
-    }
+    };
 
-    initializeApp()
+    initializeApp();
 
     return () => {
-      apiClient.disconnect()
-    }
-  }, [selectedRace])
+      apiClient.disconnect();
+    };
+  }, [selectedRace]);
 
   const handleRaceChange = async (newRaceNumber) => {
-    setSelectedRace(newRaceNumber)
-    setRaceInitialized(false)
-    setCurrentLap(0)
-    setRaceRunning(false)
-  }
+    setSelectedRace(newRaceNumber);
+    setRaceInitialized(false);
+    setCurrentLap(0);
+    setRaceRunning(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -230,44 +224,35 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* TOP WIDGETS */}
+      {/* WEATHER (FULL WIDTH) */}
+      <Card>
+        <WeatherWidget data={weatherData} />
+      </Card>
+
+      {/* STANDINGS + PREDICTIONS (50/50) */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card>
-          <WeatherWidget data={weatherData} />
+        <Card className="h-full">
+          <DriversList
+            drivers={raceData?.drivers || []}
+            currentLap={raceData?.currentLap}
+          />
         </Card>
-        <Card>
-          <RaceInfo data={raceData} />
+
+        <Card className="h-full">
+          <PredictionsPanel
+            predictions={predictions}
+            currentLap={raceData?.currentLap}
+            modelMetrics={modelMetrics}
+            totalLaps={raceData?.totalLaps}
+          />
         </Card>
       </div>
 
-      {/* MAIN GRID */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <div className="xl:col-span-4">
-          <Card className="h-full">
-            <DriversList
-              drivers={raceData?.drivers || []}
-              currentLap={raceData?.currentLap}
-            />
-          </Card>
-        </div>
+      {/* NOTIFICATIONS (FULL WIDTH) */}
+      <Card>
+        <NotificationsPanel notifications={notifications} />
+      </Card>
 
-        <div className="xl:col-span-5">
-          <Card className="h-full">
-            <PredictionsPanel
-              predictions={predictions}
-              currentLap={raceData?.currentLap}
-              modelMetrics={modelMetrics}
-              totalLaps={raceData?.totalLaps}
-            />
-          </Card>
-        </div>
-
-        <div className="xl:col-span-3">
-          <Card className="h-full">
-            <NotificationsPanel notifications={notifications} />
-          </Card>
-        </div>
-      </div>
     </div>
   );
 }

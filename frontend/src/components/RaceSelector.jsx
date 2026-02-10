@@ -25,7 +25,7 @@ const RACES = {
 };
 
 const ITEM_H = 44; // px per row
-const VISIBLE = 5; // odd number
+const VISIBLE = 5; // must be odd
 const MID = Math.floor(VISIBLE / 2);
 
 function clamp(n, min, max) {
@@ -51,53 +51,54 @@ export default function RaceSelector({
     else if (onRaceChange) onRaceChange(id);
   };
 
-  // --- drag state (we manage offset ourselves, no native scroll) ---
-  // offsetPx means how much the list is translated up (positive = move up)
-  // We keep offset such that selected item is centered.
-  const [offsetPx, setOffsetPx] = useState(0);
-
-  const isDraggingRef = useRef(false);
-  const startYRef = useRef(0);
-  const startOffsetRef = useRef(0);
-
-  const containerRef = useRef(null);
-
   const maxIndex = list.length - 1;
-  const maxOffset = maxIndex * ITEM_H; // when last item is centered
-  const minOffset = 0; // when first item is centered
+  const maxOffset = maxIndex * ITEM_H; // last centered
+  const minOffset = 0; // first centered
 
-  const setOffsetClamped = (next) => {
-    setOffsetPx(clamp(next, minOffset, maxOffset));
+  // UI state + ref (ref is the truth during dragging)
+  const [offsetPx, _setOffsetPx] = useState(0);
+  const offsetRef = useRef(0);
+
+  const setOffsetPx = (next) => {
+    const clamped = clamp(next, minOffset, maxOffset);
+    offsetRef.current = clamped;
+    _setOffsetPx(clamped);
   };
 
-  const indexFromOffset = (off) => {
-    // When offset = 0 => index 0 centered
-    // When offset = ITEM_H => index 1 centered
-    return clamp(Math.round(off / ITEM_H), 0, maxIndex);
-  };
+  const indexFromOffset = (off) =>
+    clamp(Math.round(off / ITEM_H), 0, maxIndex);
 
   const snapToNearest = (off) => {
     const idx = indexFromOffset(off);
     const snapped = idx * ITEM_H;
     setOffsetPx(snapped);
+
     const id = list[idx]?.id;
     if (id && id !== value) emit(id);
   };
 
-  // whenever value changes from parent, center it
+  // Keep centered when parent value changes
   useEffect(() => {
     const idx = list.findIndex((r) => r.id === value);
     if (idx >= 0) setOffsetPx(idx * ITEM_H);
-  }, [value, list]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [value]);
 
-  // pointer handlers (mouse + touch)
+  // --- drag state ---
+  const isDraggingRef = useRef(false);
+  const startYRef = useRef(0);
+  const startOffsetRef = useRef(0);
+  const pointerIdRef = useRef(null);
+
   const onPointerDown = (e) => {
     if (disabled) return;
-    isDraggingRef.current = true;
-    startYRef.current = e.clientY;
-    startOffsetRef.current = offsetPx;
 
-    // capture pointer so we still receive moves outside
+    isDraggingRef.current = true;
+    pointerIdRef.current = e.pointerId;
+
+    startYRef.current = e.clientY;
+    startOffsetRef.current = offsetRef.current;
+
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
 
@@ -105,16 +106,37 @@ export default function RaceSelector({
     if (!isDraggingRef.current) return;
 
     const dy = e.clientY - startYRef.current;
-    // dragging down should decrease offset (move list down)
+    // drag down => move list down => decrease offset
     const next = startOffsetRef.current - dy;
-    setOffsetClamped(next);
+    setOffsetPx(next);
   };
 
-  const onPointerUp = () => {
+  const endDrag = () => {
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
-    snapToNearest(offsetPx);
+
+    // IMPORTANT: snap using ref (latest), not state
+    snapToNearest(offsetRef.current);
   };
+
+  const onPointerUp = (e) => {
+    if (pointerIdRef.current !== null) {
+      try {
+        e.currentTarget.releasePointerCapture?.(pointerIdRef.current);
+      } catch {
+        // ignore
+      }
+    }
+    pointerIdRef.current = null;
+    endDrag();
+  };
+
+  const onLostPointerCapture = () => {
+    pointerIdRef.current = null;
+    endDrag();
+  };
+
+  const padTop = MID * ITEM_H;
 
   return (
     <div className="space-y-3">
@@ -155,7 +177,6 @@ export default function RaceSelector({
 
         {/* drag surface */}
         <div
-          ref={containerRef}
           className={[
             "relative overflow-hidden rounded-xl",
             disabled ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
@@ -165,13 +186,15 @@ export default function RaceSelector({
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
+          onLostPointerCapture={onLostPointerCapture}
         >
-          {/* list */}
           <div
             className="will-change-transform"
             style={{
-              transform: `translateY(${PAD_TOP()}px) translateY(${-offsetPx}px)`,
-              transition: isDraggingRef.current ? "none" : "transform 180ms ease-out",
+              transform: `translateY(${padTop - offsetPx}px)`,
+              transition: isDraggingRef.current
+                ? "none"
+                : "transform 160ms cubic-bezier(.2,.8,.2,1)",
             }}
           >
             {list.map((r) => {
@@ -204,9 +227,4 @@ export default function RaceSelector({
       </div>
     </div>
   );
-
-  function PAD_TOP() {
-    // top padding to make first items able to reach center
-    return MID * ITEM_H;
-  }
 }
