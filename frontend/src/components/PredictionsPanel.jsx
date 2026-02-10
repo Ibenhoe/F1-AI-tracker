@@ -64,7 +64,7 @@ export default function PredictionsPanel({
             <h2 className="text-sm font-semibold tracking-tight">Predictions</h2>
             <Brain size={16} className="text-neutral-500" />
           </div>
-          <p className="mt-1 text-xs text-neutral-400">
+          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
             Top 5 expected finishing order (AI)
           </p>
         </div>
@@ -76,24 +76,24 @@ export default function PredictionsPanel({
       </div>
 
       {/* Model meta */}
-      <div className="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
+      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-400">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
             <span className="inline-flex items-center gap-2">
               <Activity size={14} className="text-neutral-500" />
               <span>
                 Updates:{" "}
-                <span className="font-medium text-neutral-200 tabular-nums">
+                <span className="font-medium text-neutral-900 dark:text-neutral-200 tabular-nums">
                   {updates}
                 </span>
               </span>
             </span>
 
-            <span className="text-neutral-600">•</span>
+            <span className="text-neutral-400 dark:text-neutral-600">•</span>
 
             <span>
               Maturity:{" "}
-              <span className="font-medium text-neutral-200 tabular-nums">
+              <span className="font-medium text-neutral-900 dark:text-neutral-200 tabular-nums">
                 {maturity}%
               </span>
             </span>
@@ -112,15 +112,16 @@ export default function PredictionsPanel({
               ) : null}
             </div>
           ) : (
-            <div className="text-xs text-neutral-500">
+            <div className="text-xs text-neutral-600 dark:text-neutral-500">
               Components warming up…
             </div>
           )}
         </div>
 
-        <div className="mt-3 h-2 w-full rounded-full bg-neutral-900">
+
+        <div className="mt-3 h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-900">
           <div
-            className="h-2 rounded-full bg-neutral-100"
+            className="h-2 rounded-full bg-neutral-900 dark:bg-neutral-100"
             style={{ width: `${Math.min(100, Math.max(0, maturity))}%` }}
           />
         </div>
@@ -128,11 +129,11 @@ export default function PredictionsPanel({
 
       {/* Predictions list */}
       {top.length === 0 ? (
-        <div className="rounded-xl border border-neutral-800 bg-neutral-950/40 px-4 py-10 text-center">
-          <div className="text-sm font-medium text-neutral-200">
+        <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-10 text-center dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="text-sm font-medium text-neutral-900 dark:text-neutral-200">
             Model is training…
           </div>
-          <div className="mt-1 text-xs text-neutral-500">
+          <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-500">
             Predictions will appear once enough laps have been processed.
           </div>
         </div>
@@ -147,13 +148,13 @@ export default function PredictionsPanel({
             return (
               <div
                 key={`${pred.driver_code ?? driver}-${idx}`}
-                className="rounded-xl border border-neutral-800 bg-neutral-950/40 px-3 py-3"
+                className="rounded-xl border border-neutral-200 bg-white px-3 py-3 dark:border-neutral-800 dark:bg-neutral-950/40"
               >
                 <div className="flex items-start gap-3">
                   <div className="w-12 shrink-0">
-                    <div className="text-xs text-neutral-500">Rank</div>
+                    <div className="text-xs text-neutral-600 dark:text-neutral-500">Rank</div>
                     <div className="mt-1 flex items-center gap-2">
-                      <span className="text-sm font-semibold text-neutral-100 tabular-nums">
+                      <span className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 tabular-nums">
                         #{idx + 1}
                       </span>
                       <TrendIcon trend={pred.trend} />
@@ -162,30 +163,30 @@ export default function PredictionsPanel({
 
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center justify-between gap-2">
-                      <div className="truncate text-sm font-medium text-neutral-100">
+                      <div className="truncate text-sm font-medium text-neutral-900 dark:text-neutral-100">
                         {driver}
                       </div>
-                      <div className="text-xs text-neutral-400 tabular-nums">
+                      <div className="text-xs text-neutral-600 dark:text-neutral-400 tabular-nums">
                         Pos {fromPos} → {toPos}
                       </div>
                     </div>
 
-                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-500">
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-neutral-600 dark:text-neutral-500">
                       <span className="tabular-nums">Start P{pred.grid_pos ?? "—"}</span>
-                      <span className="text-neutral-700">•</span>
+                      <span className="text-neutral-400 dark:text-neutral-700">•</span>
                       <span className="tabular-nums">Pit stops {pred.pit_stops ?? 0}</span>
                     </div>
 
                     <div className="mt-3 flex items-center gap-3">
-                      <div className="h-2 flex-1 rounded-full bg-neutral-900">
+                      <div className="h-2 flex-1 rounded-full bg-neutral-200 dark:bg-neutral-900">
                         <div
-                          className="h-2 rounded-full bg-neutral-100"
+                          className="h-2 rounded-full bg-neutral-900 dark:bg-neutral-100"
                           style={{
                             width: `${Math.min(100, Math.max(0, confidence))}%`,
                           }}
                         />
                       </div>
-                      <div className="w-12 text-right text-xs font-medium text-neutral-300 tabular-nums">
+                      <div className="w-12 text-right text-xs font-medium text-neutral-700 dark:text-neutral-300 tabular-nums">
                         {confidence}%
                       </div>
                     </div>
@@ -199,12 +200,12 @@ export default function PredictionsPanel({
 
       {/* Footer: performance */}
       {mae !== null ? (
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-800 bg-neutral-950/40 px-3 py-3">
-          <div className="text-xs text-neutral-500">Model performance</div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-300">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 dark:border-neutral-800 dark:bg-neutral-950/40">
+          <div className="text-xs text-neutral-600 dark:text-neutral-500">Model performance</div>
+          <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-700 dark:text-neutral-300">
             <span className="tabular-nums">MAE {mae.toFixed(2)}</span>
             {maeTrendLabel ? (
-              <span className="text-neutral-500">{maeTrendLabel}</span>
+              <span className="text-neutral-500 dark:text-neutral-500">{maeTrendLabel}</span>
             ) : null}
           </div>
         </div>

@@ -6,10 +6,10 @@ import Button from "./ui/Button.jsx";
 import Badge from "./ui/Badge.jsx";
 
 const SPEEDS = [
-  { value: 0.5, label: "0.5×", hint: "Slow" },
-  { value: 1.0, label: "1.0×", hint: "Normal" },
-  { value: 2.0, label: "2.0×", hint: "Fast" },
-  { value: 4.0, label: "4.0×", hint: "Very fast" },
+  { value: 1.0, label: "1×", hint: "Normal" },
+  { value: 2.0, label: "2×", hint: "Fast" },
+  { value: 3.0, label: "3×", hint: "Very fast" },
+  { value: 4.0, label: "4×", hint: "Turbo" },
 ];
 
 function statusFor({ connected, raceInitialized, raceRunning }) {
@@ -83,7 +83,7 @@ export default function RaceControls({ raceInitialized, raceRunning, connected }
           variant="ghost"
           onClick={handleResume}
           disabled={!canResume}
-          className="justify-center border border-neutral-800"
+          className="justify-center border border-neutral-300 dark:border-neutral-800"
         >
           <Play size={16} />
           Resume
@@ -91,12 +91,12 @@ export default function RaceControls({ raceInitialized, raceRunning, connected }
       </div>
 
       {/* Speed */}
-      <div className="rounded-xl border border-neutral-800 bg-neutral-950/40 p-3">
+      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Gauge size={16} className="text-neutral-500" />
             <div>
-              <div className="text-xs font-medium text-neutral-300">
+              <div className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
                 Simulation speed
               </div>
             </div>
@@ -108,9 +108,10 @@ export default function RaceControls({ raceInitialized, raceRunning, connected }
             disabled={!connected}
             className={[
               "w-40 rounded-lg border px-3 py-2 text-sm",
-              "border-neutral-800 bg-neutral-950/40 text-neutral-100",
-              "focus:outline-none focus:ring-2 focus:ring-neutral-700",
-              !connected ? "opacity-60" : "hover:border-neutral-700",
+              "border-neutral-300 bg-white text-neutral-900",
+              "focus:outline-none focus:ring-2 focus:ring-neutral-300",
+              "dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-100 dark:focus:ring-neutral-700",
+              !connected ? "opacity-60" : "hover:border-neutral-400 dark:hover:border-neutral-700",
             ].join(" ")}
           >
             {SPEEDS.map((s) => (
@@ -124,7 +125,7 @@ export default function RaceControls({ raceInitialized, raceRunning, connected }
 
       {/* Connection hint */}
       {!connected ? (
-        <div className="text-xs text-neutral-500">
+        <div className="text-xs text-neutral-600 dark:text-neutral-500">
           Waiting for backend connection…
         </div>
       ) : null}
