@@ -4,9 +4,6 @@ from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
 from sklearn.metrics import mean_absolute_error, accuracy_score, classification_report
 from sklearn.preprocessing import LabelEncoder
 import numpy as np
-from sklearn.neural_network import MLPRegressor, MLPClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.impute import SimpleImputer
 import os
 
 # ---------------------------------------------------------
@@ -176,6 +173,42 @@ else:
 # Verschil tussen driver form en constructor form.
 # Positief = Coureur presteert beter dan de auto (gemiddeld).
 df['driver_vs_team_form'] = df['constructor_recent_form'] - df['driver_recent_form']
+
+# --- NIEUW: QUALIFYING PACE (RELATIEF AAN POLE) ---
+# Grid positie is "ordinaal" (1, 2, 3). Tijdverschil is "ratio" (0.1s, 0.5s).
+# Dat laatste bevat veel meer informatie over de ware snelheid van de auto.
+
+def parse_quali_time(t_str):
+    if pd.isna(t_str) or str(t_str).strip() == '' or '\\N' in str(t_str): return np.nan
+    try:
+        t_str = str(t_str).strip()
+        if ':' in t_str:
+            parts = t_str.split(':')
+            return float(parts[0]) * 60 + float(parts[1])
+        return float(t_str)
+    except:
+        return np.nan
+
+# 1. Parse de tijden (q1, q2, q3)
+for col in ['q1', 'q2', 'q3']:
+    if col in df.columns:
+        df[f'{col}_sec'] = df[col].apply(parse_quali_time)
+
+# 2. Beste tijd per coureur bepalen (sommige halen Q3 niet)
+df['best_quali_time'] = df[['q1_sec', 'q2_sec', 'q3_sec']].min(axis=1)
+
+# 3. Pole tijd per race bepalen
+pole_times = df.groupby('raceId')['best_quali_time'].min().rename('pole_time')
+df = df.merge(pole_times, on='raceId', how='left')
+
+# 4. Het percentage verschil berekenen (1.00 = Pole, 1.01 = 1% langzamer)
+df['quali_pace_deficit'] = df['best_quali_time'] / df['pole_time']
+df['quali_pace_deficit'] = df['quali_pace_deficit'].fillna(1.07) # 107% regel als fallback
+
+# --- NIEUW: TEAMMATE BATTLE (SKILL ISOLATOR) ---
+# Presteert deze coureur beter of slechter dan zijn teamgenoot in recente vorm?
+# Dit filtert de "auto factor" eruit.
+df['teammate_form_diff'] = df.groupby(['raceId', 'team_continuity_id'])['driver_recent_form'].transform(lambda x: x - x.mean())
 
 # --- WEERDATA VOORBEREIDEN ---
 # We vullen ontbrekende weerdata op met logische standaardwaarden
@@ -359,7 +392,9 @@ feature_cols = [
     'circuit_avg_stops',      # <--- Nieuw
     'driver_tire_management', # <--- Nieuw
     'driver_recent_speed',
-    'points_before_race'
+    'points_before_race',
+    'quali_pace_deficit',     # <--- Nieuw: Echte snelheid
+    'teammate_form_diff'      # <--- Nieuw: Skill vs Auto
 ]
 
 # Filter data: Alleen rijen met een geldig resultaat
@@ -517,6 +552,12 @@ def get_current_points(driver_id, year):
 
 X_next['points_before_race'] = X_next.apply(lambda x: get_current_points(x['driverId'], x['year']), axis=1)
 
+# --- NIEUWE FEATURES VOOR VOORSPELLING ---
+# 1. Quali Pace Deficit (Schatting op basis van grid, want we hebben geen Q3 tijden in de dict)
+X_next['quali_pace_deficit'] = 1.0 + (X_next['grid'] - 1) * 0.003 # Aanname: 0.3% tijdverlies per gridplek
+# 2. Teammate Diff (Berekend uit de reeds bepaalde form)
+X_next['teammate_form_diff'] = X_next.groupby('team_continuity_id')['driver_recent_form'].transform(lambda x: x - x.mean())
+
 # Selecteer input
 X_next_input = X_next[feature_cols]
 
@@ -534,83 +575,57 @@ actual_positions = {
 
 # --- MODEL 1: POSITIE VOORSPELLEN (REGRESSIE) ---
 print("\n==================================================")
-print(" 1. TRAINING POSITION MODEL (XGBRegressor) ")
+print(" 1. TRAINING POSITION MODEL (XGBRanker - Learning to Rank) ")
 print("==================================================")
 
-# NIEUW: Filter op finishers. We willen snelheid leren van mensen die finishen.
-# Dit voorkomt dat het model denkt dat P1 starten leidt tot P20 (door een crash).
-print("   -> Filteren: Trainen op alleen finishers (crashes negeren voor positiemodel)...")
-mask_finishers = y_dnf == 0
-X_reg = X[mask_finishers]
-y_reg = y_pos[mask_finishers]
+# --- STAP 3A: DATA VOORBEREIDING VOOR RANKING ---
+# XGBRanker heeft data nodig die gegroepeerd is per race.
+# Het model leert: "In deze groep (race), wie is beter dan wie?"
 
-# PROFESSOR FIX: Weighted Regression.
-# We care MUCH more about predicting P1 correctly than P18.
-# Weight = 22 - Position. (P1 gets weight 21, P20 gets weight 2).
-train_weights = (22 - y_reg).clip(lower=1)
+# 1. Sorteren op RaceID (Cruciaal voor groepering)
+# We maken een nieuwe gesorteerde set specifiek voor de Ranker
+train_sorted = train_df.sort_values(by=['raceId', 'positionOrder'])
 
-reg_params = {
-    'n_estimators': [100, 200, 300], # More trees to find subtle patterns
-    'max_depth': [3, 4, 5], 
-    'learning_rate': [0.01, 0.05, 0.1],
-    'colsample_bytree': [0.8, 1.0] # Randomly hide columns to prevent overfitting
-}
-tscv = TimeSeriesSplit(n_splits=3)
+# 2. Filter finishers (We ranken alleen snelheid, crashes doen we apart)
+mask_finishers = train_sorted['is_dnf'] == 0
+X_rank = train_sorted[mask_finishers][feature_cols]
 
-reg_model = xgb.XGBRegressor(objective='reg:squarederror', random_state=42)
-grid_reg = GridSearchCV(reg_model, reg_params, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
-# PROFESSOR FIX: Train with weights!
-grid_reg.fit(X_reg, y_reg, sample_weight=train_weights)
+# 3. Target omzetten naar Relevance (Hoger is beter)
+# Voor ranking werkt 'punten' beter dan positie. P1 = 20, P20 = 1.
+y_rank_score = 21 - train_sorted[mask_finishers]['positionOrder']
 
-best_reg_model = grid_reg.best_estimator_
-print(f"Beste Positie Parameters: {grid_reg.best_params_}")
-print(f"Beste MAE Score (Foutmarge): {-grid_reg.best_score_:.2f} posities")
+# 4. Groepen maken (Hoeveel auto's in elke race?)
+# We gebruiken de gesorteerde data om te tellen hoe groot elke 'query' (race) is.
+groups = train_sorted[mask_finishers].groupby('raceId', sort=False).size().to_numpy()
 
-# --- MODEL 1.5: NEURAL NETWORK (MLPRegressor) ---
-print("\n==================================================")
-print(" 1.5 TRAINING NEURAL NETWORK (MLPRegressor) ")
-print("==================================================")
+print(f"   -> Training data: {len(X_rank)} rijen verdeeld over {len(groups)} races.")
 
-scaler = StandardScaler()
-imputer = SimpleImputer(strategy='median')
-
-# Pipeline: Impute -> Scale
-X_reg_scaled = scaler.fit_transform(imputer.fit_transform(X_reg))
-
-nn_params = {
-    'hidden_layer_sizes': [(64, 32), (32, 16), (100, 50)], # Verschillende netwerk groottes
-    'activation': ['relu', 'tanh'],
-    'alpha': [0.0001, 0.001, 0.01], # Regularisatie (voorkomt overfitting)
-    'learning_rate_init': [0.001, 0.01] 
-}
-
-nn_base = MLPRegressor(solver='adam', max_iter=2000, random_state=42)
-grid_nn = GridSearchCV(nn_base, nn_params, cv=tscv, scoring='neg_mean_absolute_error', n_jobs=-1)
-grid_nn.fit(X_reg_scaled, y_reg)
-
-nn_model = grid_nn.best_estimator_
-print(f"Beste NN Parameters: {grid_nn.best_params_}")
-print(f"Beste NN MAE Score: {-grid_nn.best_score_:.2f} posities")
-
-# --- MODEL 1.6: NEURAL NETWORK CRASH MODEL (MLPClassifier) ---
-# We trainen ook een NN om crashes te herkennen, net als XGBoost.
-print("   -> Training Neural Network Crash Model...")
-
-# Voor classificatie gebruiken we de hele dataset (X), niet alleen finishers
-X_scaled = scaler.transform(imputer.transform(X)) # Gebruik dezelfde scaler/imputer logic
-
-nn_class_model = MLPClassifier(
-    hidden_layer_sizes=(32, 16), # Iets kleiner netwerk voor simpele Ja/Nee vraag
-    activation='relu',
-    max_iter=1000,
-    random_state=42
+print("   -> Training Ranker Model...")
+rank_model = xgb.XGBRanker(
+    objective='rank:ndcg', # Normalized Discounted Cumulative Gain (Optimaliseert de Top 3 zwaarder)
+    n_estimators=200,
+    learning_rate=0.05,
+    max_depth=4,
+    subsample=0.8,
+    colsample_bytree=0.8,
+    random_state=42,
+    tree_method="hist" # Sneller
 )
-nn_class_model.fit(X_scaled, y_dnf)
+
+rank_model.fit(
+    X_rank, 
+    y_rank_score, 
+    group=groups, 
+    verbose=True
+)
+print("   -> Model getraind!")
 
 # --- MODEL 2: CRASH/DNF VOORSPELLEN (CLASSIFICATIE) ---
 print("\n==================================================")
 print(" 2. TRAINING CRASH MODEL (XGBClassifier) ")
 print("==================================================")
+
+tscv = TimeSeriesSplit(n_splits=3)
 
 class_params = {
     'n_estimators': [100], 'max_depth': [3, 5],
@@ -635,15 +650,11 @@ print(" 3. VOORSPELLING SPA 2024 (GECOMBINEERD MODEL) ")
 print("==================================================")
 
 # 1. Voorspel Posities (Snelheid)
-pred_pos = best_reg_model.predict(X_next_input)
+# Ranker geeft een 'score' (hoe hoger hoe beter). Wij moeten dit omzetten naar rangorde (1, 2, 3).
+pred_scores = rank_model.predict(X_next_input)
 
-# 1.5 Voorspel Posities (Neural Network)
-X_next_scaled = scaler.transform(imputer.transform(X_next_input))
-pred_pos_nn = nn_model.predict(X_next_scaled)
-
-# 1.6 Voorspel Crashes (Neural Network)
-pred_dnf_prob_nn = nn_class_model.predict_proba(X_next_scaled)[:, 1]
-pred_dnf_label_nn = (pred_dnf_prob_nn > 0.5).astype(int)
+# We zetten de scores om naar posities (Hoogste score = P1)
+pred_pos = pd.Series(pred_scores).rank(ascending=False, method='first').astype(int).values
 
 # 2. Voorspel Crashes (Betrouwbaarheid)
 pred_dnf_prob = best_class_model.predict_proba(X_next_input)[:, 1] # Kans op DNF
@@ -653,9 +664,9 @@ pred_dnf_label = (pred_dnf_prob > 0.5).astype(int) # 0 = Finish, 1 = DNF
 result_df = X_next.copy()
 result_df['actual_pos'] = result_df['driver_name'].map(actual_positions)
 
-# --- 1. XGBOOST UITSLAG (Met DNF Logic) ---
+# --- UITSLAG (Met DNF Logic) ---
 print("\n" + "="*50)
-print(" UITSLAG 1: XGBOOST (Inclusief DNF Model)")
+print(" UITSLAG: XGBOOST (Inclusief DNF Model)")
 print("="*50)
 
 xgb_df = result_df.copy()
@@ -673,49 +684,5 @@ xgb_df['Status'] = np.where(xgb_df['DNF_Pred'] == 1, "DNF", "Finish")
 print(f"Totale Fout XGBoost: {xgb_df['Error'].sum()}")
 print(xgb_df[['Rank', 'driver_name', 'actual_pos', 'Error', 'Status', 'Score']].to_string(index=False))
 
-# --- 2. NEURAL NETWORK UITSLAG (Puur Regressie) ---
-print("\n" + "="*50)
-print(" UITSLAG 2: NEURAL NETWORK (Puur Snelheid)")
-print("="*50)
-
-nn_df = result_df.copy()
-nn_df['Score'] = pred_pos_nn
-nn_df['DNF_Pred'] = pred_dnf_label_nn # Nu gebruiken we ook de NN crash voorspelling
-
-# Sorteren: DNF's onderaan (999), anders op score
-nn_df['Sort'] = np.where(nn_df['DNF_Pred'] == 1, 999, nn_df['Score'])
-nn_df = nn_df.sort_values(by='Sort')
-
-nn_df['Rank'] = range(1, len(nn_df) + 1)
-nn_df['Error'] = (nn_df['Rank'] - nn_df['actual_pos']).abs()
-nn_df['Status'] = np.where(nn_df['DNF_Pred'] == 1, "DNF", "Finish")
-
-print(f"Totale Fout Neural Network: {nn_df['Error'].sum()}")
-print(nn_df[['Rank', 'driver_name', 'actual_pos', 'Error', 'Status', 'Score']].to_string(index=False))
-
-# --- 3. ENSEMBLE UITSLAG (Gemiddelde) ---
-print("\n" + "="*50)
-print(" UITSLAG 3: ENSEMBLE (XGB + NN Gecombineerd)")
-print("="*50)
-
-ens_df = result_df.copy()
-# We nemen het gemiddelde van de ruwe scores (Ensemble Averaging)
-ens_df['Score'] = (pred_pos + pred_pos_nn) / 2
-
-# We nemen ook het gemiddelde van de crash-kans!
-ens_prob_dnf = (pred_dnf_prob + pred_dnf_prob_nn) / 2
-ens_df['DNF_Pred'] = (ens_prob_dnf > 0.5).astype(int)
-
-# Sorteren: DNF's onderaan (999), anders op score
-ens_df['Sort'] = np.where(ens_df['DNF_Pred'] == 1, 999, ens_df['Score'])
-ens_df = ens_df.sort_values(by='Sort')
-
-ens_df['Rank'] = range(1, len(ens_df) + 1)
-ens_df['Error'] = (ens_df['Rank'] - ens_df['actual_pos']).abs()
-ens_df['Status'] = np.where(ens_df['DNF_Pred'] == 1, "DNF", "Finish")
-
-print(f"Totale Fout Ensemble: {ens_df['Error'].sum()}")
-print(ens_df[['Rank', 'driver_name', 'actual_pos', 'Error', 'Status', 'Score']].to_string(index=False))
-
 print("-" * 60)
-print("\nKlaar! Drie modellen geëvalueerd: XGBoost, Neural Network en Ensemble.")
+print("\nKlaar! Model geëvalueerd.")
