@@ -3,10 +3,11 @@ import { Moon, Sun } from "lucide-react";
 
 import Sidebar from "../components/Sidebar.jsx";
 import Button from "../components/ui/Button.jsx";
+import AccentSelect from "../components/ui/AccentSelect.jsx";
 import { useTheme } from "../providers/ThemeProvider.jsx";
 
 export default function AppLayout() {
-  const { theme, toggle } = useTheme();
+  const { theme, toggle, accent, setAccent, accents } = useTheme();
 
   return (
     <div className="min-h-screen bg-white text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
@@ -30,6 +31,11 @@ export default function AppLayout() {
                 <Moon size={16} className="hidden dark:block" />
                 <span className="text-sm">Theme</span>
               </Button>
+              <AccentSelect
+                value={accent}
+                options={accents}
+                onChange={setAccent}
+              />
             </div>
           </header>
 

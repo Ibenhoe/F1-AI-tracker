@@ -4,6 +4,7 @@
 
 :root {
   color-scheme: light;
+  --accent: 255 255 255;
 }
 .dark {
   color-scheme: dark;

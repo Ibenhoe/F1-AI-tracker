@@ -1,14 +1,17 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 const ThemeContext = createContext(null);
-
-/**
- * theme:
- * - "system" (default)
- * - "dark"
- * - "light"
- */
 const STORAGE_KEY = "f1ai.theme";
+const ACCENT_KEY = "f1ai.accent";
+
+export const ACCENTS = [
+  { id: "white", label: "White", hex: "#FFFFFF" },
+  { id: "blue", label: "Blue", hex: "#3B82F6" },
+  { id: "green", label: "Green", hex: "#22C55E" },
+  { id: "orange", label: "Orange", hex: "#F97316" },
+  { id: "purple", label: "Purple", hex: "#8B5CF6" },
+  { id: "pink", label: "Pink", hex: "#EC4899" },
+];
 
 function getSystemPrefersDark() {
   return window.matchMedia &&
@@ -24,22 +27,46 @@ function applyThemeClass(theme) {
   root.classList.toggle("dark", isDark);
 }
 
-export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("system");
+function hexToRgb(hex) {
+  const h = hex.replace("#", "");
+  const n = parseInt(h, 16);
+  return {
+    r: (n >> 16) & 255,
+    g: (n >> 8) & 255,
+    b: n & 255,
+  };
+}
 
-  useEffect(() => {
+function applyAccent(hex) {
+  const root = document.documentElement;
+  const { r, g, b } = hexToRgb(hex);
+
+  root.style.setProperty("--accent", `${r} ${g} ${b}`);
+}
+
+export function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "light" || stored === "dark" || stored === "system") {
-      setTheme(stored);
-    } else {
-      setTheme("system");
-    }
-  }, []);
+    if (stored === "light" || stored === "dark" || stored === "system") return stored;
+    return "system";
+  });
+
+  const [accent, setAccent] = useState(() => {
+    const stored = localStorage.getItem(ACCENT_KEY);
+    const exists = ACCENTS.find((a) => a.id === stored);
+    return exists?.id ?? "white";
+  });
 
   useEffect(() => {
     applyThemeClass(theme);
     localStorage.setItem(STORAGE_KEY, theme);
-  }, [theme]);
+
+    const hex =
+      ACCENTS.find((a) => a.id === accent)?.hex ?? ACCENTS[3].hex;
+
+    applyAccent(hex);
+    localStorage.setItem(ACCENT_KEY, accent);
+  }, [theme, accent]);
 
   useEffect(() => {
     if (!window.matchMedia) return;
@@ -63,9 +90,14 @@ export function ThemeProvider({ children }) {
       theme,
       setTheme,
       toggle: () =>
-        setTheme((t) => (t === "dark" ? "light" : t === "light" ? "dark" : "dark")),
+        setTheme((t) =>
+          t === "dark" ? "light" : t === "light" ? "dark" : "dark"
+        ),
+      accent,
+      setAccent,
+      accents: ACCENTS,
     }),
-    [theme]
+    [theme, accent]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
