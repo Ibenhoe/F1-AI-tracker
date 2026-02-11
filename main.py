@@ -298,11 +298,6 @@ else:
     df['driver_dnf_rate'] = 0.2
     df['constructor_dnf_rate'] = 0.2
 
-# --- NIEUW: TEAMMATE COMPARISON (SKILL VS CAR) ---
-# Verschil tussen driver form en constructor form.
-# Positief = Coureur presteert beter dan de auto (gemiddeld).
-df['driver_vs_team_form'] = df['constructor_recent_form'] - df['driver_recent_form']
-
 # --- NIEUW: QUALIFYING PACE (RELATIEF AAN POLE) ---
 # Grid positie is "ordinaal" (1, 2, 3). Tijdverschil is "ratio" (0.1s, 0.5s).
 # Dat laatste bevat veel meer informatie over de ware snelheid van de auto.
@@ -494,7 +489,6 @@ feature_cols = [
     'age_bin_code',
     'driver_recent_form',
     'constructor_recent_form',
-    'driver_vs_team_form',
     'driver_track_avg_grid',
     'driver_track_avg_finish',
     'driver_track_podiums',
@@ -630,9 +624,6 @@ X_next['constructor_elo'] = X_next['team_continuity_id'].apply(lambda x: get_lat
 X_next['driver_recent_form'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, default_val=12.0))
 # Let op: we gebruiken nu team_continuity_id voor de constructor form
 X_next['constructor_recent_form'] = X_next['team_continuity_id'].apply(lambda x: get_recent_form('team_continuity_id', x, default_val=12.0))
-
-# Teammate comparison voor voorspelling
-X_next['driver_vs_team_form'] = X_next['constructor_recent_form'] - X_next['driver_recent_form']
 
 # Pitstop Form toevoegen (gebruikt de 'avg_pit_duration_filled' kolom uit de historie)
 X_next['driver_recent_pit_avg'] = X_next['driverId'].apply(lambda x: get_recent_form('driverId', x, target_col='avg_pit_duration_filled', default_val=global_pit_mean))
