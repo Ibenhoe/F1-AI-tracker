@@ -1,6 +1,19 @@
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import Badge from "./ui/Badge.jsx";
 
+const TEAM_COLORS = {
+  "Mercedes": "#00D7B6",
+  "Red Bull Racing": "#4781D7",
+  "Ferrari": "#ED1131",
+  "McLaren": "#F47600",
+  "Alpine": "#00A1E8",
+  "Racing Bulls": "#6C98FF",
+  "Aston Martin": "#229971",
+  "Williams": "#1868DB",
+  "Kick Sauber": "#01C00E",
+  "Haas": "#9C9FA2",
+};
+
 function tireMeta(compound) {
   const c = String(compound ?? "").toUpperCase();
 
@@ -128,11 +141,19 @@ export default function DriversList({ drivers, currentLap }) {
                 <div
                   key={key}
                   className={[
-                    "grid min-w-0 grid-cols-[44px_1fr_110px_92px_64px_72px] items-center gap-3 px-3 py-3",
+                    "relative grid min-w-0 grid-cols-[44px_1fr_110px_92px_64px_72px] items-center gap-3 px-3 py-3",
                     "bg-white hover:bg-neutral-50",
                     "dark:bg-neutral-950/30 dark:hover:bg-neutral-950/50",
                   ].join(" ")}
                 >
+                  {/* Team accent bar */}
+                  <div
+                    className="absolute left-0 top-0 h-full w-1 rounded-l-xl"
+                    style={{
+                      backgroundColor: TEAM_COLORS[team] || "#444",
+                    }}
+                  />
+
                   {/* Position */}
                   <div className="text-center text-sm font-semibold text-neutral-900 dark:text-neutral-100 tabular-nums">
                     {idx + 1}
