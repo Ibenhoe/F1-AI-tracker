@@ -7,23 +7,19 @@ export default function Card({ className, children, clip = false }) {
         "relative rounded-2xl border",
         clip ? "overflow-hidden" : "overflow-visible",
 
-        // LIGHT MODE
+        // LIGHT
         "border-neutral-200 bg-white",
-        "shadow-[0_1px_0_rgba(0,0,0,0.03),0_10px_30px_rgba(0,0,0,0.06)]",
+        "shadow-[0_1px_0_rgba(0,0,0,0.04),0_12px_28px_rgba(0,0,0,0.08)]",
 
-        // DARK MODE
-        "dark:border-neutral-800/70 dark:bg-gradient-to-b dark:from-neutral-900/60 dark:to-neutral-950/60",
-        "dark:shadow-[0_0_0_1px_rgba(255,255,255,0.02),0_20px_60px_rgba(0,0,0,0.35)]",
+        // DARK (clean + flat)
+        "dark:border-neutral-800 dark:bg-neutral-900",
+        "dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_18px_50px_rgba(0,0,0,0.65)]",
 
         "p-6",
         className
       )}
     >
-      {/* DARK MODE HIGHLIGHTS */}
-      <div className="pointer-events-none absolute inset-0 hidden dark:block bg-[radial-gradient(80%_60%_at_50%_0%,rgba(255,255,255,0.06),transparent_60%)]" />
-      <div className="pointer-events-none absolute inset-0 hidden dark:block bg-[radial-gradient(90%_80%_at_50%_120%,rgba(0,0,0,0.55),transparent_55%)]" />
-
-      <div className="relative">{children}</div>
+      {children}
     </div>
   );
 }
