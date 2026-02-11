@@ -24,13 +24,10 @@ const RACES = {
   21: "Abu Dhabi",
 };
 
-const ITEM_H = 44; // px per row
+const ITEM_H = 44;
 const VISIBLE = 5; // must be odd
 const MID = Math.floor(VISIBLE / 2);
-
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
-}
+const LOOPS = 3; // render 3x list for infinite feel
 
 export default function RaceSelector({
   selectedRace,
@@ -38,12 +35,19 @@ export default function RaceSelector({
   onSelectRace,
   disabled,
 }) {
-  const list = useMemo(
+  const baseList = useMemo(
     () => Object.entries(RACES).map(([id, name]) => ({ id: Number(id), name })),
     []
   );
 
-  const value = Number(selectedRace ?? 21);
+  const N = baseList.length; // 21
+  const loopList = useMemo(() => {
+    const out = [];
+    for (let i = 0; i < LOOPS; i++) out.push(...baseList);
+    return out;
+  }, [baseList]);
+
+  const value = Number(selectedRace ?? 1);
 
   const emit = (id) => {
     if (disabled) return;
@@ -51,38 +55,66 @@ export default function RaceSelector({
     else if (onRaceChange) onRaceChange(id);
   };
 
-  const maxIndex = list.length - 1;
-  const maxOffset = maxIndex * ITEM_H; // last centered
-  const minOffset = 0; // first centered
-
-  // UI state + ref (ref is the truth during dragging)
+  // offset is in "rows", but measured in px
   const [offsetPx, _setOffsetPx] = useState(0);
   const offsetRef = useRef(0);
 
   const setOffsetPx = (next) => {
-    const clamped = clamp(next, minOffset, maxOffset);
-    offsetRef.current = clamped;
-    _setOffsetPx(clamped);
+    offsetRef.current = next;
+    _setOffsetPx(next);
   };
 
-  const indexFromOffset = (off) =>
-    clamp(Math.round(off / ITEM_H), 0, maxIndex);
+  const padTop = MID * ITEM_H;
 
-  const snapToNearest = (off) => {
-    const idx = indexFromOffset(off);
+  // --- infinite wrap helpers ---
+  const oneLoopPx = N * ITEM_H; // 21 rows
+  const centerLoopStartPx = oneLoopPx; // start of the middle copy (loop 2)
+
+  const normalizeId = (id) => {
+    // ensure 1..N
+    const raw = Number(id);
+    if (!Number.isFinite(raw)) return 1;
+    const m = ((raw - 1) % N + N) % N; // 0..N-1
+    return m + 1;
+  };
+
+  const idxFromOffset = (offPx) => {
+    // offPx is the "scroll offset" in px (0 at very top of the whole loopList)
+    return Math.round(offPx / ITEM_H);
+  };
+
+  const snapToNearest = (offPx) => {
+    const idx = idxFromOffset(offPx);
     const snapped = idx * ITEM_H;
     setOffsetPx(snapped);
 
-    const id = list[idx]?.id;
-    if (id && id !== value) emit(id);
+    const row = loopList[idx];
+    if (!row) return;
+
+    const id = normalizeId(row.id);
+    if (id !== value) emit(id);
   };
 
-  // Keep centered when parent value changes
+  const wrapIfNeeded = (offPx) => {
+    // Keep the offset around the middle loop to avoid hitting edges.
+    // Threshold: if we drift into the first or third loop too far, jump by ±oneLoopPx.
+    const minSafe = oneLoopPx * 0.5; // halfway through loop 1
+    const maxSafe = oneLoopPx * 2.5; // halfway through loop 3
+
+    if (offPx < minSafe) return offPx + oneLoopPx;
+    if (offPx > maxSafe) return offPx - oneLoopPx;
+    return offPx;
+  };
+
+  // When parent value changes, center to that value in the middle loop
   useEffect(() => {
-    const idx = list.findIndex((r) => r.id === value);
-    if (idx >= 0) setOffsetPx(idx * ITEM_H);
+    const baseIdx = baseList.findIndex((r) => r.id === value);
+    if (baseIdx < 0) return;
+
+    const target = centerLoopStartPx + baseIdx * ITEM_H;
+    setOffsetPx(target);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, baseList]);
 
   // --- drag state ---
   const isDraggingRef = useRef(false);
@@ -106,8 +138,12 @@ export default function RaceSelector({
     if (!isDraggingRef.current) return;
 
     const dy = e.clientY - startYRef.current;
-    // drag down => move list down => decrease offset
-    const next = startOffsetRef.current - dy;
+    // drag down => decrease offset (content moves down)
+    let next = startOffsetRef.current - dy;
+
+    // wrap continuously during drag (no clamping)
+    next = wrapIfNeeded(next);
+
     setOffsetPx(next);
   };
 
@@ -115,8 +151,10 @@ export default function RaceSelector({
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
 
-    // IMPORTANT: snap using ref (latest), not state
-    snapToNearest(offsetRef.current);
+    // wrap once more then snap
+    const wrapped = wrapIfNeeded(offsetRef.current);
+    setOffsetPx(wrapped);
+    snapToNearest(wrapped);
   };
 
   const onPointerUp = (e) => {
@@ -136,8 +174,6 @@ export default function RaceSelector({
     endDrag();
   };
 
-  const padTop = MID * ITEM_H;
-
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -154,7 +190,7 @@ export default function RaceSelector({
 
       <div
         className={[
-          "relative rounded-2xl border p-3 select-none",
+          "relative select-none rounded-2xl border p-3",
           "border-neutral-200 bg-white/70",
           "dark:border-neutral-800 dark:bg-neutral-950/40",
           disabled ? "opacity-60" : "",
@@ -197,11 +233,14 @@ export default function RaceSelector({
                 : "transform 160ms cubic-bezier(.2,.8,.2,1)",
             }}
           >
-            {list.map((r) => {
-              const active = r.id === value;
+            {loopList.map((r, i) => {
+              const id = normalizeId(r.id);
+              const name = baseList[id - 1]?.name ?? r.name;
+              const active = id === value;
+
               return (
                 <div
-                  key={r.id}
+                  key={`${i}-${id}`}
                   className={[
                     "flex items-center justify-between rounded-xl px-3",
                     active
@@ -210,9 +249,11 @@ export default function RaceSelector({
                   ].join(" ")}
                   style={{ height: ITEM_H }}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-7 text-right tabular-nums">{r.id}.</span>
-                    <span className="truncate">{r.name}</span>
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="w-8 text-right tabular-nums">
+                      {String(id).padStart(2, "0")}
+                    </span>
+                    <span className="truncate">{name}</span>
                   </div>
                   {active ? (
                     <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">

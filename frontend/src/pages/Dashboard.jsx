@@ -79,7 +79,7 @@ export default function Dashboard() {
   const [raceRunning, setRaceRunning] = useState(false);
   const [connected, setConnected] = useState(false);
   const [raceInitialized, setRaceInitialized] = useState(false);
-  const [selectedRace, setSelectedRace] = useState(21);
+  const [selectedRace, setSelectedRace] = useState(1);
 
   useEffect(() => {
     const initializeApp = async () => {
