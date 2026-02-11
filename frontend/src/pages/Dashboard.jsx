@@ -164,27 +164,6 @@ export default function Dashboard() {
           }
         });
 
-        apiClient.on("race/started", () => {
-          setRaceRunning(true);
-          setNotifications((prev) => [
-            {
-              id: Date.now(),
-              type: "success",
-              message: "Race started!",
-              time: new Date().toLocaleTimeString(),
-            },
-            ...prev,
-          ]);
-        });
-
-        apiClient.on("race/paused", () => {
-          setRaceRunning(false);
-        });
-
-        apiClient.on("race/resumed", () => {
-          setRaceRunning(true);
-        });
-
         apiClient.on("race/finished", () => {
           setRaceRunning(false);
           setNotifications((prev) => [
@@ -274,6 +253,9 @@ export default function Dashboard() {
             raceRunning={raceRunning}
             connected={connected}
             raceData={raceData}
+            onStarted={() => setRaceRunning(true)}
+            onPaused={() => setRaceRunning(false)}
+            onResumed={() => setRaceRunning(true)}
           />
         </Card>
       </div>

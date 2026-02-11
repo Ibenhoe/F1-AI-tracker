@@ -28,7 +28,10 @@ export default function RaceControls({
   raceInitialized,
   raceRunning,
   connected,
-  raceData, // <-- NEW (optional): { race, currentLap, totalLaps }
+  raceData,
+  onStarted,
+  onPaused,
+  onResumed,
 }) {
   const [speed, setSpeed] = useState(1.0);
 
@@ -41,16 +44,34 @@ export default function RaceControls({
   const canPause = connected && raceRunning;
   const canResume = connected && raceInitialized && !raceRunning;
 
-  const handleStart = () => {
-    if (canStart) apiClient.startRace(speed);
+  const handleStart = async () => {
+    if (!canStart) return;
+    try {
+      await apiClient.startRace(speed);
+      onStarted?.();
+    } catch (e) {
+      console.error("[RaceControls] startRace failed:", e);
+    }
   };
 
-  const handlePause = () => {
-    if (canPause) apiClient.pauseRace();
+  const handlePause = async () => {
+    if (!canPause) return;
+    try {
+      await apiClient.pauseRace();
+      onPaused?.();
+    } catch (e) {
+      console.error("[RaceControls] pauseRace failed:", e);
+    }
   };
 
-  const handleResume = () => {
-    if (canResume) apiClient.resumeRace();
+  const handleResume = async () => {
+    if (!canResume) return;
+    try {
+      await apiClient.resumeRace();
+      onResumed?.();
+    } catch (e) {
+      console.error("[RaceControls] resumeRace failed:", e);
+    }
   };
 
   const handleSpeedChange = (newSpeed) => {
