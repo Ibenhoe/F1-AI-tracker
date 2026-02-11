@@ -1,49 +1,85 @@
 import './PreRaceAnalysis.css'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import RaceSelector from '../components/RaceSelector'
+import Card from '../components/ui/Card'
 
 export default function PreRaceAnalysis() {
   const [raceNumber, setRaceNumber] = useState(21)
   const [predictions, setPredictions] = useState([])
+  const [tireStrategies, setTireStrategies] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [analysis, setAnalysis] = useState(null)
+  const [circuitAnalysis, setCircuitAnalysis] = useState(null)
+  const [validationMetrics, setValidationMetrics] = useState(null)
+  const retryTimerRef = useRef(null)
 
-  // Fetch pre-race analysis when race changes
+  // Fetch both pre-race analysis and tire strategy when race changes
   useEffect(() => {
     if (raceNumber) {
-      fetchPreRaceAnalysis(raceNumber)
+      fetchPreRaceData(raceNumber)
+      // Also fetch validation metrics once
+      fetchValidationMetrics()
+    }
+    
+    // Cleanup retry timer on unmount
+    return () => {
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current)
+      }
     }
   }, [raceNumber])
 
-  const fetchPreRaceAnalysis = async (raceNum) => {
+  const fetchPreRaceData = async (raceNum) => {
     try {
       setLoading(true)
       setError(null)
       
-      const response = await fetch('http://localhost:5000/api/race/prerace-analysis', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          race_number: raceNum,
-          grid: null
+      // Fetch both APIs in parallel
+      const [predResponse, tireResponse] = await Promise.all([
+        fetch('http://localhost:5000/api/race/prerace-analysis', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ race_number: raceNum, grid: null })
+        }),
+        fetch('http://localhost:5000/api/race/tire-strategy', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ race_number: raceNum })
         })
-      })
+      ])
 
-      if (!response.ok) {
+      if (!predResponse.ok) {
         throw new Error('Failed to fetch pre-race analysis')
       }
 
-      const data = await response.json()
-      
-      if (data.predictions) {
-        setPredictions(data.predictions)
-        setAnalysis(data.analysis)
+      const predData = await predResponse.json()
+      if (predData.predictions) {
+        setPredictions(predData.predictions)
+        setAnalysis(predData.analysis)
+      }
+
+      // Tire strategy might fail gracefully or be loading (202 = pending)
+      if (tireResponse.ok || tireResponse.status === 202) {
+        const tireData = await tireResponse.json()
+        if (tireData.strategies && tireData.strategies.length > 0) {
+          setTireStrategies(tireData.strategies)
+          setCircuitAnalysis(tireData.circuit_analysis)
+        }
+        if (tireResponse.status === 202) {
+          // Model is still loading, retry after 2 seconds
+          console.log('Tire strategy model is loading, will retry in 2 seconds...')
+          if (retryTimerRef.current) clearTimeout(retryTimerRef.current)
+          retryTimerRef.current = setTimeout(() => {
+            fetchPreRaceData(raceNum)
+          }, 2000)
+        }
+      } else if (tireResponse.status === 503) {
+        // Model temporarily unavailable
+        console.warn('Tire strategy model temporarily unavailable, skipping...')
       }
     } catch (err) {
-      console.error('Error fetching pre-race analysis:', err)
+      console.error('Error fetching pre-race data:', err)
       setError(err.message)
     } finally {
       setLoading(false)
@@ -52,6 +88,22 @@ export default function PreRaceAnalysis() {
 
   const handleRaceSelect = (raceId) => {
     setRaceNumber(raceId)
+  }
+
+  const fetchValidationMetrics = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/race/validation-metrics', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      
+      if (response.ok) {
+        const data = await response.json()
+        setValidationMetrics(data)
+      }
+    } catch (err) {
+      console.warn('Could not fetch validation metrics:', err)
+    }
   }
 
   const getConfidenceColor = (confidence) => {
@@ -69,200 +121,215 @@ export default function PreRaceAnalysis() {
   }
 
   return (
-    <div className="pre-race-analysis">
-      <div className="pre-race-header">
-        <h1>Pre-Race AI Analysis</h1>
-        <p className="subtitle">Voorspellingen op basis van 40+ features en XGBoost-model</p>
-      </div>
-
-      <div className="pre-race-content">
-        <div className="race-selector-section">
-          <h2>Kies een race</h2>
-          <RaceSelector 
-            selectedRace={raceNumber}
-            onSelectRace={handleRaceSelect} 
-          />
+    <div className="w-full min-h-screen bg-white dark:bg-neutral-950 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-neutral-900 dark:text-neutral-100 mb-2">
+            Pre-Race AI Analysis
+          </h1>
+          <p className="text-neutral-600 dark:text-neutral-400">
+            Voorspellingen en bandenstrategie voor alle 21 F1 races
+          </p>
         </div>
 
+        {/* Race Selector */}
+        <Card>
+          <div className="flex flex-col gap-4">
+            <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+              Kies een race
+            </h2>
+            <RaceSelector 
+              selectedRace={raceNumber}
+              onSelectRace={handleRaceSelect} 
+            />
+          </div>
+        </Card>
+
+        {/* Error State */}
         {error && (
-          <div className="error-message">
-            <p>Fout: {error}</p>
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-700 dark:text-red-300">Fout: {error}</p>
           </div>
         )}
 
+        {/* Loading State */}
         {loading && (
-          <div className="loading-container">
-            <div className="spinner"></div>
-            <p>AI-model laden en voorspellingen genereren...</p>
+          <div className="flex flex-col items-center justify-center py-16 gap-4">
+            <div className="w-12 h-12 border-4 border-neutral-200 dark:border-neutral-700 border-t-neutral-900 dark:border-t-neutral-100 rounded-full animate-spin" />
+            <p className="text-neutral-600 dark:text-neutral-400">AI-model laden en voorspellingen genereren...</p>
           </div>
         )}
 
+        {/* Main Content */}
         {!loading && predictions.length > 0 && (
-          <div className="analysis-grid">
+          <div className="space-y-6">
             {/* AI Predictions Panel */}
-            <div className="analysis-card predictions-card">
-              <div className="card-header">
-                <h2>AI-Voorspellingen (Top 10)</h2>
-                {analysis && (
-                  <p className="model-info">
-                    Model: {analysis.model} | {analysis.features_used} features
-                  </p>
-                )}
-              </div>
-
-              <div className="predictions-table">
-                <div className="table-header">
-                  <div className="col-position">#</div>
-                  <div className="col-driver">Driver</div>
-                  <div className="col-team">Team</div>
-                  <div className="col-grid">Grid</div>
-                  <div className="col-score">AI Score</div>
-                  <div className="col-confidence">Confidence</div>
+            <Card>
+              <div className="flex flex-col gap-6">
+                <div>
+                  <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100">
+                    🏁 AI-Voorspellingen
+                  </h2>
                 </div>
 
-                {predictions.map((pred, idx) => (
-                  <div key={idx} className="table-row">
-                    <div className="col-position medal">
-                      <span className="position-number">{idx + 1}</span>
-                    </div>
-                    <div className="col-driver">
-                      <div className="driver-info">
-                        <div className="driver-name">{pred.driver}</div>
-                        <div className="driver-number">#{pred.number}</div>
-                      </div>
-                    </div>
-                    <div className="col-team">
-                      <div className="team-badge">{pred.team}</div>
-                    </div>
-                    <div className="col-grid">
-                      <div className="grid-badge">P{pred.grid_position}</div>
-                    </div>
-                    <div className="col-score">
-                      <span className="score-value">{pred.ai_score.toFixed(2)}</span>
-                    </div>
-                    <div className="col-confidence">
-                      <div className="confidence-bar-container">
-                        <div
-                          className="confidence-bar"
-                          style={{
-                            width: `${pred.confidence}%`,
-                            backgroundColor: getConfidenceColor(pred.confidence)
-                          }}
-                        ></div>
-                        <span className="confidence-text">
-                          {pred.confidence.toFixed(0)}%
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Model Analysis Info */}
-            <div className="analysis-card info-card">
-              <h2>Model Informatie</h2>
-              <div className="info-grid">
-                <div className="info-item">
-                  <h3>Features Gebruikt</h3>
-                  <p className="info-value">{analysis?.features_used || 17}</p>
-                  <ul className="feature-list">
-                    <li>Grid Position</li>
-                    <li>Driver Experience</li>
-                    <li>Recent Form (5 races)</li>
-                    <li>Track History</li>
-                    <li>Pit Stop Data</li>
-                    <li>Weather Conditions</li>
-                    <li>Constructor Strength</li>
-                  </ul>
-                </div>
-
-                <div className="info-item">
-                  <h3>Model Type</h3>
-                  <p className="info-value">{analysis?.model || 'XGBoost'}</p>
-                  <p className="model-desc">
-                    Advanced machine learning regressor trained op historische F1-data (2015-2024)
-                  </p>
-                </div>
-
-                <div className="info-item">
-                  <h3>Confidence Level</h3>
-                  <p className="info-value">Max {analysis?.confidence_threshold || 85}%</p>
-                  <p className="model-desc">
-                    Realistische voorspellingen die onverwachte race-factoren in acht nemen
-                  </p>
-                </div>
-
-                <div className="info-item">
-                  <h3>Accuratesse</h3>
-                  <p className="info-value">~78%</p>
-                  <p className="model-desc">
-                    Topscorer voorspellingen op testset (MAE: 4.2 positions)
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Strategy Analysis */}
-            <div className="analysis-card strategy-card">
-              <h2>🎯 Strategische Inzichten</h2>
-              <div className="strategy-grid">
-                <div className="strategy-item">
-                  <h4>Top 3 Favorieten</h4>
-                  <div className="favorites-list">
-                    {predictions.slice(0, 3).map((pred, idx) => (
-                      <div key={idx} className="favorite-item">
-                        <span className="medal-lg">{getMedalEmoji(pred.position)}</span>
-                        <span className="fav-name">{pred.driver}</span>
-                        <span className="fav-conf">{pred.confidence.toFixed(0)}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="strategy-item">
-                  <h4>Dark Horses</h4>
-                  <div className="darkhorse-list">
-                    {predictions
-                      .filter(p => p.grid_position > 10 && p.position <= 10)
-                      .slice(0, 3)
-                      .map((pred, idx) => (
-                        <div key={idx} className="darkhorse-item">
-                          <span className="pos-tag">P{pred.grid_position}</span>
-                          <span className="dh-name">{pred.driver}</span>
-                          <span className="dh-move">→ P{pred.position}</span>
-                        </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="border-b border-neutral-200 dark:border-neutral-800">
+                        <th className="text-left py-3 px-4 font-semibold text-neutral-700 dark:text-neutral-300">#</th>
+                        <th className="text-left py-3 px-4 font-semibold text-neutral-700 dark:text-neutral-300">Driver</th>
+                        <th className="text-left py-3 px-4 font-semibold text-neutral-700 dark:text-neutral-300">Team</th>
+                        <th className="text-left py-3 px-4 font-semibold text-neutral-700 dark:text-neutral-300">Grid</th>
+                        <th className="text-left py-3 px-4 font-semibold text-neutral-700 dark:text-neutral-300">Score</th>
+                        <th className="text-left py-3 px-4 font-semibold text-neutral-700 dark:text-neutral-300">Confidence</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {predictions.slice(0, 10).map((pred, idx) => (
+                        <tr key={idx} className="border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition">
+                          <td className="py-3 px-4 font-semibold text-neutral-900 dark:text-neutral-100">{idx + 1}</td>
+                          <td className="py-3 px-4">
+                            <div className="font-semibold text-neutral-900 dark:text-neutral-100">{pred.driver}</div>
+                            <div className="text-xs text-neutral-600 dark:text-neutral-400">#{pred.number}</div>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="inline-block px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-medium rounded">
+                              {pred.team}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="font-semibold text-neutral-900 dark:text-neutral-100">P{pred.grid_position}</span>
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-neutral-900 dark:text-neutral-100">
+                            {pred.ai_score.toFixed(1)}
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2">
+                              <div className="w-16 h-2 bg-neutral-200 dark:bg-neutral-700 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full transition-all"
+                                  style={{
+                                    width: `${pred.confidence}%`,
+                                    backgroundColor: getConfidenceColor(pred.confidence)
+                                  }}
+                                />
+                              </div>
+                              <span className="w-12 text-right font-semibold text-neutral-900 dark:text-neutral-100">
+                                {pred.confidence.toFixed(0)}%
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
                       ))}
-                    {predictions.filter(p => p.grid_position > 10 && p.position <= 10).length === 0 && (
-                      <p className="no-data">Geen dark horses deze race</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="strategy-item">
-                  <h4>Risico's</h4>
-                  <div className="risks-list">
-                    {predictions.filter(p => p.confidence < 65).slice(0, 3).map((pred, idx) => (
-                      <div key={idx} className="risk-item">
-                        <span className="risk-name">{pred.driver}</span>
-                        <span className="risk-conf">{pred.confidence.toFixed(0)}%</span>
-                        <span className="risk-badge">Onzeker</span>
-                      </div>
-                    ))}
-                    {predictions.filter(p => p.confidence < 65).length === 0 && (
-                      <p className="no-data">Lage onzekerheid deze race</p>
-                    )}
-                  </div>
+                    </tbody>
+                  </table>
                 </div>
               </div>
-            </div>
+            </Card>
+
+            {/* Tire Strategy Panel - GENERAL STRATEGIES (1-2) */}
+            {tireStrategies.length > 0 && (
+              <Card className="xl:col-span-2">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 mb-1">
+                      🛞 Bandenstrategie
+                    </h2>
+                    {circuitAnalysis && (
+                      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+                        Circuit wear: {(circuitAnalysis.tire_wear_rate * 100).toFixed(0)}% | Type: {circuitAnalysis.track_type}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-3">
+                    {tireStrategies.map((strat, idx) => (
+                      <div key={idx} className="border rounded-lg border-neutral-200 dark:border-neutral-800 p-4">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="inline-block px-2 py-1 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs font-semibold rounded">
+                                {strat.rank === 1 ? '✓ PRIMAIR' : '⚡ ALT'}
+                              </span>
+                              <h3 className="text-base font-semibold text-neutral-900 dark:text-neutral-100">
+                                {strat.strategy_type.replace(/_/g, ' ').toUpperCase()}
+                              </h3>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+                              {strat.confidence.toFixed(0)}%
+                            </div>
+                            <div className="text-xs text-neutral-600 dark:text-neutral-400">
+                              betrouwbaarheid
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <span className="block text-neutral-600 dark:text-neutral-400 text-xs font-medium mb-1">
+                              Pit Stops:
+                            </span>
+                            <span className="text-neutral-900 dark:text-neutral-100 font-medium">
+                              {strat.pit_stop_laps.length === 0 
+                                ? 'Geen' 
+                                : strat.pit_stop_laps.map((lap, i) => (
+                                    <span key={i}>
+                                      Lap {lap}{i < strat.pit_stop_laps.length - 1 ? ', ' : ''}
+                                    </span>
+                                  ))
+                              }
+                            </span>
+                          </div>
+
+                          <div>
+                            <span className="block text-neutral-600 dark:text-neutral-400 text-xs font-medium mb-1">
+                              Bandenkeuze:
+                            </span>
+                            <div className="flex items-center gap-1 flex-wrap">
+                              {strat.tire_sequence.map((compound, i) => (
+                                <span key={i} className="inline-flex items-center gap-1">
+                                  <span className={`px-2 py-1 rounded text-xs font-semibold 
+                                    ${compound === 'SOFT' ? 'bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-200' : ''}
+                                    ${compound === 'MEDIUM' ? 'bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-200' : ''}
+                                    ${compound === 'HARD' ? 'bg-white dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200' : ''}
+                                  `}>
+                                    {compound}
+                                  </span>
+                                  {i < strat.tire_sequence.length - 1 && <span className="text-neutral-400">→</span>}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {strat.recommendation && (
+                          <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-neutral-800">
+                            <p className="text-sm text-neutral-700 dark:text-neutral-300">
+                              💡 {strat.recommendation}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
+
           </div>
         )}
 
         {!loading && predictions.length === 0 && !error && (
-          <div className="empty-state">
-            <p>👉 Selecteer een race om AI-voorspellingen te zien</p>
-          </div>
+          <Card>
+            <div className="text-center py-16">
+              <p className="text-neutral-600 dark:text-neutral-400 text-lg">
+                👉 Selecteer een race om AI-voorspellingen te zien
+              </p>
+            </div>
+          </Card>
         )}
       </div>
     </div>

@@ -18,6 +18,7 @@ import pandas as pd
 import fastf1
 from race_simulator import RaceSimulator
 from prerace_model import ensure_prerace_model_loaded
+from tire_strategy_model import ensure_tire_strategy_model_loaded
 
 # Performance optimization: Rate-limiting for Socket.IO emissions
 class RateLimiter:
@@ -126,6 +127,31 @@ model_cache = {
     'loaded': False
 }
 
+# Tire strategy model pre-loading (background thread)
+tire_strategy_preload_thread = None
+tire_strategy_preload_started = False
+
+def preload_tire_strategy_model():
+    """Preload tire strategy model in background to avoid UI freeze"""
+    global tire_strategy_preload_started
+    
+    if tire_strategy_preload_started:
+        return
+    
+    tire_strategy_preload_started = True
+    
+    def _preload():
+        try:
+            print("[STARTUP] Pre-loading tire strategy model in background...")
+            ensure_tire_strategy_model_loaded()
+            print("[STARTUP] Tire strategy model pre-loaded successfully!")
+        except Exception as e:
+            print(f"[STARTUP] ERROR pre-loading tire strategy model: {e}")
+    
+    # Start background thread
+    preload_thread = threading.Thread(target=_preload, daemon=True)
+    preload_thread.start()
+
 
 @app.route('/', methods=['GET'])
 def root():
@@ -141,6 +167,40 @@ def health_check():
         'version': '1.0',
         'timestamp': datetime.now().isoformat()
     }), 200
+
+
+# ========== UTILITY FUNCTIONS ==========
+
+def get_race_info(race_num):
+    """Utility function to get race name and validate race number (P4.2 - reduce duplication)"""
+    RACES_MAP = {
+        1: "Bahrain", 2: "Saudi Arabia", 3: "Australia", 4: "Japan", 5: "China",
+        6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain", 10: "Austria",
+        11: "UK", 12: "Hungary", 13: "Belgium", 14: "Netherlands", 15: "Italy",
+        16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil", 21: "Abu Dhabi"
+    }
+    
+    if not isinstance(race_num, int) or race_num < 1 or race_num > 21:
+        raise ValueError(f'Invalid race number {race_num}. Must be 1-21.')
+    
+    race_name = RACES_MAP.get(race_num, "Unknown")
+    return race_name
+
+
+def get_race_grid(race_num):
+    """Fetch qualifying grid from FastF1 or fallback (P4.1 - can be cached later)"""
+    grid = _fetch_qualifying_grid(race_num)
+    
+    if not grid or len(grid) == 0:
+        print(f"[API] WARNING: Could not fetch FastF1 data, using fallback")
+        grid = _get_fallback_grid(race_num)
+    else:
+        print(f"[API] ✓ Using REAL FastF1 qualifying grid")
+    
+    return grid
+
+
+# ========== API ENDPOINTS ==========
 
 
 @app.route('/api/races', methods=['GET'])
@@ -183,17 +243,11 @@ def get_prerace_analysis():
         data = request.json or {}
         race_num = data.get('race_number', 21)
         
-        if not isinstance(race_num, int) or race_num < 1 or race_num > 21:
-            return jsonify({'error': f'Invalid race number {race_num}', 'status': 'error'}), 400
-        
-        # Get race name for logging
-        RACES_MAP = {
-            1: "Bahrain", 2: "Saudi Arabia", 3: "Australia", 4: "Japan", 5: "China",
-            6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain", 10: "Austria",
-            11: "UK", 12: "Hungary", 13: "Belgium", 14: "Netherlands", 15: "Italy",
-            16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil", 21: "Abu Dhabi"
-        }
-        race_name = RACES_MAP.get(race_num, "Unknown")
+        # Use utility to validate and get race name (P4.2 - removes duplication)
+        try:
+            race_name = get_race_info(race_num)
+        except ValueError as ve:
+            return jsonify({'error': str(ve), 'status': 'error'}), 400
         
         print(f"\n{'='*80}")
         print(f"[PRERACE API] RACE {race_num}: {race_name} - Processing pre-race analysis")
@@ -205,15 +259,8 @@ def get_prerace_analysis():
             print("[PRERACE API] ERROR: Model failed to load")
             return jsonify({'error': 'Could not load model'}), 500
         
-        # Try to fetch REAL qualifying data from FastF1
-        grid = _fetch_qualifying_grid(race_num)
-        
-        if not grid or len(grid) == 0:
-            print(f"[PRERACE API] WARNING: Could not fetch real FastF1 data for Race {race_num} ({race_name})")
-            print(f"[PRERACE API] Using fallback grid instead...")
-            grid = _get_fallback_grid(race_num)
-        else:
-            print(f"[PRERACE API] ✓ Using REAL FastF1 qualifying data for Race {race_num} ({race_name})")
+        # Fetch grid using utility (P4.1 - caching opportunity identified)
+        grid = get_race_grid(race_num)
         
         # Log grid positions for debugging
         print(f"[PRERACE API] Grid positions for Race {race_num} ({race_name}):")
@@ -246,6 +293,92 @@ def get_prerace_analysis():
         
     except Exception as e:
         print(f"[PRERACE API] ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e), 'status': 'error'}), 400
+
+
+@app.route('/api/race/tire-strategy', methods=['POST'])
+def get_tire_strategy():
+    """Get tire strategy recommendations for upcoming race
+    
+    Uses circuit-specific tire degradation models and weather forecasting
+    """
+    try:
+        data = request.json or {}
+        race_num = data.get('race_number', 21)
+        weather_forecast = data.get('weather_forecast')  # Optional: {temp_c, precip_mm, cloud_pct}
+        
+        # Use utility to validate and get race name (P3.1 HIGH - fix + P4.2 - reduce duplication)
+        try:
+            race_name = get_race_info(race_num)
+        except ValueError as ve:
+            return jsonify({'error': str(ve), 'status': 'error'}), 400
+        
+        print(f"\n{'='*80}")
+        print(f"[TIRE STRATEGY API] RACE {race_num}: {race_name} - Computing tire strategy")
+        print(f"{'='*80}")
+        
+        # Load tire strategy model (with timeout to prevent UI freeze)
+        try:
+            tire_model = ensure_tire_strategy_model_loaded()
+            if not tire_model or not tire_model.loaded:
+                print("[TIRE STRATEGY API] WARNING: Model not ready, returning graceful fallback")
+                return jsonify({
+                    'status': 'pending',
+                    'message': 'Tire strategy model is loading. Please try again in a moment.',
+                    'race_number': race_num,
+                    'strategies': []
+                }), 202  # 202 Accepted - still processing
+        except Exception as model_err:
+            print(f"[TIRE STRATEGY API] ERROR loading model: {model_err}")
+            return jsonify({
+                'status': 'error',
+                'message': f'Tire strategy model unavailable: {str(model_err)[:100]}',
+                'race_number': race_num,
+                'strategies': []
+            }), 503  # 503 Service Unavailable
+        
+        # Fetch grid using utility (P4.1 - caching opportunity identified)
+        grid = get_race_grid(race_num)
+        
+        print(f"[TIRE STRATEGY API] Grid loaded: {len(grid)} drivers")
+        
+        # Get tire strategy predictions (includes per-driver strategies)
+        strategies = tire_model.predict_strategy(grid, race_num, weather_forecast)
+        
+        print(f"[TIRE STRATEGY API] ✓ Generated tire strategies for {len(strategies)} strategies")
+        print(f"[TIRE STRATEGY API] Top strategies:")
+        for i, strat in enumerate(strategies, 1):
+            if strat.get('strategy_type') != 'per_driver_details':
+                print(f"    {i}. {strat.get('strategy_type'):15s} - Confidence: {strat.get('confidence', 0):.0f}%")
+        print(f"{'='*80}\n")
+        
+        # Extract general strategies (first 2) and per-driver strategies
+        general_strategies = [s for s in strategies if s.get('strategy_type') != 'per_driver_details']
+        per_driver = next((s for s in strategies if s.get('strategy_type') == 'per_driver_details'), None)
+        
+        # Format response
+        response_data = {
+            'status': 'success',
+            'race_number': race_num,
+            'strategies': general_strategies,  # Top 2 general strategies
+            'per_driver_strategies': per_driver.get('drivers', []) if per_driver else [],  # Individual driver tire sequences
+            'circuit_analysis': tire_model.circuit_properties.get(int(race_num), {}),
+            'tire_degradation': tire_model.tire_degradation_curves.get(int(race_num), {}),
+            'analysis': {
+                'model': 'Circuit-Specific XGBoost + Degradation Curves + Per-Driver Optimization',
+                'error_margin': '±2-3 laps',
+                'weather_integrated': True,
+                'per_driver_tire_selection': True,
+                'circuit_properties': ['tire_wear_rate', 'track_type', 'brake_wear', 'overtaking_difficulty']
+            }
+        }
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        print(f"[TIRE STRATEGY API] ERROR: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({'error': str(e), 'status': 'error'}), 400
@@ -724,6 +857,8 @@ def pause_race_http():
 def resume_race_http():
     """Resume race via HTTP"""
     race_state['running'] = True
+    # Start simulation thread again to continue the race
+    threading.Thread(target=run_simulation, daemon=True).start()
     return jsonify({'status': 'resumed'}), 200
 
 
@@ -884,6 +1019,9 @@ if __name__ == '__main__':
     print("[BACKEND] Server running on http://localhost:5000")
     print("[BACKEND] Socket.IO available at ws://localhost:5000/socket.io/")
     print("="*60 + "\n")
+    
+    # Pre-load tire strategy model in background to avoid UI freeze on first request
+    preload_tire_strategy_model()
     
     # Run with werkzeug
     socketio.run(
