@@ -1,10 +1,9 @@
 import pandas as pd
 import xgboost as xgb
-from sklearn.model_selection import GridSearchCV, TimeSeriesSplit
-from sklearn.metrics import mean_absolute_error, accuracy_score, classification_report
-from sklearn.preprocessing import LabelEncoder
 import numpy as np
 import os
+import warnings
+warnings.filterwarnings('ignore')
 
 # ---------------------------------------------------------
 # STAP 1: DATA LADEN & FEATURE ENGINEERING
@@ -25,8 +24,20 @@ except FileNotFoundError:
 df['date'] = pd.to_datetime(df['date'])
 df = df.sort_values(by='date')
 
-# --- NIEUW: TEAM CONTINUÏTEIT (MOET EERST VOOR ELO) ---
-# We mappen oude teamnamen naar hun huidige identiteit zodat Elo doorloopt.
+# --- HELPER FUNCTIONS ---
+
+def parse_time_str(t_str):
+    """Converts '1:30.123' or '90.123' to seconds (float)."""
+    if pd.isna(t_str) or str(t_str).strip() == '' or '\\N' in str(t_str): return np.nan
+    try:
+        t_str = str(t_str).strip()
+        if ':' in t_str:
+            parts = t_str.split(':')
+            return float(parts[0]) * 60 + float(parts[1])
+        return float(t_str)
+    except:
+        return np.nan
+
 def get_team_continuity_id(row):
     name = str(row.get('name_team', '')).lower()
     cid = row['constructorId']
@@ -37,12 +48,6 @@ def get_team_continuity_id(row):
     if 'rb' in name or 'alphatauri' in name or 'toro rosso' in name or 'minardi' in name: return 213
     if 'sauber' in name or 'alfa romeo' in name: return 15
     return cid
-
-df['team_continuity_id'] = df.apply(get_team_continuity_id, axis=1)
-
-# --- NIEUW: ELO RATING SYSTEM (THE PLATEAU BREAKER) ---
-# We berekenen de 'True Skill' van elke coureur en team over de HELE historie.
-print("   -> Calculating Elo Ratings (1950-Present)...")
 
 def calculate_elo_history(df):
     driver_elo = {}      # Huidige rating per coureur
@@ -87,6 +92,12 @@ def calculate_elo_history(df):
             constructor_elo[c_id] = c_curr + K_FACTOR * (actual_score - c_exp)
             
     return d_elo_vals, c_elo_vals
+
+# --- APPLY HELPERS TO DATA ---
+
+df['team_continuity_id'] = df.apply(get_team_continuity_id, axis=1)
+
+print("   -> Calculating Elo Ratings (1950-Present)...")
 
 # Elo berekenen op de HELE dataset (dus ook 1950-2014)
 # Omdat df gesorteerd is op datum, werkt groupby('raceId', sort=False) chronologisch correct.
@@ -185,7 +196,6 @@ df['grid_bin'] = pd.cut(df['grid'], bins=[-1, 1, 3, 10, 15, 25], labels=['Pole',
 df['age_bin'] = pd.cut(df['driver_age'], bins=[17, 24, 30, 36, 60], labels=['Rookie', 'Prime', 'Experienced', 'Veteran'])
 
 # 5. Encoding (Tekst naar getallen voor XGBoost)
-# PROFESSOR FIX: LabelEncoder sorteert alfabetisch (Back=0, Pole=3). We willen logische volgorde!
 grid_mapping = {'Pole': 0, 'Top3': 1, 'Points': 2, 'Midfield': 3, 'Back': 4}
 age_mapping = {'Rookie': 0, 'Prime': 1, 'Experienced': 2, 'Veteran': 3}
 
@@ -196,8 +206,6 @@ df['age_bin_code'] = df['age_bin'].map(age_mapping).fillna(1).astype(int)
 # We berekenen hoeveel posities er gemiddeld veranderen op een circuit.
 # Veel verandering = makkelijk inhalen (of chaos). Weinig = Monaco.
 df['pos_change_abs'] = (df['grid'] - df['positionOrder']).abs()
-# PROFESSOR FIX: Data Leakage! Gebruik geen mean() over de hele dataset (toekomstkennis).
-# Gebruik expanding mean (alleen historie).
 df['circuit_overtake_index'] = df.groupby('circuitId')['pos_change_abs'].transform(lambda x: x.expanding().mean().shift(1))
 # Vul eventuele gaten (eerste race op circuit)
 df['circuit_overtake_index'] = df['circuit_overtake_index'].fillna(df['pos_change_abs'].mean())
@@ -299,21 +307,10 @@ df['driver_vs_team_form'] = df['constructor_recent_form'] - df['driver_recent_fo
 # Grid positie is "ordinaal" (1, 2, 3). Tijdverschil is "ratio" (0.1s, 0.5s).
 # Dat laatste bevat veel meer informatie over de ware snelheid van de auto.
 
-def parse_quali_time(t_str):
-    if pd.isna(t_str) or str(t_str).strip() == '' or '\\N' in str(t_str): return np.nan
-    try:
-        t_str = str(t_str).strip()
-        if ':' in t_str:
-            parts = t_str.split(':')
-            return float(parts[0]) * 60 + float(parts[1])
-        return float(t_str)
-    except:
-        return np.nan
-
 # 1. Parse de tijden (q1, q2, q3)
 for col in ['q1', 'q2', 'q3']:
     if col in df.columns:
-        df[f'{col}_sec'] = df[col].apply(parse_quali_time)
+        df[f'{col}_sec'] = df[col].apply(parse_time_str)
 
 # 2. Beste tijd per coureur bepalen (sommige halen Q3 niet)
 df['best_quali_time'] = df[['q1_sec', 'q2_sec', 'q3_sec']].min(axis=1)
@@ -385,20 +382,9 @@ df['driver_track_podiums'] = df['driver_track_podiums'].fillna(0.0)
 # --- NIEUW: AGRESSIVITEIT & PUNTEN STAND ---
 # We kijken of coureurs sneller worden (agressiviteit/skill) en hoeveel punten ze hebben (veilig vs risico).
 
-def parse_fastest_lap(t_str):
-    if pd.isna(t_str) or str(t_str).strip() == '\\N': return np.nan
-    try:
-        # Formaat M:SS.mmm (bijv 1:30.123)
-        parts = str(t_str).split(':')
-        if len(parts) == 2:
-            return float(parts[0]) * 60 + float(parts[1])
-        return float(t_str)
-    except:
-        return np.nan
-
 if 'fastestLapTime' in df.columns:
     # 1. Zet tijd om naar seconden
-    df['fastest_lap_seconds'] = df['fastestLapTime'].apply(parse_fastest_lap)
+    df['fastest_lap_seconds'] = df['fastestLapTime'].apply(parse_time_str)
     
     # 2. Normaliseren: Hoe snel t.o.v. de snelste raceronde die dag?
     # Dit maakt tijden vergelijkbaar tussen circuits (Monaco vs Spa)
@@ -542,8 +528,6 @@ train_df = df.dropna(subset=['positionOrder'] + feature_cols)
 
 X = train_df[feature_cols]
 y = train_df['positionOrder']
-y_pos = train_df['positionOrder'] # Target voor Regressie (Positie)
-y_dnf = train_df['is_dnf']        # Target voor Classificatie (Crash/Pech)
 
 # ---------------------------------------------------------
 # STAP 2: VOORSPELLING DATA VOORBEREIDEN (SPA 2024)
@@ -552,19 +536,19 @@ y_dnf = train_df['is_dnf']        # Target voor Classificatie (Crash/Pech)
 print("\nInput data voorbereiden voor Spa 2024...")
 
 # Hulpfunctie: Haal de huidige ervaring van een coureur op uit de historie
-def get_experience(driver_id):
+def get_experience(driver_id, df=df):
     if driver_id in df['driverId'].values:
         return df[df['driverId'] == driver_id]['driver_experience'].max() + 1
     return 0 # Nieuwe coureur
 
 # Hulpfunctie: Haal de laatste Elo op
-def get_latest_elo(id_col, id_val, target_col='driver_elo'):
+def get_latest_elo(id_col, id_val, target_col='driver_elo', df=df):
     # Pak de allerlaatste race van deze entiteit
     last_val = df[df[id_col] == id_val].sort_values(by='date').iloc[-1][target_col]
     return last_val if not pd.isna(last_val) else 1500.0
 
 # Hulpfunctie: Haal de recente vorm op (gemiddelde laatste 5 races) uit de historie
-def get_recent_form(id_col, id_val, target_col='positionOrder', window=5, default_val=12.0):
+def get_recent_form(id_col, id_val, target_col='positionOrder', window=5, default_val=12.0, df=df):
     # Pak de laatste N races van deze coureur/team uit de dataset
     history = df[df[id_col] == id_val].sort_values(by='date').tail(window)
     if len(history) == 0:
@@ -576,7 +560,7 @@ def get_recent_form(id_col, id_val, target_col='positionOrder', window=5, defaul
     return np.average(values, weights=weights)
 
 # Hulpfunctie: Haal de historie op dit circuit op
-def get_track_history(driver_id, circuit_id):
+def get_track_history(driver_id, circuit_id, df=df):
     history = df[(df['driverId'] == driver_id) & (df['circuitId'] == circuit_id)]
     if len(history) == 0:
         return 12.0, 12.0, 0.0 # Default waarden
@@ -587,7 +571,7 @@ def get_track_history(driver_id, circuit_id):
     return avg_grid, avg_finish, podiums
 
 # Hulpfunctie: Haal de track type affinity op
-def get_style_affinity(driver_id, track_type):
+def get_style_affinity(driver_id, track_type, df=df):
     # Haal alle races van deze coureur op dit type circuit
     type_history = df[(df['driverId'] == driver_id) & (df['track_type'] == track_type)]
     if len(type_history) == 0: return 0.0
@@ -632,7 +616,6 @@ X_next['is_home_race'] = np.where(X_next['mapped_nationality'] == X_next['countr
 X_next['grid_bin'] = pd.cut(X_next['grid'], bins=[-1, 1, 3, 10, 15, 25], labels=['Pole', 'Top3', 'Points', 'Midfield', 'Back'])
 X_next['age_bin'] = pd.cut(X_next['driver_age'], bins=[17, 24, 30, 36, 60], labels=['Rookie', 'Prime', 'Experienced', 'Veteran'])
 
-# PROFESSOR FIX: Pas dezelfde handmatige mapping toe op de voorspelling
 X_next['grid_bin_code'] = X_next['grid_bin'].map(grid_mapping).fillna(4).astype(int)
 X_next['age_bin_code'] = X_next['age_bin'].map(age_mapping).fillna(1).astype(int)
 
@@ -795,31 +778,6 @@ rank_model.fit(
 )
 print("   -> Model getraind!")
 
-# --- MODEL 2: CRASH/DNF VOORSPELLEN (CLASSIFICATIE) ---
-# print("\n==================================================")
-# print(" 2. TRAINING CRASH MODEL (XGBClassifier) ")
-# print("==================================================")
-
-# tscv = TimeSeriesSplit(n_splits=3)
-
-# class_params = {
-#     'n_estimators': [100], 'max_depth': [3, 5],
-#     'scale_pos_weight': [3, 5] # Belangrijk! Geeft extra gewicht aan de zeldzame 'crash' klasse.
-# }
-
-# class_model = xgb.XGBClassifier(eval_metric='logloss', random_state=42)
-# grid_class = GridSearchCV(class_model, class_params, cv=tscv, scoring='accuracy', n_jobs=-1)
-# grid_class.fit(X, y_dnf)
-
-# best_class_model = grid_class.best_estimator_
-# print(f"Beste Crash Parameters: {grid_class.best_params_}")
-# print(f"Beste Accuracy: {grid_class.best_score_ * 100:.1f}%")
-
-# # NIEUW: Precision & Recall tonen om de 'Accuracy Paradox' te checken
-# print("\n   -> Gedetailleerd Rapport (Precision/Recall):")
-# y_pred_full = best_class_model.predict(X)
-# print(classification_report(y_dnf, y_pred_full, target_names=['Finish', 'DNF']))
-
 print("\n==================================================")
 print(" 3. VOORSPELLING SPA 2024 (GECOMBINEERD MODEL) ")
 print("==================================================")
@@ -830,10 +788,6 @@ pred_scores = rank_model.predict(X_next_input)
 
 # We zetten de scores om naar posities (Hoogste score = P1)
 pred_pos = pd.Series(pred_scores).rank(ascending=False, method='first').astype(int).values
-
-# 2. Voorspel Crashes (Betrouwbaarheid)
-# pred_dnf_prob = best_class_model.predict_proba(X_next_input)[:, 1] # Kans op DNF
-# pred_dnf_label = (pred_dnf_prob > 0.5).astype(int) # 0 = Finish, 1 = DNF
 
 # TIJDELIJK: DNF uitgeschakeld
 pred_dnf_label = np.zeros(len(X_next_input), dtype=int)
