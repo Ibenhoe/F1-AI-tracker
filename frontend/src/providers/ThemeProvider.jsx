@@ -25,16 +25,13 @@ function applyThemeClass(theme) {
 }
 
 export function ThemeProvider({ children }) {
-  const [theme, setTheme] = useState("system");
-
-  useEffect(() => {
+  const [theme, setTheme] = useState(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored === "light" || stored === "dark" || stored === "system") {
-      setTheme(stored);
-    } else {
-      setTheme("system");
+      return stored;
     }
-  }, []);
+    return "system";
+  });
 
   useEffect(() => {
     applyThemeClass(theme);
