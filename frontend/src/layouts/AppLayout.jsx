@@ -33,8 +33,10 @@ export default function AppLayout() {
             </div>
           </header>
 
-          <main className="container flex-1 py-8">
-            <Outlet />
+          <main className="flex-1 py-8">
+            <div className="px-4 sm:px-6 lg:px-8">
+              <Outlet />
+            </div>
           </main>
         </div>
       </div>

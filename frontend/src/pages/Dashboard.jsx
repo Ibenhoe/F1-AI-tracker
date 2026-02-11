@@ -11,6 +11,64 @@ import apiClient from "../services/apiClient";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 
+function InsightsCard({
+  predictions,
+  currentLap,
+  modelMetrics,
+  totalLaps,
+  weatherData,
+  notifications,
+}) {
+  const [tab, setTab] = useState("predictions");
+
+  const tabs = [
+    { id: "predictions", label: "Predictions" },
+    { id: "weather", label: "Weather" },
+    { id: "notifications", label: "Notifications" },
+  ];
+
+  return (
+    <Card className="xl:col-span-4 p-5" clip>
+      <div className="flex h-full min-w-0 flex-col gap-4">
+        <div className="flex flex-wrap gap-2">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTab(t.id)}
+              className={[
+                "rounded-full border px-3 py-1 text-sm font-medium transition",
+                tab === t.id
+                  ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900"
+                  : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-200 dark:hover:bg-neutral-900/40",
+              ].join(" ")}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+          {tab === "predictions" && (
+            <PredictionsPanel
+              predictions={predictions}
+              currentLap={currentLap}
+              modelMetrics={modelMetrics}
+              totalLaps={totalLaps}
+            />
+          )}
+
+          {tab === "weather" && <WeatherWidget data={weatherData} />}
+
+          {tab === "notifications" && (
+            <NotificationsPanel notifications={notifications} />
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
 export default function Dashboard() {
   const [raceData, setRaceData] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
@@ -184,7 +242,7 @@ export default function Dashboard() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-neutral-400">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Live race tracking, model predictions and telemetry summaries.
           </p>
         </div>
@@ -200,64 +258,49 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* DASHBOARD GRID */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start">
-        {/* MAIN */}
-        <div className="min-w-0 space-y-4 xl:col-span-8">
-          {/* TOOLBAR */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
-            <div className="min-w-0 lg:col-span-5">
-              <Card className="h-full p-4">
-                <RaceSelector
-                  selectedRace={selectedRace}
-                  onRaceChange={handleRaceChange}
-                  disabled={raceRunning}
-                />
-              </Card>
-            </div>
+      {/* TOP CONTROLS (compact, calm) */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <Card className="lg:col-span-4 p-4" clip>
+          <RaceSelector
+            selectedRace={selectedRace}
+            onRaceChange={handleRaceChange}
+            disabled={raceRunning}
+          />
+        </Card>
 
-            <div className="min-w-0 lg:col-span-7">
-              <Card className="h-full p-4">
-                <RaceControls
-                  raceInitialized={raceInitialized}
-                  raceRunning={raceRunning}
-                  connected={connected}
-                  raceData={raceData}
-                />
-              </Card>
-            </div>
-          </div>
+        <Card className="lg:col-span-8 p-4" clip>
+          <RaceControls
+            raceInitialized={raceInitialized}
+            raceRunning={raceRunning}
+            connected={connected}
+            raceData={raceData}
+          />
+        </Card>
+      </div>
 
-          {/* STANDINGS + PREDICTIONS */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-            <Card className="h-full min-w-0">
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        {/* PRIMARY */}
+        <Card className="xl:col-span-8 p-5" clip>
+          <div className="flex min-w-0 flex-col gap-4">
+            <div className="min-w-0">
               <DriversList
                 drivers={raceData?.drivers || []}
                 currentLap={raceData?.currentLap}
               />
-            </Card>
-
-            <Card className="h-full min-w-0">
-              <PredictionsPanel
-                predictions={predictions}
-                currentLap={raceData?.currentLap}
-                modelMetrics={modelMetrics}
-                totalLaps={raceData?.totalLaps}
-              />
-            </Card>
+            </div>
           </div>
-        </div>
+        </Card>
 
-        {/* SIDEBAR */}
-        <div className="min-w-0 space-y-4 xl:col-span-4">
-          <Card className="min-w-0">
-            <WeatherWidget data={weatherData} />
-          </Card>
-
-          <Card className="min-w-0">
-            <NotificationsPanel notifications={notifications} />
-          </Card>
-        </div>
+        {/* INSIGHTS */}
+        <InsightsCard
+          predictions={predictions}
+          currentLap={raceData?.currentLap}
+          modelMetrics={modelMetrics}
+          totalLaps={raceData?.totalLaps}
+          weatherData={weatherData}
+          notifications={notifications}
+        />
       </div>
     </div>
   );
