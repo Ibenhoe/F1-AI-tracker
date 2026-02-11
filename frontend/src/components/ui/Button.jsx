@@ -11,9 +11,9 @@ const base =
 const variants = {
   primary: cn(
     // LIGHT
-    "bg-neutral-900 text-white hover:bg-neutral-800",
+    "bg-[rgb(var(--accent))] text-white hover:opacity-90",
     // DARK (inverted primary for contrast)
-    "dark:bg-neutral-50 dark:text-neutral-950 dark:hover:bg-neutral-200"
+    "dark:bg-[rgb(var(--accent))] dark:text-neutral-950"
   ),
 
   secondary: cn(
