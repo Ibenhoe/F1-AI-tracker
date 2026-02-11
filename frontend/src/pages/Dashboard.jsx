@@ -200,59 +200,65 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* TOOLBAR */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
-        <div className="lg:col-span-5">
-          <Card className="h-full p-4">
-            <RaceSelector
-              selectedRace={selectedRace}
-              onRaceChange={handleRaceChange}
-              disabled={raceRunning}
-            />
-          </Card>
+      {/* DASHBOARD GRID */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12 xl:items-start">
+        {/* MAIN */}
+        <div className="min-w-0 space-y-4 xl:col-span-8">
+          {/* TOOLBAR */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12 lg:items-stretch">
+            <div className="min-w-0 lg:col-span-5">
+              <Card className="h-full p-4">
+                <RaceSelector
+                  selectedRace={selectedRace}
+                  onRaceChange={handleRaceChange}
+                  disabled={raceRunning}
+                />
+              </Card>
+            </div>
+
+            <div className="min-w-0 lg:col-span-7">
+              <Card className="h-full p-4">
+                <RaceControls
+                  raceInitialized={raceInitialized}
+                  raceRunning={raceRunning}
+                  connected={connected}
+                  raceData={raceData}
+                />
+              </Card>
+            </div>
+          </div>
+
+          {/* STANDINGS + PREDICTIONS */}
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <Card className="h-full min-w-0">
+              <DriversList
+                drivers={raceData?.drivers || []}
+                currentLap={raceData?.currentLap}
+              />
+            </Card>
+
+            <Card className="h-full min-w-0">
+              <PredictionsPanel
+                predictions={predictions}
+                currentLap={raceData?.currentLap}
+                modelMetrics={modelMetrics}
+                totalLaps={raceData?.totalLaps}
+              />
+            </Card>
+          </div>
         </div>
 
-        <div className="lg:col-span-7">
-          <Card className="h-full p-4">
-            <RaceControls
-              raceInitialized={raceInitialized}
-              raceRunning={raceRunning}
-              connected={connected}
-              raceData={raceData}
-            />
+        {/* SIDEBAR */}
+        <div className="min-w-0 space-y-4 xl:col-span-4">
+          <Card className="min-w-0">
+            <WeatherWidget data={weatherData} />
+          </Card>
+
+          <Card className="min-w-0">
+            <NotificationsPanel notifications={notifications} />
           </Card>
         </div>
       </div>
-
-      {/* WEATHER (FULL WIDTH) */}
-      <Card>
-        <WeatherWidget data={weatherData} />
-      </Card>
-
-      {/* STANDINGS + PREDICTIONS (50/50) */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-        <Card className="h-full">
-          <DriversList
-            drivers={raceData?.drivers || []}
-            currentLap={raceData?.currentLap}
-          />
-        </Card>
-
-        <Card className="h-full">
-          <PredictionsPanel
-            predictions={predictions}
-            currentLap={raceData?.currentLap}
-            modelMetrics={modelMetrics}
-            totalLaps={raceData?.totalLaps}
-          />
-        </Card>
-      </div>
-
-      {/* NOTIFICATIONS (FULL WIDTH) */}
-      <Card>
-        <NotificationsPanel notifications={notifications} />
-      </Card>
-
     </div>
   );
 }
