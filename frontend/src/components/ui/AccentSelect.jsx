@@ -20,15 +20,13 @@ export default function AccentSelect({
     [options, value]
   );
 
+  const isWhite = value === "white";
+
   useEffect(() => {
-    const idx = Math.max(
-      0,
-      options.findIndex((o) => o.id === value)
-    );
+    const idx = Math.max(0, options.findIndex((o) => o.id === value));
     setActiveIndex(idx);
   }, [options, value]);
 
-  // Click outside to close
   useEffect(() => {
     if (!open) return;
 
@@ -100,22 +98,33 @@ export default function AccentSelect({
         aria-expanded={open}
         className={cn(
           "inline-flex h-10 items-center justify-between gap-2 rounded-lg border px-3 text-sm font-medium",
-          "border-neutral-800 bg-neutral-950 text-neutral-100",
-          "hover:border-neutral-700",
-          "focus:outline-none focus:ring-2 focus:ring-neutral-700/60",
+          // LIGHT
+          "border-neutral-200 bg-white text-neutral-900",
+          "hover:border-neutral-300",
+          "focus:outline-none focus:ring-2 focus:ring-neutral-300/60",
+          // DARK
+          "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100",
+          "dark:hover:border-neutral-700",
+          "dark:focus:ring-neutral-700/60",
           buttonClassName
         )}
       >
         <span className="flex items-center gap-2">
           <span
-            className="h-2.5 w-2.5 rounded-full"
+            className={cn(
+              "h-2.5 w-2.5 rounded-full",
+              isWhite ? "ring-1 ring-neutral-300 dark:ring-white/25" : ""
+            )}
             style={{ backgroundColor: "rgb(var(--accent))" }}
             aria-hidden="true"
           />
           <span className="tabular-nums">{selected?.label ?? "Accent"}</span>
         </span>
 
-        <ChevronDown size={16} className={cn("opacity-80", open && "rotate-180")} />
+        <ChevronDown
+          size={16}
+          className={cn("opacity-80 transition-transform", open && "rotate-180")}
+        />
       </button>
 
       {open ? (
@@ -125,12 +134,21 @@ export default function AccentSelect({
           onKeyDown={onKeyDown}
           className={cn(
             "absolute right-0 z-50 mt-2 w-48 overflow-hidden rounded-xl border shadow-lg",
-            "border-neutral-800 bg-neutral-950 text-neutral-100"
+            // LIGHT
+            "border-neutral-200 bg-white text-neutral-900",
+            // DARK
+            "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100"
           )}
         >
           {options.map((o, idx) => {
             const isSelected = o.id === value;
             const isActive = idx === activeIndex;
+            const optIsWhite = o.id === "white";
+
+            const selectedStyle =
+              isSelected && !optIsWhite
+                ? { backgroundColor: "rgb(var(--accent) / 0.14)" }
+                : undefined;
 
             return (
               <button
@@ -143,28 +161,21 @@ export default function AccentSelect({
                 className={cn(
                   "flex w-full items-center justify-between px-3 py-2 text-left text-sm",
                   "transition-colors",
-                  isActive ? "bg-neutral-900" : "bg-transparent",
-                  "hover:bg-neutral-900"
+                  isActive
+                    ? "bg-neutral-50 dark:bg-neutral-900"
+                    : "bg-transparent",
+                  "hover:bg-neutral-50 dark:hover:bg-neutral-900",
+                  isSelected && optIsWhite ? "bg-neutral-100 dark:bg-neutral-900" : ""
                 )}
-                style={
-                  isSelected
-                    ? {
-                        backgroundColor: "rgb(var(--accent) / 0.18)",
-                      }
-                    : undefined
-                }
+                style={selectedStyle}
               >
                 <span className="flex items-center gap-2">
                   <span
-                    className="h-2 w-2 rounded-full"
-                    style={
-                      o.id === "white"
-                        ? {
-                            backgroundColor: "#fff",
-                            outline: "1px solid rgba(255,255,255,0.25)",
-                          }
-                        : { backgroundColor: o.hex }
-                    }
+                    className={cn(
+                      "h-2 w-2 rounded-full",
+                      optIsWhite ? "ring-1 ring-neutral-300 dark:ring-white/25" : ""
+                    )}
+                    style={optIsWhite ? { backgroundColor: "#fff" } : { backgroundColor: o.hex }}
                     aria-hidden="true"
                   />
                   <span>{o.label}</span>

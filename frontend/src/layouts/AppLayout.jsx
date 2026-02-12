@@ -19,7 +19,7 @@ export default function AppLayout() {
         <div className="flex min-w-0 flex-1 flex-col">
           {/* Top bar */}
           <header className="sticky top-0 z-10 border-b border-neutral-200 bg-white/70 backdrop-blur dark:border-neutral-900 dark:bg-neutral-950/60">
-            <div className="container flex items-center justify-end py-3">
+            <div className="container flex items-center justify-end gap-2 py-3">
               <Button
                 variant="ghost"
                 onClick={toggle}
