@@ -1,0 +1,2496 @@
+year,round,event,circuit,driver_code,driver_number,driver_age,constructor,grid_position,finish_position,position_gain,points_constructor
+2020,1,Austrian Grand Prix,Spielberg,77,77,30,Mercedes,2,1,1,100.0
+2020,1,Austrian Grand Prix,Spielberg,33,33,27,Red Bull Racing,22,20,2,100.0
+2020,1,Austrian Grand Prix,Spielberg,4,4,36,McLaren,3,3,0,100.0
+2020,1,Austrian Grand Prix,Spielberg,23,23,34,Red Bull Racing,15,13,2,100.0
+2020,1,Austrian Grand Prix,Spielberg,44,44,31,Mercedes,5,4,1,100.0
+2020,1,Austrian Grand Prix,Spielberg,11,11,36,Racing Point,6,6,0,100.0
+2020,1,Austrian Grand Prix,Spielberg,16,16,28,Ferrari,3,2,1,100.0
+2020,1,Austrian Grand Prix,Spielberg,55,55,30,McLaren,5,5,0,100.0
+2020,1,Austrian Grand Prix,Spielberg,18,18,33,Racing Point,18,18,0,100.0
+2020,1,Austrian Grand Prix,Spielberg,3,3,26,Renault,19,19,0,100.0
+2020,1,Austrian Grand Prix,Spielberg,5,5,30,Ferrari,11,10,1,100.0
+2020,1,Austrian Grand Prix,Spielberg,10,10,34,AlphaTauri,4,7,-3,100.0
+2020,1,Austrian Grand Prix,Spielberg,26,26,34,AlphaTauri,9,12,-3,100.0
+2020,1,Austrian Grand Prix,Spielberg,31,31,31,Renault,8,8,0,100.0
+2020,1,Austrian Grand Prix,Spielberg,8,8,28,Haas F1 Team,13,16,-3,100.0
+2020,1,Austrian Grand Prix,Spielberg,20,20,27,Haas F1 Team,14,17,-3,100.0
+2020,1,Austrian Grand Prix,Spielberg,63,63,31,Williams,11,15,-4,100.0
+2020,1,Austrian Grand Prix,Spielberg,99,99,31,Alfa Romeo Racing,5,9,-4,100.0
+2020,1,Austrian Grand Prix,Spielberg,7,7,26,Alfa Romeo Racing,10,14,-4,100.0
+2020,1,Austrian Grand Prix,Spielberg,6,6,29,Williams,7,11,-4,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,7,7,28,Alfa Romeo Racing,7,11,-4,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,55,55,25,McLaren,9,9,0,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,44,44,31,Mercedes,2,1,1,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,33,33,35,Red Bull Racing,5,3,2,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,77,77,29,Mercedes,3,2,1,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,31,31,25,Renault,18,18,0,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,23,23,35,Red Bull Racing,6,4,2,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,10,10,28,AlphaTauri,12,15,-3,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,3,3,24,Renault,8,8,0,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,4,4,35,McLaren,5,5,0,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,5,5,33,Ferrari,21,20,1,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,63,63,29,Williams,12,16,-4,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,18,18,36,Racing Point,7,7,0,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,26,26,35,AlphaTauri,7,10,-3,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,16,16,32,Ferrari,20,19,1,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,20,20,24,Haas F1 Team,9,12,-3,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,11,11,34,Racing Point,6,6,0,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,6,6,34,Williams,13,17,-4,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,99,99,33,Alfa Romeo Racing,10,14,-4,100.0
+2020,1,Styrian Grand Prix,Styrian Grand Prix,8,8,35,Haas F1 Team,10,13,-3,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,31,31,35,Renault,14,14,0,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,44,44,26,Mercedes,2,1,1,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,77,77,35,Mercedes,4,3,1,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,18,18,30,Racing Point,4,4,0,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,11,11,27,Racing Point,7,7,0,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,5,5,32,Ferrari,7,6,1,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,16,16,26,Ferrari,12,11,1,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,33,33,28,Red Bull Racing,4,2,2,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,4,4,26,McLaren,13,13,0,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,55,55,30,McLaren,10,10,0,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,10,10,28,AlphaTauri,17,20,-3,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,3,3,32,Renault,8,8,0,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,63,63,30,Williams,14,18,-4,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,23,23,25,Red Bull Racing,7,5,2,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,6,6,27,Williams,15,19,-4,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,20,20,32,Haas F1 Team,6,9,-3,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,26,26,35,AlphaTauri,9,12,-3,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,8,8,25,Haas F1 Team,12,15,-3,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,99,99,33,Alfa Romeo Racing,13,17,-4,100.0
+2020,1,Hungarian Grand Prix,Hungarian Grand Prix,7,7,32,Alfa Romeo Racing,12,16,-4,100.0
+2020,1,British Grand Prix,Silverstone,44,44,33,Mercedes,2,1,1,100.0
+2020,1,British Grand Prix,Silverstone,77,77,28,Mercedes,12,11,1,100.0
+2020,1,British Grand Prix,Silverstone,33,33,25,Red Bull Racing,4,2,2,100.0
+2020,1,British Grand Prix,Silverstone,16,16,27,Ferrari,4,3,1,100.0
+2020,1,British Grand Prix,Silverstone,4,4,35,McLaren,5,5,0,100.0
+2020,1,British Grand Prix,Silverstone,18,18,35,Racing Point,9,9,0,100.0
+2020,1,British Grand Prix,Silverstone,55,55,30,McLaren,13,13,0,100.0
+2020,1,British Grand Prix,Silverstone,3,3,35,Renault,4,4,0,100.0
+2020,1,British Grand Prix,Silverstone,31,31,36,Renault,6,6,0,100.0
+2020,1,British Grand Prix,Silverstone,5,5,31,Ferrari,11,10,1,100.0
+2020,1,British Grand Prix,Silverstone,10,10,26,AlphaTauri,4,7,-3,100.0
+2020,1,British Grand Prix,Silverstone,23,23,24,Red Bull Racing,10,8,2,100.0
+2020,1,British Grand Prix,Silverstone,27,27,27,Racing Point,20,20,0,100.0
+2020,1,British Grand Prix,Silverstone,20,20,25,Haas F1 Team,16,19,-3,100.0
+2020,1,British Grand Prix,Silverstone,99,99,31,Alfa Romeo Racing,10,14,-4,100.0
+2020,1,British Grand Prix,Silverstone,7,7,27,Alfa Romeo Racing,13,17,-4,100.0
+2020,1,British Grand Prix,Silverstone,8,8,25,Haas F1 Team,13,16,-3,100.0
+2020,1,British Grand Prix,Silverstone,6,6,29,Williams,11,15,-4,100.0
+2020,1,British Grand Prix,Silverstone,26,26,29,AlphaTauri,15,18,-3,100.0
+2020,1,British Grand Prix,Silverstone,63,63,33,Williams,8,12,-4,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,77,77,27,Mercedes,4,3,1,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,44,44,29,Mercedes,3,2,1,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,27,27,36,Racing Point,7,7,0,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,33,33,25,Red Bull Racing,3,1,2,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,3,3,33,Renault,14,14,0,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,18,18,35,Racing Point,6,6,0,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,10,10,25,AlphaTauri,8,11,-3,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,16,16,33,Ferrari,5,4,1,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,23,23,27,Red Bull Racing,7,5,2,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,4,4,31,McLaren,9,9,0,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,5,5,30,Ferrari,13,12,1,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,55,55,35,McLaren,13,13,0,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,8,8,32,Haas F1 Team,13,16,-3,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,31,31,31,Renault,8,8,0,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,63,63,28,Williams,14,18,-4,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,26,26,36,AlphaTauri,7,10,-3,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,20,20,25,Haas F1 Team,17,20,-3,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,6,6,28,Williams,15,19,-4,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,99,99,31,Alfa Romeo Racing,13,17,-4,100.0
+2020,1,Anniversary Grand Prix,Anniversary Grand Prix,7,7,33,Alfa Romeo Racing,11,15,-4,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,44,44,32,Mercedes,2,1,1,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,77,77,35,Mercedes,4,3,1,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,33,33,35,Red Bull Racing,4,2,2,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,11,11,35,Racing Point,5,5,0,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,18,18,36,Racing Point,4,4,0,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,23,23,32,Red Bull Racing,10,8,2,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,55,55,36,McLaren,6,6,0,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,4,4,36,McLaren,10,10,0,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,16,16,24,Ferrari,21,20,1,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,10,10,32,AlphaTauri,6,9,-3,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,5,5,30,Ferrari,8,7,1,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,26,26,32,AlphaTauri,9,12,-3,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,3,3,31,Renault,11,11,0,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,7,7,24,Alfa Romeo Racing,10,14,-4,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,31,31,35,Renault,13,13,0,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,20,20,31,Haas F1 Team,12,15,-3,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,8,8,31,Haas F1 Team,16,19,-3,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,63,63,34,Williams,13,17,-4,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,6,6,26,Williams,14,18,-4,100.0
+2020,1,Spanish Grand Prix,Spanish Grand Prix,99,99,24,Alfa Romeo Racing,12,16,-4,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,44,44,31,Mercedes,2,1,1,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,77,77,26,Mercedes,3,2,1,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,33,33,26,Red Bull Racing,5,3,2,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,3,3,24,Renault,4,4,0,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,23,23,34,Red Bull Racing,8,6,2,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,31,31,28,Renault,5,5,0,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,55,55,33,McLaren,20,20,0,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,11,11,30,Racing Point,10,10,0,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,18,18,33,Racing Point,9,9,0,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,4,4,32,McLaren,7,7,0,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,26,26,35,AlphaTauri,8,11,-3,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,10,10,30,AlphaTauri,5,8,-3,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,16,16,32,Ferrari,15,14,1,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,5,5,31,Ferrari,14,13,1,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,63,63,35,Williams,15,19,-4,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,7,7,25,Alfa Romeo Racing,8,12,-4,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,8,8,24,Haas F1 Team,12,15,-3,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,99,99,30,Alfa Romeo Racing,14,18,-4,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,6,6,30,Williams,12,16,-4,100.0
+2020,1,Belgian Grand Prix,Belgian Grand Prix,20,20,31,Haas F1 Team,14,17,-3,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,44,44,28,Mercedes,8,7,1,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,77,77,26,Mercedes,6,5,1,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,55,55,35,McLaren,2,2,0,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,11,11,31,Racing Point,10,10,0,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,33,33,29,Red Bull Racing,19,17,2,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,4,4,34,McLaren,4,4,0,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,3,3,26,Renault,6,6,0,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,18,18,24,Racing Point,3,3,0,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,23,23,26,Red Bull Racing,17,15,2,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,10,10,28,AlphaTauri,1,1,0,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,26,26,26,AlphaTauri,6,9,-3,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,31,31,24,Renault,8,8,0,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,16,16,28,Ferrari,19,18,1,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,7,7,33,Alfa Romeo Racing,9,13,-4,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,20,20,30,Haas F1 Team,16,19,-3,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,8,8,30,Haas F1 Team,9,12,-3,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,5,5,34,Ferrari,21,20,1,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,99,99,32,Alfa Romeo Racing,12,16,-4,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,63,63,33,Williams,10,14,-4,100.0
+2020,1,Italian Grand Prix,Italian Grand Prix,6,6,33,Williams,7,11,-4,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,44,44,35,Mercedes,2,1,1,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,77,77,36,Mercedes,3,2,1,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,33,33,26,Red Bull Racing,21,19,2,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,23,23,30,Red Bull Racing,5,3,2,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,16,16,24,Ferrari,9,8,1,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,18,18,27,Racing Point,13,13,0,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,11,11,36,Racing Point,5,5,0,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,3,3,27,Renault,4,4,0,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,55,55,28,McLaren,18,18,0,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,31,31,30,Renault,14,14,0,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,4,4,30,McLaren,6,6,0,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,26,26,36,AlphaTauri,4,7,-3,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,7,7,34,Alfa Romeo Racing,5,9,-4,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,5,5,36,Ferrari,11,10,1,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,8,8,27,Haas F1 Team,9,12,-3,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,10,10,36,AlphaTauri,17,20,-3,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,99,99,30,Alfa Romeo Racing,13,17,-4,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,63,63,34,Williams,7,11,-4,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,6,6,26,Williams,11,15,-4,100.0
+2020,1,Tuscan Grand Prix,Tuscan Grand Prix,20,20,29,Haas F1 Team,13,16,-3,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,44,44,35,Mercedes,4,3,1,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,33,33,25,Red Bull Racing,4,2,2,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,77,77,33,Mercedes,2,1,1,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,11,11,36,Racing Point,4,4,0,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,3,3,32,Renault,5,5,0,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,55,55,28,McLaren,19,19,0,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,31,31,29,Renault,7,7,0,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,4,4,35,McLaren,15,15,0,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,10,10,35,AlphaTauri,6,9,-3,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,16,16,35,Ferrari,7,6,1,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,26,26,35,AlphaTauri,5,8,-3,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,18,18,27,Racing Point,20,20,0,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,63,63,34,Williams,14,18,-4,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,5,5,33,Ferrari,14,13,1,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,23,23,30,Red Bull Racing,12,10,2,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,8,8,35,Haas F1 Team,14,17,-3,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,99,99,32,Alfa Romeo Racing,7,11,-4,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,20,20,30,Haas F1 Team,9,12,-3,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,7,7,24,Alfa Romeo Racing,10,14,-4,100.0
+2020,1,Russian Grand Prix,Russian Grand Prix,6,6,24,Williams,12,16,-4,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,77,77,32,Mercedes,20,19,1,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,44,44,34,Mercedes,2,1,1,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,33,33,32,Red Bull Racing,4,2,2,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,16,16,27,Ferrari,8,7,1,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,23,23,36,Red Bull Racing,19,17,2,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,3,3,32,Renault,3,3,0,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,31,31,26,Renault,18,18,0,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,4,4,30,McLaren,16,16,0,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,11,11,29,Racing Point,4,4,0,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,55,55,31,McLaren,5,5,0,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,5,5,34,Ferrari,12,11,1,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,10,10,32,AlphaTauri,3,6,-3,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,26,26,28,AlphaTauri,12,15,-3,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,99,99,24,Alfa Romeo Racing,6,10,-4,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,20,20,26,Haas F1 Team,10,13,-3,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,8,8,33,Haas F1 Team,6,9,-3,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,63,63,35,Williams,16,20,-4,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,6,6,31,Williams,10,14,-4,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,7,7,34,Alfa Romeo Racing,8,12,-4,100.0
+2020,1,Eifel Grand Prix,Eifel Grand Prix,27,27,29,Racing Point,8,8,0,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,44,44,31,Mercedes,2,1,1,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,77,77,32,Mercedes,3,2,1,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,33,33,27,Red Bull Racing,5,3,2,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,16,16,24,Ferrari,5,4,1,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,11,11,24,Racing Point,7,7,0,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,23,23,33,Red Bull Racing,14,12,2,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,55,55,27,McLaren,6,6,0,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,4,4,35,McLaren,13,13,0,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,10,10,30,AlphaTauri,2,5,-3,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,3,3,25,Renault,9,9,0,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,31,31,26,Renault,8,8,0,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,18,18,24,Racing Point,20,20,0,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,26,26,28,AlphaTauri,16,19,-3,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,63,63,24,Williams,10,14,-4,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,5,5,31,Ferrari,11,10,1,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,7,7,24,Alfa Romeo Racing,7,11,-4,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,99,99,34,Alfa Romeo Racing,11,15,-4,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,8,8,24,Haas F1 Team,14,17,-3,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,20,20,25,Haas F1 Team,13,16,-3,100.0
+2020,1,Portuguese Grand Prix,Portuguese Grand Prix,6,6,25,Williams,14,18,-4,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,77,77,35,Mercedes,3,2,1,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,44,44,29,Mercedes,2,1,1,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,33,33,30,Red Bull Racing,19,17,2,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,10,10,28,AlphaTauri,17,20,-3,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,3,3,24,Renault,3,3,0,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,23,23,24,Red Bull Racing,17,15,2,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,16,16,26,Ferrari,6,5,1,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,26,26,25,AlphaTauri,1,4,-3,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,4,4,28,McLaren,8,8,0,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,55,55,35,McLaren,7,7,0,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,11,11,33,Racing Point,6,6,0,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,31,31,29,Renault,19,19,0,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,63,63,30,Williams,12,16,-4,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,5,5,27,Ferrari,13,12,1,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,18,18,30,Racing Point,13,13,0,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,8,8,34,Haas F1 Team,11,14,-3,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,20,20,31,Haas F1 Team,15,18,-3,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,7,7,34,Alfa Romeo Racing,5,9,-4,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,6,6,24,Williams,7,11,-4,100.0
+2020,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,99,99,29,Alfa Romeo Racing,6,10,-4,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,18,18,31,Racing Point,9,9,0,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,33,33,28,Red Bull Racing,8,6,2,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,11,11,27,Racing Point,2,2,0,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,23,23,25,Red Bull Racing,9,7,2,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,3,3,29,Renault,10,10,0,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,44,44,29,Mercedes,2,1,1,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,31,31,34,Renault,11,11,0,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,7,7,24,Alfa Romeo Racing,11,15,-4,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,77,77,32,Mercedes,15,14,1,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,99,99,35,Alfa Romeo Racing,16,20,-4,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,5,5,34,Ferrari,4,3,1,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,16,16,29,Ferrari,5,4,1,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,20,20,36,Haas F1 Team,14,17,-3,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,4,4,26,McLaren,8,8,0,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,55,55,27,McLaren,5,5,0,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,26,26,35,AlphaTauri,9,12,-3,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,8,8,34,Haas F1 Team,15,18,-3,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,6,6,27,Williams,15,19,-4,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,10,10,26,AlphaTauri,10,13,-3,100.0
+2020,1,Turkish Grand Prix,Turkish Grand Prix,63,63,33,Williams,12,16,-4,100.0
+2020,1,Bahrain Grand Prix,Sakhir,44,44,26,Mercedes,2,1,1,100.0
+2020,1,Bahrain Grand Prix,Sakhir,77,77,26,Mercedes,9,8,1,100.0
+2020,1,Bahrain Grand Prix,Sakhir,33,33,27,Red Bull Racing,4,2,2,100.0
+2020,1,Bahrain Grand Prix,Sakhir,23,23,30,Red Bull Racing,5,3,2,100.0
+2020,1,Bahrain Grand Prix,Sakhir,11,11,27,Racing Point,18,18,0,100.0
+2020,1,Bahrain Grand Prix,Sakhir,3,3,32,Renault,7,7,0,100.0
+2020,1,Bahrain Grand Prix,Sakhir,31,31,24,Renault,9,9,0,100.0
+2020,1,Bahrain Grand Prix,Sakhir,10,10,31,AlphaTauri,3,6,-3,100.0
+2020,1,Bahrain Grand Prix,Sakhir,4,4,30,McLaren,4,4,0,100.0
+2020,1,Bahrain Grand Prix,Sakhir,26,26,25,AlphaTauri,8,11,-3,100.0
+2020,1,Bahrain Grand Prix,Sakhir,5,5,31,Ferrari,14,13,1,100.0
+2020,1,Bahrain Grand Prix,Sakhir,16,16,24,Ferrari,11,10,1,100.0
+2020,1,Bahrain Grand Prix,Sakhir,18,18,34,Racing Point,19,19,0,100.0
+2020,1,Bahrain Grand Prix,Sakhir,63,63,35,Williams,8,12,-4,100.0
+2020,1,Bahrain Grand Prix,Sakhir,55,55,32,McLaren,5,5,0,100.0
+2020,1,Bahrain Grand Prix,Sakhir,99,99,32,Alfa Romeo Racing,12,16,-4,100.0
+2020,1,Bahrain Grand Prix,Sakhir,7,7,25,Alfa Romeo Racing,11,15,-4,100.0
+2020,1,Bahrain Grand Prix,Sakhir,20,20,30,Haas F1 Team,14,17,-3,100.0
+2020,1,Bahrain Grand Prix,Sakhir,8,8,33,Haas F1 Team,17,20,-3,100.0
+2020,1,Bahrain Grand Prix,Sakhir,6,6,26,Williams,10,14,-4,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,77,77,30,Mercedes,9,8,1,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,63,63,35,Mercedes,10,9,1,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,33,33,33,Red Bull Racing,21,19,2,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,16,16,32,Ferrari,21,20,1,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,11,11,27,Racing Point,1,1,0,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,26,26,35,AlphaTauri,4,7,-3,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,3,3,24,Renault,5,5,0,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,55,55,25,McLaren,4,4,0,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,10,10,24,AlphaTauri,8,11,-3,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,18,18,35,Racing Point,3,3,0,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,31,31,28,Renault,2,2,0,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,23,23,28,Red Bull Racing,8,6,2,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,5,5,34,Ferrari,13,12,1,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,99,99,30,Alfa Romeo Racing,9,13,-4,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,20,20,32,Haas F1 Team,12,15,-3,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,6,6,32,Williams,14,18,-4,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,89,89,26,Williams,12,16,-4,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,7,7,26,Alfa Romeo Racing,10,14,-4,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,4,4,26,McLaren,10,10,0,100.0
+2020,1,Sakhir Grand Prix,Sakhir Grand Prix,51,51,27,Haas F1 Team,14,17,-3,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,33,33,31,Red Bull Racing,3,1,2,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,77,77,29,Mercedes,3,2,1,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,44,44,31,Mercedes,4,3,1,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,4,4,24,McLaren,5,5,0,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,23,23,31,Red Bull Racing,6,4,2,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,55,55,27,McLaren,6,6,0,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,26,26,34,AlphaTauri,8,11,-3,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,18,18,24,Racing Point,10,10,0,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,10,10,31,AlphaTauri,5,8,-3,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,31,31,27,Renault,9,9,0,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,3,3,29,Renault,7,7,0,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,16,16,31,Ferrari,14,13,1,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,5,5,27,Ferrari,15,14,1,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,99,99,26,Alfa Romeo Racing,12,16,-4,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,7,7,32,Alfa Romeo Racing,8,12,-4,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,63,63,26,Williams,11,15,-4,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,51,51,32,Haas F1 Team,16,19,-3,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,6,6,36,Williams,13,17,-4,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,11,11,25,Racing Point,20,20,0,100.0
+2020,1,Abu Dhabi Grand Prix,Yas Island,20,20,25,Haas F1 Team,15,18,-3,100.0
+2021,1,Bahrain Grand Prix,Sakhir,33,33,25,Red Bull Racing,4,2,2,100.0
+2021,1,Bahrain Grand Prix,Sakhir,44,44,29,Mercedes,2,1,1,100.0
+2021,1,Bahrain Grand Prix,Sakhir,77,77,26,Mercedes,4,3,1,100.0
+2021,1,Bahrain Grand Prix,Sakhir,16,16,36,Ferrari,7,6,1,100.0
+2021,1,Bahrain Grand Prix,Sakhir,10,10,32,AlphaTauri,14,17,-3,100.0
+2021,1,Bahrain Grand Prix,Sakhir,3,3,27,McLaren,7,7,0,100.0
+2021,1,Bahrain Grand Prix,Sakhir,4,4,24,McLaren,4,4,0,100.0
+2021,1,Bahrain Grand Prix,Sakhir,55,55,27,Ferrari,9,8,1,100.0
+2021,1,Bahrain Grand Prix,Sakhir,14,14,24,Alpine,17,19,-2,100.0
+2021,1,Bahrain Grand Prix,Sakhir,18,18,28,Aston Martin,9,10,-1,100.0
+2021,1,Bahrain Grand Prix,Sakhir,11,11,27,Red Bull Racing,7,5,2,100.0
+2021,1,Bahrain Grand Prix,Sakhir,99,99,31,Alfa Romeo Racing,8,12,-4,100.0
+2021,1,Bahrain Grand Prix,Sakhir,22,22,31,AlphaTauri,6,9,-3,100.0
+2021,1,Bahrain Grand Prix,Sakhir,7,7,30,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,Bahrain Grand Prix,Sakhir,63,63,26,Williams,10,14,-4,100.0
+2021,1,Bahrain Grand Prix,Sakhir,31,31,24,Alpine,11,13,-2,100.0
+2021,1,Bahrain Grand Prix,Sakhir,6,6,24,Williams,14,18,-4,100.0
+2021,1,Bahrain Grand Prix,Sakhir,47,47,35,Haas F1 Team,13,16,-3,100.0
+2021,1,Bahrain Grand Prix,Sakhir,9,9,34,Haas F1 Team,17,20,-3,100.0
+2021,1,Bahrain Grand Prix,Sakhir,5,5,26,Aston Martin,14,15,-1,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,44,44,29,Mercedes,3,2,1,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,11,11,30,Red Bull Racing,14,12,2,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,33,33,29,Red Bull Racing,3,1,2,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,16,16,29,Ferrari,5,4,1,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,10,10,29,AlphaTauri,5,8,-3,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,3,3,36,McLaren,6,6,0,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,4,4,26,McLaren,3,3,0,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,77,77,29,Mercedes,19,18,1,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,31,31,31,Alpine,8,10,-2,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,18,18,34,Aston Martin,6,7,-1,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,55,55,34,Ferrari,6,5,1,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,63,63,25,Williams,15,19,-4,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,5,5,28,Aston Martin,14,15,-1,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,6,6,24,Williams,16,20,-4,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,14,14,35,Alpine,9,11,-2,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,7,7,24,Alfa Romeo Racing,5,9,-4,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,99,99,28,Alfa Romeo Racing,10,14,-4,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,47,47,35,Haas F1 Team,13,16,-3,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,9,9,36,Haas F1 Team,14,17,-3,100.0
+2021,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,22,22,26,AlphaTauri,10,13,-3,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,77,77,27,Mercedes,4,3,1,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,44,44,26,Mercedes,2,1,1,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,33,33,24,Red Bull Racing,4,2,2,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,11,11,24,Red Bull Racing,6,4,2,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,55,55,35,Ferrari,12,11,1,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,31,31,35,Alpine,5,7,-2,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,4,4,36,McLaren,5,5,0,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,16,16,28,Ferrari,7,6,1,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,10,10,29,AlphaTauri,7,10,-3,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,5,5,26,Aston Martin,12,13,-1,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,63,63,35,Williams,12,16,-4,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,99,99,32,Alfa Romeo Racing,8,12,-4,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,14,14,28,Alpine,6,8,-2,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,22,22,31,AlphaTauri,12,15,-3,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,7,7,36,Alfa Romeo Racing,16,20,-4,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,3,3,24,McLaren,9,9,0,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,18,18,28,Aston Martin,13,14,-1,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,6,6,26,Williams,14,18,-4,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,47,47,35,Haas F1 Team,14,17,-3,100.0
+2021,1,Portuguese Grand Prix,Portuguese Grand Prix,9,9,24,Haas F1 Team,16,19,-3,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,44,44,27,Mercedes,2,1,1,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,33,33,36,Red Bull Racing,4,2,2,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,77,77,28,Mercedes,4,3,1,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,16,16,30,Ferrari,5,4,1,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,31,31,24,Alpine,7,9,-2,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,55,55,26,Ferrari,8,7,1,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,3,3,25,McLaren,6,6,0,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,11,11,32,Red Bull Racing,7,5,2,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,4,4,33,McLaren,8,8,0,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,14,14,29,Alpine,15,17,-2,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,18,18,33,Aston Martin,10,11,-1,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,10,10,26,AlphaTauri,7,10,-3,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,5,5,31,Aston Martin,12,13,-1,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,99,99,31,Alfa Romeo Racing,11,15,-4,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,63,63,25,Williams,10,14,-4,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,22,22,29,AlphaTauri,17,20,-3,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,7,7,30,Alfa Romeo Racing,8,12,-4,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,47,47,25,Haas F1 Team,15,18,-3,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,6,6,34,Williams,12,16,-4,100.0
+2021,1,Spanish Grand Prix,Spanish Grand Prix,9,9,33,Haas F1 Team,16,19,-3,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,16,16,25,Ferrari,21,20,1,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,33,33,33,Red Bull Racing,3,1,2,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,77,77,24,Mercedes,20,19,1,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,55,55,31,Ferrari,3,2,1,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,4,4,24,McLaren,3,3,0,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,10,10,32,AlphaTauri,3,6,-3,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,44,44,34,Mercedes,8,7,1,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,5,5,29,Aston Martin,4,5,-1,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,11,11,30,Red Bull Racing,6,4,2,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,99,99,36,Alfa Romeo Racing,6,10,-4,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,31,31,33,Alpine,7,9,-2,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,3,3,30,McLaren,12,12,0,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,18,18,33,Aston Martin,7,8,-1,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,7,7,26,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,63,63,25,Williams,10,14,-4,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,22,22,32,AlphaTauri,13,16,-3,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,14,14,31,Alpine,11,13,-2,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,6,6,36,Williams,11,15,-4,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,9,9,35,Haas F1 Team,14,17,-3,100.0
+2021,1,Monaco Grand Prix,Monte Carlo,47,47,33,Haas F1 Team,15,18,-3,100.0
+2021,1,Azerbaijan Grand Prix,Baku,16,16,30,Ferrari,5,4,1,100.0
+2021,1,Azerbaijan Grand Prix,Baku,44,44,32,Mercedes,16,15,1,100.0
+2021,1,Azerbaijan Grand Prix,Baku,33,33,27,Red Bull Racing,20,18,2,100.0
+2021,1,Azerbaijan Grand Prix,Baku,10,10,36,AlphaTauri,1,3,-2,100.0
+2021,1,Azerbaijan Grand Prix,Baku,55,55,27,Ferrari,9,8,1,100.0
+2021,1,Azerbaijan Grand Prix,Baku,11,11,24,Red Bull Racing,3,1,2,100.0
+2021,1,Azerbaijan Grand Prix,Baku,22,22,31,AlphaTauri,4,7,-3,100.0
+2021,1,Azerbaijan Grand Prix,Baku,14,14,35,Alpine,4,6,-2,100.0
+2021,1,Azerbaijan Grand Prix,Baku,4,4,26,McLaren,5,5,0,100.0
+2021,1,Azerbaijan Grand Prix,Baku,77,77,30,Mercedes,13,12,1,100.0
+2021,1,Azerbaijan Grand Prix,Baku,5,5,35,Aston Martin,1,2,-1,100.0
+2021,1,Azerbaijan Grand Prix,Baku,31,31,25,Alpine,18,20,-2,100.0
+2021,1,Azerbaijan Grand Prix,Baku,3,3,25,McLaren,9,9,0,100.0
+2021,1,Azerbaijan Grand Prix,Baku,7,7,30,Alfa Romeo Racing,6,10,-4,100.0
+2021,1,Azerbaijan Grand Prix,Baku,63,63,29,Williams,13,17,-4,100.0
+2021,1,Azerbaijan Grand Prix,Baku,6,6,26,Williams,12,16,-4,100.0
+2021,1,Azerbaijan Grand Prix,Baku,47,47,32,Haas F1 Team,10,13,-3,100.0
+2021,1,Azerbaijan Grand Prix,Baku,9,9,33,Haas F1 Team,11,14,-3,100.0
+2021,1,Azerbaijan Grand Prix,Baku,18,18,36,Aston Martin,18,19,-1,100.0
+2021,1,Azerbaijan Grand Prix,Baku,99,99,29,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,French Grand Prix,French Grand Prix,33,33,33,Red Bull Racing,3,1,2,100.0
+2021,1,French Grand Prix,French Grand Prix,44,44,33,Mercedes,3,2,1,100.0
+2021,1,French Grand Prix,French Grand Prix,77,77,29,Mercedes,5,4,1,100.0
+2021,1,French Grand Prix,French Grand Prix,11,11,24,Red Bull Racing,5,3,2,100.0
+2021,1,French Grand Prix,French Grand Prix,55,55,27,Ferrari,12,11,1,100.0
+2021,1,French Grand Prix,French Grand Prix,10,10,33,AlphaTauri,4,7,-3,100.0
+2021,1,French Grand Prix,French Grand Prix,16,16,29,Ferrari,17,16,1,100.0
+2021,1,French Grand Prix,French Grand Prix,4,4,29,McLaren,5,5,0,100.0
+2021,1,French Grand Prix,French Grand Prix,14,14,34,Alpine,6,8,-2,100.0
+2021,1,French Grand Prix,French Grand Prix,3,3,35,McLaren,6,6,0,100.0
+2021,1,French Grand Prix,French Grand Prix,31,31,28,Alpine,12,14,-2,100.0
+2021,1,French Grand Prix,French Grand Prix,5,5,24,Aston Martin,8,9,-1,100.0
+2021,1,French Grand Prix,French Grand Prix,99,99,31,Alfa Romeo Racing,11,15,-4,100.0
+2021,1,French Grand Prix,French Grand Prix,63,63,28,Williams,8,12,-4,100.0
+2021,1,French Grand Prix,French Grand Prix,47,47,35,Haas F1 Team,16,19,-3,100.0
+2021,1,French Grand Prix,French Grand Prix,6,6,35,Williams,14,18,-4,100.0
+2021,1,French Grand Prix,French Grand Prix,7,7,35,Alfa Romeo Racing,13,17,-4,100.0
+2021,1,French Grand Prix,French Grand Prix,9,9,28,Haas F1 Team,17,20,-3,100.0
+2021,1,French Grand Prix,French Grand Prix,18,18,30,Aston Martin,9,10,-1,100.0
+2021,1,French Grand Prix,French Grand Prix,22,22,27,AlphaTauri,10,13,-3,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,33,33,29,Red Bull Racing,3,1,2,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,44,44,36,Mercedes,3,2,1,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,4,4,27,McLaren,5,5,0,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,11,11,26,Red Bull Racing,6,4,2,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,77,77,30,Mercedes,4,3,1,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,10,10,31,AlphaTauri,17,20,-3,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,16,16,27,Ferrari,8,7,1,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,14,14,36,Alpine,7,9,-2,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,18,18,25,Aston Martin,7,8,-1,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,63,63,35,Williams,15,19,-4,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,22,22,33,AlphaTauri,7,10,-3,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,55,55,26,Ferrari,7,6,1,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,3,3,24,McLaren,13,13,0,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,5,5,31,Aston Martin,11,12,-1,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,99,99,26,Alfa Romeo Racing,11,15,-4,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,6,6,35,Williams,13,17,-4,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,31,31,33,Alpine,12,14,-2,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,7,7,30,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,47,47,33,Haas F1 Team,13,16,-3,100.0
+2021,1,Styrian Grand Prix,Styrian Grand Prix,9,9,28,Haas F1 Team,15,18,-3,100.0
+2021,1,Austrian Grand Prix,Spielberg,33,33,33,Red Bull Racing,3,1,2,100.0
+2021,1,Austrian Grand Prix,Spielberg,4,4,28,McLaren,3,3,0,100.0
+2021,1,Austrian Grand Prix,Spielberg,11,11,30,Red Bull Racing,8,6,2,100.0
+2021,1,Austrian Grand Prix,Spielberg,44,44,32,Mercedes,5,4,1,100.0
+2021,1,Austrian Grand Prix,Spielberg,77,77,35,Mercedes,3,2,1,100.0
+2021,1,Austrian Grand Prix,Spielberg,10,10,28,AlphaTauri,6,9,-3,100.0
+2021,1,Austrian Grand Prix,Spielberg,22,22,24,AlphaTauri,9,12,-3,100.0
+2021,1,Austrian Grand Prix,Spielberg,63,63,33,Williams,7,11,-4,100.0
+2021,1,Austrian Grand Prix,Spielberg,18,18,33,Aston Martin,12,13,-1,100.0
+2021,1,Austrian Grand Prix,Spielberg,55,55,24,Ferrari,6,5,1,100.0
+2021,1,Austrian Grand Prix,Spielberg,5,5,25,Aston Martin,16,17,-1,100.0
+2021,1,Austrian Grand Prix,Spielberg,16,16,29,Ferrari,9,8,1,100.0
+2021,1,Austrian Grand Prix,Spielberg,3,3,32,McLaren,7,7,0,100.0
+2021,1,Austrian Grand Prix,Spielberg,14,14,31,Alpine,8,10,-2,100.0
+2021,1,Austrian Grand Prix,Spielberg,99,99,36,Alfa Romeo Racing,10,14,-4,100.0
+2021,1,Austrian Grand Prix,Spielberg,7,7,28,Alfa Romeo Racing,12,16,-4,100.0
+2021,1,Austrian Grand Prix,Spielberg,31,31,24,Alpine,18,20,-2,100.0
+2021,1,Austrian Grand Prix,Spielberg,6,6,36,Williams,11,15,-4,100.0
+2021,1,Austrian Grand Prix,Spielberg,47,47,30,Haas F1 Team,15,18,-3,100.0
+2021,1,Austrian Grand Prix,Spielberg,9,9,28,Haas F1 Team,16,19,-3,100.0
+2021,1,British Grand Prix,Silverstone,33,33,29,Red Bull Racing,22,20,2,100.0
+2021,1,British Grand Prix,Silverstone,44,44,36,Mercedes,2,1,1,100.0
+2021,1,British Grand Prix,Silverstone,77,77,30,Mercedes,4,3,1,100.0
+2021,1,British Grand Prix,Silverstone,16,16,26,Ferrari,3,2,1,100.0
+2021,1,British Grand Prix,Silverstone,4,4,35,McLaren,4,4,0,100.0
+2021,1,British Grand Prix,Silverstone,3,3,33,McLaren,5,5,0,100.0
+2021,1,British Grand Prix,Silverstone,14,14,26,Alpine,5,7,-2,100.0
+2021,1,British Grand Prix,Silverstone,5,5,28,Aston Martin,18,19,-1,100.0
+2021,1,British Grand Prix,Silverstone,31,31,29,Alpine,7,9,-2,100.0
+2021,1,British Grand Prix,Silverstone,55,55,32,Ferrari,7,6,1,100.0
+2021,1,British Grand Prix,Silverstone,10,10,36,AlphaTauri,8,11,-3,100.0
+2021,1,British Grand Prix,Silverstone,63,63,35,Williams,8,12,-4,100.0
+2021,1,British Grand Prix,Silverstone,7,7,28,Alfa Romeo Racing,11,15,-4,100.0
+2021,1,British Grand Prix,Silverstone,18,18,24,Aston Martin,7,8,-1,100.0
+2021,1,British Grand Prix,Silverstone,99,99,27,Alfa Romeo Racing,9,13,-4,100.0
+2021,1,British Grand Prix,Silverstone,22,22,28,AlphaTauri,7,10,-3,100.0
+2021,1,British Grand Prix,Silverstone,6,6,35,Williams,10,14,-4,100.0
+2021,1,British Grand Prix,Silverstone,47,47,33,Haas F1 Team,15,18,-3,100.0
+2021,1,British Grand Prix,Silverstone,9,9,33,Haas F1 Team,14,17,-3,100.0
+2021,1,British Grand Prix,Silverstone,11,11,28,Red Bull Racing,18,16,2,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,44,44,30,Mercedes,4,3,1,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,77,77,27,Mercedes,19,18,1,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,33,33,24,Red Bull Racing,12,10,2,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,11,11,28,Red Bull Racing,19,17,2,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,10,10,30,AlphaTauri,3,6,-3,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,4,4,33,McLaren,16,16,0,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,16,16,33,Ferrari,20,19,1,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,31,31,29,Alpine,1,1,0,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,14,14,28,Alpine,3,5,-2,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,5,5,27,Aston Martin,1,2,-1,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,3,3,25,McLaren,12,12,0,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,18,18,27,Aston Martin,19,20,-1,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,7,7,33,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,99,99,33,Alfa Romeo Racing,10,14,-4,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,55,55,26,Ferrari,5,4,1,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,22,22,33,AlphaTauri,4,7,-3,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,63,63,24,Williams,5,9,-4,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,6,6,31,Williams,4,8,-4,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,9,9,28,Haas F1 Team,12,15,-3,100.0
+2021,1,Hungarian Grand Prix,Hungarian Grand Prix,47,47,36,Haas F1 Team,10,13,-3,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,33,33,27,Red Bull Racing,3,1,2,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,63,63,31,Williams,1,2,-1,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,44,44,30,Mercedes,4,3,1,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,3,3,25,McLaren,4,4,0,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,5,5,24,Aston Martin,4,5,-1,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,10,10,35,AlphaTauri,3,6,-3,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,11,11,34,Red Bull Racing,22,20,2,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,31,31,27,Alpine,5,7,-2,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,16,16,31,Ferrari,9,8,1,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,6,6,35,Williams,5,9,-4,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,55,55,25,Ferrari,11,10,1,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,14,14,26,Alpine,9,11,-2,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,77,77,35,Mercedes,13,12,1,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,99,99,24,Alfa Romeo Racing,9,13,-4,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,4,4,24,McLaren,14,14,0,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,22,22,36,AlphaTauri,12,15,-3,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,47,47,26,Haas F1 Team,13,16,-3,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,9,9,34,Haas F1 Team,14,17,-3,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,18,18,28,Aston Martin,17,18,-1,100.0
+2021,1,Belgian Grand Prix,Belgian Grand Prix,7,7,35,Alfa Romeo Racing,15,19,-4,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,33,33,26,Red Bull Racing,3,1,2,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,44,44,24,Mercedes,3,2,1,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,77,77,24,Mercedes,4,3,1,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,10,10,31,AlphaTauri,1,4,-3,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,16,16,33,Ferrari,6,5,1,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,55,55,34,Ferrari,8,7,1,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,99,99,35,Alfa Romeo Racing,10,14,-4,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,31,31,36,Alpine,7,9,-2,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,14,14,36,Alpine,4,6,-2,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,3,3,35,McLaren,11,11,0,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,63,63,25,Williams,13,17,-4,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,18,18,36,Aston Martin,11,12,-1,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,4,4,26,McLaren,10,10,0,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,22,22,25,AlphaTauri,16,19,-3,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,5,5,26,Aston Martin,12,13,-1,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,88,88,30,Alfa Romeo Racing,11,15,-4,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,47,47,24,Haas F1 Team,15,18,-3,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,9,9,33,Haas F1 Team,17,20,-3,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,6,6,31,Williams,12,16,-4,100.0
+2021,1,Dutch Grand Prix,Dutch Grand Prix,11,11,36,Red Bull Racing,10,8,2,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,33,33,33,Red Bull Racing,20,18,2,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,3,3,33,McLaren,1,1,0,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,4,4,33,McLaren,2,2,0,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,44,44,25,Mercedes,18,17,1,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,16,16,26,Ferrari,5,4,1,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,55,55,32,Ferrari,7,6,1,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,99,99,30,Alfa Romeo Racing,9,13,-4,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,11,11,27,Red Bull Racing,7,5,2,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,18,18,33,Aston Martin,6,7,-1,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,14,14,28,Alpine,6,8,-2,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,5,5,25,Aston Martin,11,12,-1,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,31,31,36,Alpine,8,10,-2,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,6,6,34,Williams,7,11,-4,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,63,63,36,Williams,5,9,-4,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,22,22,31,AlphaTauri,17,20,-3,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,9,9,27,Haas F1 Team,13,16,-3,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,88,88,32,Alfa Romeo Racing,10,14,-4,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,47,47,28,Haas F1 Team,12,15,-3,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,77,77,36,Mercedes,4,3,1,100.0
+2021,1,Italian Grand Prix,Italian Grand Prix,10,10,32,AlphaTauri,16,19,-3,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,4,4,27,McLaren,7,7,0,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,55,55,33,Ferrari,4,3,1,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,63,63,28,Williams,6,10,-4,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,44,44,32,Mercedes,2,1,1,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,3,3,31,McLaren,4,4,0,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,14,14,26,Alpine,4,6,-2,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,18,18,24,Aston Martin,10,11,-1,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,11,11,26,Red Bull Racing,11,9,2,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,31,31,27,Alpine,12,14,-2,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,5,5,25,Aston Martin,11,12,-1,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,10,10,24,AlphaTauri,10,13,-3,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,22,22,30,AlphaTauri,14,17,-3,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,7,7,31,Alfa Romeo Racing,4,8,-4,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,47,47,30,Haas F1 Team,17,20,-3,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,9,9,28,Haas F1 Team,15,18,-3,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,77,77,35,Mercedes,6,5,1,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,99,99,24,Alfa Romeo Racing,12,16,-4,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,6,6,30,Williams,15,19,-4,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,16,16,36,Ferrari,16,15,1,100.0
+2021,1,Russian Grand Prix,Russian Grand Prix,33,33,30,Red Bull Racing,4,2,2,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,77,77,32,Mercedes,2,1,1,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,33,33,26,Red Bull Racing,4,2,2,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,16,16,32,Ferrari,5,4,1,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,10,10,24,AlphaTauri,3,6,-3,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,14,14,24,Alpine,14,16,-2,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,11,11,27,Red Bull Racing,5,3,2,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,4,4,32,McLaren,7,7,0,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,18,18,29,Aston Martin,8,9,-1,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,22,22,36,AlphaTauri,11,14,-3,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,5,5,34,Aston Martin,17,18,-1,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,44,44,26,Mercedes,6,5,1,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,31,31,24,Alpine,8,10,-2,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,63,63,27,Williams,11,15,-4,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,47,47,35,Haas F1 Team,16,19,-3,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,6,6,36,Williams,13,17,-4,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,99,99,32,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,7,7,26,Alfa Romeo Racing,8,12,-4,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,9,9,35,Haas F1 Team,17,20,-3,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,55,55,32,Ferrari,9,8,1,100.0
+2021,1,Turkish Grand Prix,Turkish Grand Prix,3,3,30,McLaren,13,13,0,100.0
+2021,1,United States Grand Prix,United States Grand Prix,33,33,35,Red Bull Racing,3,1,2,100.0
+2021,1,United States Grand Prix,United States Grand Prix,44,44,27,Mercedes,3,2,1,100.0
+2021,1,United States Grand Prix,United States Grand Prix,11,11,26,Red Bull Racing,5,3,2,100.0
+2021,1,United States Grand Prix,United States Grand Prix,16,16,33,Ferrari,5,4,1,100.0
+2021,1,United States Grand Prix,United States Grand Prix,55,55,28,Ferrari,8,7,1,100.0
+2021,1,United States Grand Prix,United States Grand Prix,3,3,28,McLaren,5,5,0,100.0
+2021,1,United States Grand Prix,United States Grand Prix,4,4,26,McLaren,8,8,0,100.0
+2021,1,United States Grand Prix,United States Grand Prix,10,10,35,AlphaTauri,17,20,-3,100.0
+2021,1,United States Grand Prix,United States Grand Prix,77,77,32,Mercedes,7,6,1,100.0
+2021,1,United States Grand Prix,United States Grand Prix,22,22,27,AlphaTauri,6,9,-3,100.0
+2021,1,United States Grand Prix,United States Grand Prix,31,31,34,Alpine,17,19,-2,100.0
+2021,1,United States Grand Prix,United States Grand Prix,99,99,28,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,United States Grand Prix,United States Grand Prix,18,18,27,Aston Martin,11,12,-1,100.0
+2021,1,United States Grand Prix,United States Grand Prix,6,6,28,Williams,11,15,-4,100.0
+2021,1,United States Grand Prix,United States Grand Prix,7,7,30,Alfa Romeo Racing,9,13,-4,100.0
+2021,1,United States Grand Prix,United States Grand Prix,47,47,32,Haas F1 Team,13,16,-3,100.0
+2021,1,United States Grand Prix,United States Grand Prix,9,9,30,Haas F1 Team,14,17,-3,100.0
+2021,1,United States Grand Prix,United States Grand Prix,5,5,36,Aston Martin,9,10,-1,100.0
+2021,1,United States Grand Prix,United States Grand Prix,14,14,28,Alpine,16,18,-2,100.0
+2021,1,United States Grand Prix,United States Grand Prix,63,63,33,Williams,10,14,-4,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,77,77,33,Mercedes,16,15,1,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,44,44,30,Mercedes,3,2,1,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,33,33,33,Red Bull Racing,3,1,2,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,11,11,28,Red Bull Racing,5,3,2,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,10,10,26,AlphaTauri,1,4,-3,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,55,55,30,Ferrari,7,6,1,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,3,3,36,McLaren,12,12,0,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,16,16,34,Ferrari,6,5,1,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,5,5,34,Aston Martin,6,7,-1,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,7,7,25,Alfa Romeo Racing,4,8,-4,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,99,99,35,Alfa Romeo Racing,7,11,-4,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,14,14,32,Alpine,7,9,-2,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,6,6,33,Williams,13,17,-4,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,47,47,33,Haas F1 Team,16,19,-3,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,9,9,35,Haas F1 Team,15,18,-3,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,63,63,24,Williams,12,16,-4,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,22,22,36,AlphaTauri,17,20,-3,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,4,4,29,McLaren,10,10,0,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,31,31,30,Alpine,11,13,-2,100.0
+2021,1,Mexico City Grand Prix,Hermanos Rodriguez,18,18,36,Aston Martin,13,14,-1,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,77,77,31,Mercedes,4,3,1,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,33,33,33,Red Bull Racing,4,2,2,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,55,55,32,Ferrari,7,6,1,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,11,11,25,Red Bull Racing,6,4,2,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,4,4,34,McLaren,10,10,0,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,16,16,33,Ferrari,6,5,1,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,10,10,25,AlphaTauri,4,7,-3,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,31,31,28,Alpine,6,8,-2,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,5,5,36,Aston Martin,10,11,-1,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,44,44,28,Mercedes,2,1,1,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,3,3,29,McLaren,19,19,0,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,14,14,26,Alpine,7,9,-2,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,99,99,31,Alfa Romeo Racing,10,14,-4,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,18,18,36,Aston Martin,19,20,-1,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,22,22,24,AlphaTauri,12,15,-3,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,6,6,29,Williams,12,16,-4,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,63,63,27,Williams,9,13,-4,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,47,47,24,Haas F1 Team,15,18,-3,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,9,9,30,Haas F1 Team,14,17,-3,100.0
+2021,1,São Paulo Grand Prix,São Paulo Grand Prix,7,7,32,Alfa Romeo Racing,8,12,-4,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,44,44,36,Mercedes,2,1,1,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,10,10,27,AlphaTauri,8,11,-3,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,14,14,27,Alpine,1,3,-2,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,4,4,29,McLaren,9,9,0,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,77,77,35,Mercedes,21,20,1,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,55,55,26,Ferrari,8,7,1,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,33,33,36,Red Bull Racing,4,2,2,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,22,22,35,AlphaTauri,10,13,-3,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,31,31,29,Alpine,3,5,-2,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,5,5,30,Aston Martin,9,10,-1,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,11,11,34,Red Bull Racing,6,4,2,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,18,18,33,Aston Martin,5,6,-1,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,16,16,33,Ferrari,9,8,1,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,3,3,26,McLaren,12,12,0,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,63,63,30,Williams,13,17,-4,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,7,7,26,Alfa Romeo Racing,10,14,-4,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,6,6,36,Williams,15,19,-4,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,99,99,36,Alfa Romeo Racing,11,15,-4,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,47,47,25,Haas F1 Team,13,16,-3,100.0
+2021,1,Qatar Grand Prix,Qatar Grand Prix,9,9,35,Haas F1 Team,15,18,-3,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,44,44,33,Mercedes,2,1,1,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,77,77,27,Mercedes,4,3,1,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,33,33,35,Red Bull Racing,4,2,2,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,16,16,31,Ferrari,8,7,1,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,11,11,36,Red Bull Racing,19,17,2,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,10,10,32,AlphaTauri,3,6,-3,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,4,4,30,McLaren,10,10,0,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,22,22,24,AlphaTauri,11,14,-3,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,31,31,26,Alpine,2,4,-2,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,99,99,36,Alfa Romeo Racing,5,9,-4,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,3,3,35,McLaren,5,5,0,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,7,7,32,Alfa Romeo Racing,11,15,-4,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,14,14,35,Alpine,11,13,-2,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,63,63,24,Williams,15,19,-4,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,55,55,32,Ferrari,9,8,1,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,6,6,31,Williams,8,12,-4,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,5,5,24,Aston Martin,15,16,-1,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,18,18,29,Aston Martin,10,11,-1,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,47,47,28,Haas F1 Team,17,20,-3,100.0
+2021,1,Saudi Arabian Grand Prix,Jeddah,9,9,29,Haas F1 Team,15,18,-3,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,33,33,33,Red Bull Racing,3,1,2,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,44,44,35,Mercedes,3,2,1,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,4,4,36,McLaren,7,7,0,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,11,11,36,Red Bull Racing,17,15,2,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,55,55,36,Ferrari,4,3,1,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,77,77,28,Mercedes,7,6,1,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,16,16,29,Ferrari,11,10,1,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,22,22,28,AlphaTauri,1,4,-3,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,31,31,34,Alpine,7,9,-2,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,3,3,35,McLaren,12,12,0,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,14,14,28,Alpine,6,8,-2,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,10,10,27,AlphaTauri,2,5,-3,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,18,18,26,Aston Martin,12,13,-1,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,99,99,26,Alfa Romeo Racing,13,17,-4,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,5,5,27,Aston Martin,10,11,-1,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,6,6,32,Williams,12,16,-4,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,63,63,25,Williams,14,18,-4,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,7,7,32,Alfa Romeo Racing,15,19,-4,100.0
+2021,1,Abu Dhabi Grand Prix,Yas Island,47,47,24,Haas F1 Team,11,14,-3,100.0
+2022,1,Bahrain Grand Prix,Sakhir,16,16,24,Ferrari,2,1,1,100.0
+2022,1,Bahrain Grand Prix,Sakhir,1,1,28,Red Bull Racing,21,19,2,100.0
+2022,1,Bahrain Grand Prix,Sakhir,55,55,29,Ferrari,3,2,1,100.0
+2022,1,Bahrain Grand Prix,Sakhir,11,11,29,Red Bull Racing,20,18,2,100.0
+2022,1,Bahrain Grand Prix,Sakhir,44,44,26,Mercedes,4,3,1,100.0
+2022,1,Bahrain Grand Prix,Sakhir,77,77,30,Alfa Romeo,2,6,-4,100.0
+2022,1,Bahrain Grand Prix,Sakhir,20,20,32,Haas F1 Team,2,5,-3,100.0
+2022,1,Bahrain Grand Prix,Sakhir,14,14,34,Alpine,7,9,-2,100.0
+2022,1,Bahrain Grand Prix,Sakhir,63,63,35,Mercedes,5,4,1,100.0
+2022,1,Bahrain Grand Prix,Sakhir,10,10,33,AlphaTauri,17,20,-3,100.0
+2022,1,Bahrain Grand Prix,Sakhir,31,31,31,Alpine,5,7,-2,100.0
+2022,1,Bahrain Grand Prix,Sakhir,47,47,29,Haas F1 Team,8,11,-3,100.0
+2022,1,Bahrain Grand Prix,Sakhir,4,4,35,McLaren,15,15,0,100.0
+2022,1,Bahrain Grand Prix,Sakhir,23,23,31,Williams,9,13,-4,100.0
+2022,1,Bahrain Grand Prix,Sakhir,24,24,35,Alfa Romeo,6,10,-4,100.0
+2022,1,Bahrain Grand Prix,Sakhir,22,22,28,AlphaTauri,5,8,-3,100.0
+2022,1,Bahrain Grand Prix,Sakhir,27,27,31,Aston Martin,16,17,-1,100.0
+2022,1,Bahrain Grand Prix,Sakhir,3,3,33,McLaren,14,14,0,100.0
+2022,1,Bahrain Grand Prix,Sakhir,18,18,35,Aston Martin,11,12,-1,100.0
+2022,1,Bahrain Grand Prix,Sakhir,6,6,27,Williams,12,16,-4,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,11,11,33,Red Bull Racing,6,4,2,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,16,16,31,Ferrari,3,2,1,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,55,55,33,Ferrari,4,3,1,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,1,1,35,Red Bull Racing,3,1,2,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,31,31,25,Alpine,4,6,-2,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,63,63,35,Mercedes,6,5,1,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,14,14,35,Alpine,14,16,-2,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,77,77,28,Alfa Romeo,11,15,-4,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,10,10,32,AlphaTauri,5,8,-3,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,20,20,27,Haas F1 Team,6,9,-3,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,4,4,34,McLaren,7,7,0,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,24,24,29,Alfa Romeo,7,11,-4,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,18,18,24,Aston Martin,12,13,-1,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,3,3,32,McLaren,17,17,0,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,44,44,24,Mercedes,11,10,1,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,23,23,28,Williams,10,14,-4,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,27,27,27,Aston Martin,11,12,-1,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,6,6,36,Williams,14,18,-4,100.0
+2022,1,Saudi Arabian Grand Prix,Jeddah,22,22,35,AlphaTauri,16,19,-3,100.0
+2022,1,Australian Grand Prix,Melbourne,16,16,36,Ferrari,2,1,1,100.0
+2022,1,Australian Grand Prix,Melbourne,1,1,36,Red Bull Racing,20,18,2,100.0
+2022,1,Australian Grand Prix,Melbourne,11,11,26,Red Bull Racing,4,2,2,100.0
+2022,1,Australian Grand Prix,Melbourne,4,4,36,McLaren,5,5,0,100.0
+2022,1,Australian Grand Prix,Melbourne,44,44,29,Mercedes,5,4,1,100.0
+2022,1,Australian Grand Prix,Melbourne,63,63,25,Mercedes,4,3,1,100.0
+2022,1,Australian Grand Prix,Melbourne,3,3,26,McLaren,6,6,0,100.0
+2022,1,Australian Grand Prix,Melbourne,31,31,28,Alpine,5,7,-2,100.0
+2022,1,Australian Grand Prix,Melbourne,55,55,32,Ferrari,21,20,1,100.0
+2022,1,Australian Grand Prix,Melbourne,14,14,25,Alpine,15,17,-2,100.0
+2022,1,Australian Grand Prix,Melbourne,10,10,33,AlphaTauri,6,9,-3,100.0
+2022,1,Australian Grand Prix,Melbourne,77,77,31,Alfa Romeo,4,8,-4,100.0
+2022,1,Australian Grand Prix,Melbourne,22,22,25,AlphaTauri,12,15,-3,100.0
+2022,1,Australian Grand Prix,Melbourne,24,24,34,Alfa Romeo,7,11,-4,100.0
+2022,1,Australian Grand Prix,Melbourne,47,47,36,Haas F1 Team,10,13,-3,100.0
+2022,1,Australian Grand Prix,Melbourne,20,20,28,Haas F1 Team,11,14,-3,100.0
+2022,1,Australian Grand Prix,Melbourne,5,5,30,Aston Martin,18,19,-1,100.0
+2022,1,Australian Grand Prix,Melbourne,6,6,31,Williams,12,16,-4,100.0
+2022,1,Australian Grand Prix,Melbourne,18,18,24,Aston Martin,11,12,-1,100.0
+2022,1,Australian Grand Prix,Melbourne,23,23,29,Williams,6,10,-4,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,1,1,24,Red Bull Racing,3,1,2,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,16,16,25,Ferrari,7,6,1,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,11,11,24,Red Bull Racing,4,2,2,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,55,55,34,Ferrari,21,20,1,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,4,4,28,McLaren,3,3,0,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,3,3,33,McLaren,18,18,0,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,77,77,32,Alfa Romeo,1,5,-4,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,20,20,29,Haas F1 Team,6,9,-3,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,14,14,34,Alpine,17,19,-2,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,47,47,34,Haas F1 Team,14,17,-3,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,63,63,24,Mercedes,5,4,1,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,22,22,36,AlphaTauri,4,7,-3,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,5,5,24,Aston Martin,7,8,-1,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,44,44,25,Mercedes,14,13,1,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,18,18,32,Aston Martin,9,10,-1,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,31,31,26,Alpine,12,14,-2,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,10,10,24,AlphaTauri,9,12,-3,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,23,23,28,Williams,7,11,-4,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,6,6,30,Williams,12,16,-4,100.0
+2022,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,24,24,29,Alfa Romeo,11,15,-4,100.0
+2022,1,Miami Grand Prix,Miami,16,16,35,Ferrari,3,2,1,100.0
+2022,1,Miami Grand Prix,Miami,55,55,24,Ferrari,4,3,1,100.0
+2022,1,Miami Grand Prix,Miami,1,1,28,Red Bull Racing,3,1,2,100.0
+2022,1,Miami Grand Prix,Miami,11,11,28,Red Bull Racing,6,4,2,100.0
+2022,1,Miami Grand Prix,Miami,77,77,29,Alfa Romeo,3,7,-4,100.0
+2022,1,Miami Grand Prix,Miami,44,44,26,Mercedes,7,6,1,100.0
+2022,1,Miami Grand Prix,Miami,10,10,28,AlphaTauri,15,18,-3,100.0
+2022,1,Miami Grand Prix,Miami,4,4,30,McLaren,19,19,0,100.0
+2022,1,Miami Grand Prix,Miami,22,22,28,AlphaTauri,10,13,-3,100.0
+2022,1,Miami Grand Prix,Miami,18,18,28,Aston Martin,11,12,-1,100.0
+2022,1,Miami Grand Prix,Miami,14,14,28,Alpine,7,9,-2,100.0
+2022,1,Miami Grand Prix,Miami,63,63,33,Mercedes,6,5,1,100.0
+2022,1,Miami Grand Prix,Miami,5,5,33,Aston Martin,16,17,-1,100.0
+2022,1,Miami Grand Prix,Miami,3,3,26,McLaren,11,11,0,100.0
+2022,1,Miami Grand Prix,Miami,47,47,24,Haas F1 Team,12,15,-3,100.0
+2022,1,Miami Grand Prix,Miami,20,20,28,Haas F1 Team,13,16,-3,100.0
+2022,1,Miami Grand Prix,Miami,24,24,32,Alfa Romeo,16,20,-4,100.0
+2022,1,Miami Grand Prix,Miami,23,23,24,Williams,6,10,-4,100.0
+2022,1,Miami Grand Prix,Miami,6,6,26,Williams,10,14,-4,100.0
+2022,1,Miami Grand Prix,Miami,31,31,36,Alpine,6,8,-2,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,16,16,36,Ferrari,21,20,1,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,1,1,27,Red Bull Racing,3,1,2,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,55,55,24,Ferrari,5,4,1,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,63,63,24,Mercedes,4,3,1,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,11,11,31,Red Bull Racing,4,2,2,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,44,44,25,Mercedes,6,5,1,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,77,77,35,Alfa Romeo,2,6,-4,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,20,20,31,Haas F1 Team,14,17,-3,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,3,3,30,McLaren,12,12,0,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,47,47,33,Haas F1 Team,11,14,-3,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,4,4,33,McLaren,8,8,0,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,31,31,25,Alpine,5,7,-2,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,22,22,29,AlphaTauri,7,10,-3,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,10,10,29,AlphaTauri,10,13,-3,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,24,24,26,Alfa Romeo,15,19,-4,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,5,5,34,Aston Martin,10,11,-1,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,18,18,25,Aston Martin,14,15,-1,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,23,23,35,Williams,14,18,-4,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,6,6,24,Williams,12,16,-4,100.0
+2022,1,Spanish Grand Prix,Spanish Grand Prix,14,14,29,Alpine,7,9,-2,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,16,16,35,Ferrari,5,4,1,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,55,55,28,Ferrari,3,2,1,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,11,11,34,Red Bull Racing,3,1,2,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,1,1,32,Red Bull Racing,5,3,2,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,4,4,24,McLaren,6,6,0,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,63,63,30,Mercedes,6,5,1,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,14,14,28,Alpine,5,7,-2,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,44,44,28,Mercedes,9,8,1,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,5,5,25,Aston Martin,9,10,-1,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,31,31,34,Alpine,10,12,-2,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,22,22,26,AlphaTauri,14,17,-3,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,77,77,30,Alfa Romeo,5,9,-4,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,20,20,29,Haas F1 Team,17,20,-3,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,3,3,35,McLaren,13,13,0,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,47,47,25,Haas F1 Team,16,19,-3,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,23,23,29,Williams,14,18,-4,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,10,10,25,AlphaTauri,8,11,-3,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,18,18,25,Aston Martin,13,14,-1,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,6,6,25,Williams,11,15,-4,100.0
+2022,1,Monaco Grand Prix,Monte Carlo,24,24,34,Alfa Romeo,12,16,-4,100.0
+2022,1,Azerbaijan Grand Prix,Baku,16,16,26,Ferrari,20,19,1,100.0
+2022,1,Azerbaijan Grand Prix,Baku,11,11,25,Red Bull Racing,4,2,2,100.0
+2022,1,Azerbaijan Grand Prix,Baku,1,1,27,Red Bull Racing,3,1,2,100.0
+2022,1,Azerbaijan Grand Prix,Baku,55,55,32,Ferrari,21,20,1,100.0
+2022,1,Azerbaijan Grand Prix,Baku,63,63,29,Mercedes,4,3,1,100.0
+2022,1,Azerbaijan Grand Prix,Baku,10,10,24,AlphaTauri,2,5,-3,100.0
+2022,1,Azerbaijan Grand Prix,Baku,44,44,31,Mercedes,5,4,1,100.0
+2022,1,Azerbaijan Grand Prix,Baku,22,22,35,AlphaTauri,10,13,-3,100.0
+2022,1,Azerbaijan Grand Prix,Baku,5,5,30,Aston Martin,5,6,-1,100.0
+2022,1,Azerbaijan Grand Prix,Baku,14,14,33,Alpine,5,7,-2,100.0
+2022,1,Azerbaijan Grand Prix,Baku,4,4,26,McLaren,9,9,0,100.0
+2022,1,Azerbaijan Grand Prix,Baku,3,3,24,McLaren,8,8,0,100.0
+2022,1,Azerbaijan Grand Prix,Baku,31,31,28,Alpine,8,10,-2,100.0
+2022,1,Azerbaijan Grand Prix,Baku,24,24,36,Alfa Romeo,14,18,-4,100.0
+2022,1,Azerbaijan Grand Prix,Baku,77,77,27,Alfa Romeo,7,11,-4,100.0
+2022,1,Azerbaijan Grand Prix,Baku,20,20,33,Haas F1 Team,14,17,-3,100.0
+2022,1,Azerbaijan Grand Prix,Baku,23,23,31,Williams,8,12,-4,100.0
+2022,1,Azerbaijan Grand Prix,Baku,6,6,24,Williams,11,15,-4,100.0
+2022,1,Azerbaijan Grand Prix,Baku,18,18,33,Aston Martin,15,16,-1,100.0
+2022,1,Azerbaijan Grand Prix,Baku,47,47,24,Haas F1 Team,11,14,-3,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,1,1,35,Red Bull Racing,3,1,2,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,14,14,27,Alpine,5,7,-2,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,55,55,31,Ferrari,3,2,1,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,44,44,28,Mercedes,4,3,1,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,20,20,25,Haas F1 Team,14,17,-3,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,47,47,29,Haas F1 Team,16,19,-3,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,31,31,28,Alpine,4,6,-2,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,63,63,25,Mercedes,5,4,1,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,3,3,36,McLaren,11,11,0,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,24,24,34,Alfa Romeo,5,9,-4,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,77,77,34,Alfa Romeo,4,8,-4,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,23,23,34,Williams,9,13,-4,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,11,11,26,Red Bull Racing,22,20,2,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,4,4,32,McLaren,15,15,0,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,10,10,30,AlphaTauri,11,14,-3,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,5,5,30,Aston Martin,11,12,-1,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,18,18,34,Aston Martin,9,10,-1,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,6,6,29,Williams,12,16,-4,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,16,16,31,Ferrari,6,5,1,100.0
+2022,1,Canadian Grand Prix,Canadian Grand Prix,22,22,27,AlphaTauri,15,18,-3,100.0
+2022,1,British Grand Prix,Silverstone,55,55,31,Ferrari,2,1,1,100.0
+2022,1,British Grand Prix,Silverstone,1,1,27,Red Bull Racing,9,7,2,100.0
+2022,1,British Grand Prix,Silverstone,16,16,31,Ferrari,5,4,1,100.0
+2022,1,British Grand Prix,Silverstone,11,11,32,Red Bull Racing,4,2,2,100.0
+2022,1,British Grand Prix,Silverstone,44,44,26,Mercedes,4,3,1,100.0
+2022,1,British Grand Prix,Silverstone,4,4,26,McLaren,6,6,0,100.0
+2022,1,British Grand Prix,Silverstone,14,14,34,Alpine,3,5,-2,100.0
+2022,1,British Grand Prix,Silverstone,63,63,36,Mercedes,19,18,1,100.0
+2022,1,British Grand Prix,Silverstone,24,24,25,Alfa Romeo,15,19,-4,100.0
+2022,1,British Grand Prix,Silverstone,6,6,36,Williams,8,12,-4,100.0
+2022,1,British Grand Prix,Silverstone,10,10,33,AlphaTauri,13,16,-3,100.0
+2022,1,British Grand Prix,Silverstone,77,77,26,Alfa Romeo,13,17,-4,100.0
+2022,1,British Grand Prix,Silverstone,22,22,26,AlphaTauri,11,14,-3,100.0
+2022,1,British Grand Prix,Silverstone,3,3,28,McLaren,13,13,0,100.0
+2022,1,British Grand Prix,Silverstone,31,31,28,Alpine,13,15,-2,100.0
+2022,1,British Grand Prix,Silverstone,23,23,25,Williams,16,20,-4,100.0
+2022,1,British Grand Prix,Silverstone,20,20,35,Haas F1 Team,7,10,-3,100.0
+2022,1,British Grand Prix,Silverstone,5,5,33,Aston Martin,8,9,-1,100.0
+2022,1,British Grand Prix,Silverstone,47,47,36,Haas F1 Team,5,8,-3,100.0
+2022,1,British Grand Prix,Silverstone,18,18,29,Aston Martin,10,11,-1,100.0
+2022,1,Austrian Grand Prix,Spielberg,1,1,28,Red Bull Racing,4,2,2,100.0
+2022,1,Austrian Grand Prix,Spielberg,16,16,29,Ferrari,2,1,1,100.0
+2022,1,Austrian Grand Prix,Spielberg,55,55,24,Ferrari,19,18,1,100.0
+2022,1,Austrian Grand Prix,Spielberg,63,63,28,Mercedes,5,4,1,100.0
+2022,1,Austrian Grand Prix,Spielberg,11,11,32,Red Bull Racing,22,20,2,100.0
+2022,1,Austrian Grand Prix,Spielberg,31,31,35,Alpine,3,5,-2,100.0
+2022,1,Austrian Grand Prix,Spielberg,20,20,33,Haas F1 Team,5,8,-3,100.0
+2022,1,Austrian Grand Prix,Spielberg,44,44,25,Mercedes,4,3,1,100.0
+2022,1,Austrian Grand Prix,Spielberg,47,47,24,Haas F1 Team,3,6,-3,100.0
+2022,1,Austrian Grand Prix,Spielberg,4,4,33,McLaren,7,7,0,100.0
+2022,1,Austrian Grand Prix,Spielberg,3,3,36,McLaren,9,9,0,100.0
+2022,1,Austrian Grand Prix,Spielberg,18,18,34,Aston Martin,12,13,-1,100.0
+2022,1,Austrian Grand Prix,Spielberg,24,24,32,Alfa Romeo,10,14,-4,100.0
+2022,1,Austrian Grand Prix,Spielberg,10,10,33,AlphaTauri,12,15,-3,100.0
+2022,1,Austrian Grand Prix,Spielberg,23,23,32,Williams,8,12,-4,100.0
+2022,1,Austrian Grand Prix,Spielberg,22,22,32,AlphaTauri,13,16,-3,100.0
+2022,1,Austrian Grand Prix,Spielberg,6,6,29,Williams,15,19,-4,100.0
+2022,1,Austrian Grand Prix,Spielberg,5,5,31,Aston Martin,16,17,-1,100.0
+2022,1,Austrian Grand Prix,Spielberg,14,14,34,Alpine,8,10,-2,100.0
+2022,1,Austrian Grand Prix,Spielberg,77,77,36,Alfa Romeo,7,11,-4,100.0
+2022,1,French Grand Prix,French Grand Prix,16,16,24,Ferrari,20,19,1,100.0
+2022,1,French Grand Prix,French Grand Prix,1,1,33,Red Bull Racing,3,1,2,100.0
+2022,1,French Grand Prix,French Grand Prix,11,11,27,Red Bull Racing,6,4,2,100.0
+2022,1,French Grand Prix,French Grand Prix,44,44,24,Mercedes,3,2,1,100.0
+2022,1,French Grand Prix,French Grand Prix,4,4,31,McLaren,7,7,0,100.0
+2022,1,French Grand Prix,French Grand Prix,63,63,24,Mercedes,4,3,1,100.0
+2022,1,French Grand Prix,French Grand Prix,14,14,26,Alpine,4,6,-2,100.0
+2022,1,French Grand Prix,French Grand Prix,22,22,36,AlphaTauri,17,20,-3,100.0
+2022,1,French Grand Prix,French Grand Prix,3,3,27,McLaren,9,9,0,100.0
+2022,1,French Grand Prix,French Grand Prix,31,31,31,Alpine,6,8,-2,100.0
+2022,1,French Grand Prix,French Grand Prix,77,77,29,Alfa Romeo,10,14,-4,100.0
+2022,1,French Grand Prix,French Grand Prix,5,5,33,Aston Martin,10,11,-1,100.0
+2022,1,French Grand Prix,French Grand Prix,23,23,35,Williams,9,13,-4,100.0
+2022,1,French Grand Prix,French Grand Prix,10,10,30,AlphaTauri,9,12,-3,100.0
+2022,1,French Grand Prix,French Grand Prix,18,18,31,Aston Martin,9,10,-1,100.0
+2022,1,French Grand Prix,French Grand Prix,24,24,25,Alfa Romeo,12,16,-4,100.0
+2022,1,French Grand Prix,French Grand Prix,47,47,36,Haas F1 Team,12,15,-3,100.0
+2022,1,French Grand Prix,French Grand Prix,6,6,33,Williams,13,17,-4,100.0
+2022,1,French Grand Prix,French Grand Prix,55,55,34,Ferrari,6,5,1,100.0
+2022,1,French Grand Prix,French Grand Prix,20,20,31,Haas F1 Team,15,18,-3,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,63,63,26,Mercedes,4,3,1,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,55,55,30,Ferrari,5,4,1,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,16,16,26,Ferrari,7,6,1,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,4,4,30,McLaren,7,7,0,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,31,31,34,Alpine,7,9,-2,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,14,14,35,Alpine,6,8,-2,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,44,44,36,Mercedes,3,2,1,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,77,77,25,Alfa Romeo,16,20,-4,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,3,3,33,McLaren,15,15,0,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,1,1,29,Red Bull Racing,3,1,2,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,11,11,26,Red Bull Racing,7,5,2,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,24,24,26,Alfa Romeo,9,13,-4,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,20,20,32,Haas F1 Team,13,16,-3,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,18,18,30,Aston Martin,10,11,-1,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,47,47,28,Haas F1 Team,11,14,-3,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,22,22,35,AlphaTauri,16,19,-3,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,23,23,33,Williams,13,17,-4,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,5,5,30,Aston Martin,9,10,-1,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,6,6,32,Williams,14,18,-4,100.0
+2022,1,Hungarian Grand Prix,Hungarian Grand Prix,10,10,24,AlphaTauri,9,12,-3,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,55,55,30,Ferrari,4,3,1,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,11,11,29,Red Bull Racing,4,2,2,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,14,14,33,Alpine,3,5,-2,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,44,44,35,Mercedes,21,20,1,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,63,63,32,Mercedes,5,4,1,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,23,23,24,Williams,6,10,-4,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,3,3,36,McLaren,15,15,0,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,10,10,27,AlphaTauri,6,9,-3,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,18,18,32,Aston Martin,10,11,-1,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,5,5,27,Aston Martin,7,8,-1,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,6,6,33,Williams,14,18,-4,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,20,20,26,Haas F1 Team,13,16,-3,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,77,77,32,Alfa Romeo,15,19,-4,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,1,1,36,Red Bull Racing,3,1,2,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,16,16,25,Ferrari,7,6,1,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,31,31,27,Alpine,5,7,-2,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,4,4,29,McLaren,12,12,0,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,24,24,25,Alfa Romeo,10,14,-4,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,47,47,31,Haas F1 Team,14,17,-3,100.0
+2022,1,Belgian Grand Prix,Belgian Grand Prix,22,22,31,AlphaTauri,10,13,-3,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,1,1,24,Red Bull Racing,3,1,2,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,16,16,35,Ferrari,4,3,1,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,55,55,26,Ferrari,9,8,1,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,44,44,33,Mercedes,5,4,1,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,11,11,32,Red Bull Racing,7,5,2,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,63,63,28,Mercedes,3,2,1,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,4,4,29,McLaren,7,7,0,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,47,47,27,Haas F1 Team,10,13,-3,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,22,22,33,AlphaTauri,17,20,-3,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,18,18,25,Aston Martin,9,10,-1,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,10,10,34,AlphaTauri,8,11,-3,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,31,31,31,Alpine,7,9,-2,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,14,14,34,Alpine,4,6,-2,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,24,24,36,Alfa Romeo,12,16,-4,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,23,23,29,Williams,8,12,-4,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,77,77,28,Alfa Romeo,15,19,-4,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,3,3,32,McLaren,17,17,0,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,20,20,24,Haas F1 Team,12,15,-3,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,5,5,28,Aston Martin,13,14,-1,100.0
+2022,1,Dutch Grand Prix,Dutch Grand Prix,6,6,29,Williams,14,18,-4,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,16,16,28,Ferrari,3,2,1,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,63,63,29,Mercedes,4,3,1,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,4,4,29,McLaren,7,7,0,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,3,3,30,McLaren,17,17,0,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,10,10,27,AlphaTauri,5,8,-3,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,14,14,34,Alpine,17,19,-2,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,1,1,31,Red Bull Racing,3,1,2,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,45,45,30,Williams,5,9,-4,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,24,24,32,Alfa Romeo,6,10,-4,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,6,6,30,Williams,11,15,-4,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,5,5,26,Aston Martin,19,20,-1,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,18,18,26,Aston Martin,17,18,-1,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,11,11,31,Red Bull Racing,8,6,2,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,31,31,28,Alpine,9,11,-2,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,77,77,27,Alfa Romeo,9,13,-4,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,20,20,31,Haas F1 Team,13,16,-3,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,47,47,29,Haas F1 Team,9,12,-3,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,55,55,25,Ferrari,5,4,1,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,44,44,27,Mercedes,6,5,1,100.0
+2022,1,Italian Grand Prix,Italian Grand Prix,22,22,35,AlphaTauri,11,14,-3,100.0
+2022,1,Singapore Grand Prix,Marina Bay,16,16,34,Ferrari,3,2,1,100.0
+2022,1,Singapore Grand Prix,Marina Bay,11,11,27,Red Bull Racing,3,1,2,100.0
+2022,1,Singapore Grand Prix,Marina Bay,44,44,29,Mercedes,10,9,1,100.0
+2022,1,Singapore Grand Prix,Marina Bay,55,55,29,Ferrari,4,3,1,100.0
+2022,1,Singapore Grand Prix,Marina Bay,14,14,24,Alpine,16,18,-2,100.0
+2022,1,Singapore Grand Prix,Marina Bay,4,4,31,McLaren,4,4,0,100.0
+2022,1,Singapore Grand Prix,Marina Bay,10,10,29,AlphaTauri,7,10,-3,100.0
+2022,1,Singapore Grand Prix,Marina Bay,1,1,26,Red Bull Racing,9,7,2,100.0
+2022,1,Singapore Grand Prix,Marina Bay,20,20,32,Haas F1 Team,9,12,-3,100.0
+2022,1,Singapore Grand Prix,Marina Bay,22,22,25,AlphaTauri,12,15,-3,100.0
+2022,1,Singapore Grand Prix,Marina Bay,18,18,34,Aston Martin,5,6,-1,100.0
+2022,1,Singapore Grand Prix,Marina Bay,47,47,31,Haas F1 Team,10,13,-3,100.0
+2022,1,Singapore Grand Prix,Marina Bay,5,5,33,Aston Martin,7,8,-1,100.0
+2022,1,Singapore Grand Prix,Marina Bay,24,24,26,Alfa Romeo,16,20,-4,100.0
+2022,1,Singapore Grand Prix,Marina Bay,77,77,36,Alfa Romeo,7,11,-4,100.0
+2022,1,Singapore Grand Prix,Marina Bay,3,3,35,McLaren,5,5,0,100.0
+2022,1,Singapore Grand Prix,Marina Bay,31,31,28,Alpine,14,16,-2,100.0
+2022,1,Singapore Grand Prix,Marina Bay,23,23,29,Williams,13,17,-4,100.0
+2022,1,Singapore Grand Prix,Marina Bay,6,6,33,Williams,15,19,-4,100.0
+2022,1,Singapore Grand Prix,Marina Bay,63,63,29,Mercedes,15,14,1,100.0
+2022,1,Japanese Grand Prix,Suzuka,1,1,27,Red Bull Racing,3,1,2,100.0
+2022,1,Japanese Grand Prix,Suzuka,16,16,26,Ferrari,4,3,1,100.0
+2022,1,Japanese Grand Prix,Suzuka,55,55,27,Ferrari,20,19,1,100.0
+2022,1,Japanese Grand Prix,Suzuka,11,11,24,Red Bull Racing,4,2,2,100.0
+2022,1,Japanese Grand Prix,Suzuka,31,31,27,Alpine,2,4,-2,100.0
+2022,1,Japanese Grand Prix,Suzuka,44,44,24,Mercedes,6,5,1,100.0
+2022,1,Japanese Grand Prix,Suzuka,14,14,35,Alpine,5,7,-2,100.0
+2022,1,Japanese Grand Prix,Suzuka,63,63,24,Mercedes,9,8,1,100.0
+2022,1,Japanese Grand Prix,Suzuka,5,5,33,Aston Martin,5,6,-1,100.0
+2022,1,Japanese Grand Prix,Suzuka,4,4,29,McLaren,10,10,0,100.0
+2022,1,Japanese Grand Prix,Suzuka,3,3,28,McLaren,11,11,0,100.0
+2022,1,Japanese Grand Prix,Suzuka,77,77,34,Alfa Romeo,11,15,-4,100.0
+2022,1,Japanese Grand Prix,Suzuka,22,22,27,AlphaTauri,10,13,-3,100.0
+2022,1,Japanese Grand Prix,Suzuka,24,24,36,Alfa Romeo,12,16,-4,100.0
+2022,1,Japanese Grand Prix,Suzuka,47,47,34,Haas F1 Team,15,18,-3,100.0
+2022,1,Japanese Grand Prix,Suzuka,23,23,26,Williams,16,20,-4,100.0
+2022,1,Japanese Grand Prix,Suzuka,10,10,24,AlphaTauri,14,17,-3,100.0
+2022,1,Japanese Grand Prix,Suzuka,20,20,29,Haas F1 Team,11,14,-3,100.0
+2022,1,Japanese Grand Prix,Suzuka,18,18,25,Aston Martin,11,12,-1,100.0
+2022,1,Japanese Grand Prix,Suzuka,6,6,31,Williams,5,9,-4,100.0
+2022,1,United States Grand Prix,United States Grand Prix,55,55,33,Ferrari,21,20,1,100.0
+2022,1,United States Grand Prix,United States Grand Prix,1,1,28,Red Bull Racing,3,1,2,100.0
+2022,1,United States Grand Prix,United States Grand Prix,44,44,30,Mercedes,3,2,1,100.0
+2022,1,United States Grand Prix,United States Grand Prix,63,63,33,Mercedes,6,5,1,100.0
+2022,1,United States Grand Prix,United States Grand Prix,18,18,35,Aston Martin,17,18,-1,100.0
+2022,1,United States Grand Prix,United States Grand Prix,4,4,25,McLaren,6,6,0,100.0
+2022,1,United States Grand Prix,United States Grand Prix,77,77,36,Alfa Romeo,15,19,-4,100.0
+2022,1,United States Grand Prix,United States Grand Prix,23,23,31,Williams,8,12,-4,100.0
+2022,1,United States Grand Prix,United States Grand Prix,11,11,25,Red Bull Racing,6,4,2,100.0
+2022,1,United States Grand Prix,United States Grand Prix,5,5,27,Aston Martin,7,8,-1,100.0
+2022,1,United States Grand Prix,United States Grand Prix,10,10,24,AlphaTauri,11,14,-3,100.0
+2022,1,United States Grand Prix,United States Grand Prix,16,16,28,Ferrari,4,3,1,100.0
+2022,1,United States Grand Prix,United States Grand Prix,20,20,32,Haas F1 Team,6,9,-3,100.0
+2022,1,United States Grand Prix,United States Grand Prix,14,14,24,Alpine,5,7,-2,100.0
+2022,1,United States Grand Prix,United States Grand Prix,3,3,32,McLaren,16,16,0,100.0
+2022,1,United States Grand Prix,United States Grand Prix,47,47,34,Haas F1 Team,12,15,-3,100.0
+2022,1,United States Grand Prix,United States Grand Prix,6,6,31,Williams,13,17,-4,100.0
+2022,1,United States Grand Prix,United States Grand Prix,24,24,29,Alfa Romeo,9,13,-4,100.0
+2022,1,United States Grand Prix,United States Grand Prix,22,22,30,AlphaTauri,7,10,-3,100.0
+2022,1,United States Grand Prix,United States Grand Prix,31,31,26,Alpine,9,11,-2,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,1,1,24,Red Bull Racing,3,1,2,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,63,63,28,Mercedes,5,4,1,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,44,44,35,Mercedes,3,2,1,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,11,11,35,Red Bull Racing,5,3,2,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,55,55,25,Ferrari,6,5,1,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,77,77,28,Alfa Romeo,6,10,-4,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,16,16,31,Ferrari,7,6,1,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,4,4,34,McLaren,9,9,0,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,14,14,32,Alpine,17,19,-2,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,31,31,25,Alpine,6,8,-2,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,3,3,35,McLaren,7,7,0,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,24,24,26,Alfa Romeo,9,13,-4,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,22,22,26,AlphaTauri,17,20,-3,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,10,10,24,AlphaTauri,8,11,-3,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,47,47,31,Haas F1 Team,13,16,-3,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,5,5,29,Aston Martin,13,14,-1,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,23,23,35,Williams,8,12,-4,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,6,6,36,Williams,14,18,-4,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,20,20,31,Haas F1 Team,14,17,-3,100.0
+2022,1,Mexico City Grand Prix,Hermanos Rodriguez,18,18,34,Aston Martin,14,15,-1,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,63,63,32,Mercedes,2,1,1,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,44,44,28,Mercedes,3,2,1,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,1,1,35,Red Bull Racing,8,6,2,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,11,11,26,Red Bull Racing,9,7,2,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,16,16,28,Ferrari,5,4,1,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,4,4,28,McLaren,18,18,0,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,55,55,28,Ferrari,4,3,1,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,20,20,26,Haas F1 Team,16,19,-3,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,5,5,34,Aston Martin,10,11,-1,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,10,10,33,AlphaTauri,11,14,-3,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,3,3,27,McLaren,20,20,0,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,47,47,32,Haas F1 Team,10,13,-3,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,24,24,36,Alfa Romeo,8,12,-4,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,77,77,33,Alfa Romeo,5,9,-4,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,18,18,32,Aston Martin,9,10,-1,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,31,31,25,Alpine,6,8,-2,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,14,14,31,Alpine,3,5,-2,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,6,6,31,Williams,12,16,-4,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,23,23,30,Williams,11,15,-4,100.0
+2022,1,São Paulo Grand Prix,São Paulo Grand Prix,22,22,31,AlphaTauri,14,17,-3,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,1,1,26,Red Bull Racing,3,1,2,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,11,11,36,Red Bull Racing,5,3,2,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,16,16,29,Ferrari,3,2,1,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,55,55,24,Ferrari,5,4,1,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,44,44,30,Mercedes,19,18,1,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,63,63,24,Mercedes,6,5,1,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,4,4,32,McLaren,6,6,0,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,31,31,24,Alpine,5,7,-2,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,5,5,24,Aston Martin,9,10,-1,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,14,14,30,Alpine,18,20,-2,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,22,22,25,AlphaTauri,8,11,-3,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,47,47,28,Haas F1 Team,13,16,-3,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,3,3,31,McLaren,9,9,0,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,18,18,31,Aston Martin,7,8,-1,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,24,24,26,Alfa Romeo,8,12,-4,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,20,20,30,Haas F1 Team,14,17,-3,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,10,10,26,AlphaTauri,11,14,-3,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,77,77,29,Alfa Romeo,11,15,-4,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,23,23,29,Williams,9,13,-4,100.0
+2022,1,Abu Dhabi Grand Prix,Yas Island,6,6,26,Williams,15,19,-4,100.0
+2023,1,Bahrain Grand Prix,Sakhir,1,1,30,Red Bull Racing,3,1,2,100.0
+2023,1,Bahrain Grand Prix,Sakhir,11,11,26,Red Bull Racing,4,2,2,100.0
+2023,1,Bahrain Grand Prix,Sakhir,16,16,31,Ferrari,20,19,1,100.0
+2023,1,Bahrain Grand Prix,Sakhir,55,55,33,Ferrari,5,4,1,100.0
+2023,1,Bahrain Grand Prix,Sakhir,14,14,27,Aston Martin,2,3,-1,100.0
+2023,1,Bahrain Grand Prix,Sakhir,63,63,36,Mercedes,8,7,1,100.0
+2023,1,Bahrain Grand Prix,Sakhir,44,44,24,Mercedes,6,5,1,100.0
+2023,1,Bahrain Grand Prix,Sakhir,18,18,27,Aston Martin,5,6,-1,100.0
+2023,1,Bahrain Grand Prix,Sakhir,31,31,30,Alpine,16,18,-2,100.0
+2023,1,Bahrain Grand Prix,Sakhir,27,27,34,Haas F1 Team,12,15,-3,100.0
+2023,1,Bahrain Grand Prix,Sakhir,4,4,27,McLaren,17,17,0,100.0
+2023,1,Bahrain Grand Prix,Sakhir,77,77,36,Alfa Romeo,4,8,-4,100.0
+2023,1,Bahrain Grand Prix,Sakhir,24,24,29,Alfa Romeo,12,16,-4,100.0
+2023,1,Bahrain Grand Prix,Sakhir,22,22,32,AlphaTauri,8,11,-3,100.0
+2023,1,Bahrain Grand Prix,Sakhir,23,23,24,Williams,6,10,-4,100.0
+2023,1,Bahrain Grand Prix,Sakhir,2,2,36,Williams,8,12,-4,100.0
+2023,1,Bahrain Grand Prix,Sakhir,20,20,28,Haas F1 Team,10,13,-3,100.0
+2023,1,Bahrain Grand Prix,Sakhir,81,81,34,McLaren,20,20,0,100.0
+2023,1,Bahrain Grand Prix,Sakhir,21,21,30,AlphaTauri,11,14,-3,100.0
+2023,1,Bahrain Grand Prix,Sakhir,10,10,24,Alpine,7,9,-2,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,11,11,27,Red Bull Racing,3,1,2,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,14,14,29,Aston Martin,2,3,-1,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,63,63,25,Mercedes,5,4,1,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,55,55,33,Ferrari,7,6,1,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,18,18,28,Aston Martin,19,20,-1,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,31,31,34,Alpine,6,8,-2,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,44,44,33,Mercedes,6,5,1,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,81,81,24,McLaren,15,15,0,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,10,10,29,Alpine,7,9,-2,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,27,27,29,Haas F1 Team,9,12,-3,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,24,24,36,Alfa Romeo,9,13,-4,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,16,16,27,Ferrari,8,7,1,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,20,20,36,Haas F1 Team,7,10,-3,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,77,77,31,Alfa Romeo,14,18,-4,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,1,1,27,Red Bull Racing,4,2,2,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,22,22,31,AlphaTauri,8,11,-3,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,23,23,36,Williams,15,19,-4,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,21,21,31,AlphaTauri,11,14,-3,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,4,4,28,McLaren,17,17,0,100.0
+2023,1,Saudi Arabian Grand Prix,Jeddah,2,2,36,Williams,12,16,-4,100.0
+2023,1,Australian Grand Prix,Melbourne,1,1,27,Red Bull Racing,3,1,2,100.0
+2023,1,Australian Grand Prix,Melbourne,63,63,35,Mercedes,19,18,1,100.0
+2023,1,Australian Grand Prix,Melbourne,44,44,36,Mercedes,3,2,1,100.0
+2023,1,Australian Grand Prix,Melbourne,14,14,25,Aston Martin,2,3,-1,100.0
+2023,1,Australian Grand Prix,Melbourne,55,55,34,Ferrari,13,12,1,100.0
+2023,1,Australian Grand Prix,Melbourne,18,18,26,Aston Martin,3,4,-1,100.0
+2023,1,Australian Grand Prix,Melbourne,16,16,26,Ferrari,21,20,1,100.0
+2023,1,Australian Grand Prix,Melbourne,23,23,27,Williams,15,19,-4,100.0
+2023,1,Australian Grand Prix,Melbourne,10,10,27,Alpine,11,13,-2,100.0
+2023,1,Australian Grand Prix,Melbourne,27,27,33,Haas F1 Team,4,7,-3,100.0
+2023,1,Australian Grand Prix,Melbourne,31,31,34,Alpine,12,14,-2,100.0
+2023,1,Australian Grand Prix,Melbourne,22,22,34,AlphaTauri,7,10,-3,100.0
+2023,1,Australian Grand Prix,Melbourne,4,4,28,McLaren,6,6,0,100.0
+2023,1,Australian Grand Prix,Melbourne,20,20,27,Haas F1 Team,14,17,-3,100.0
+2023,1,Australian Grand Prix,Melbourne,21,21,34,AlphaTauri,12,15,-3,100.0
+2023,1,Australian Grand Prix,Melbourne,81,81,33,McLaren,8,8,0,100.0
+2023,1,Australian Grand Prix,Melbourne,24,24,31,Alfa Romeo,5,9,-4,100.0
+2023,1,Australian Grand Prix,Melbourne,2,2,29,Williams,12,16,-4,100.0
+2023,1,Australian Grand Prix,Melbourne,77,77,29,Alfa Romeo,7,11,-4,100.0
+2023,1,Australian Grand Prix,Melbourne,11,11,31,Red Bull Racing,7,5,2,100.0
+2023,1,Azerbaijan Grand Prix,Baku,16,16,30,Ferrari,4,3,1,100.0
+2023,1,Azerbaijan Grand Prix,Baku,1,1,33,Red Bull Racing,4,2,2,100.0
+2023,1,Azerbaijan Grand Prix,Baku,11,11,34,Red Bull Racing,3,1,2,100.0
+2023,1,Azerbaijan Grand Prix,Baku,55,55,35,Ferrari,6,5,1,100.0
+2023,1,Azerbaijan Grand Prix,Baku,44,44,33,Mercedes,7,6,1,100.0
+2023,1,Azerbaijan Grand Prix,Baku,14,14,36,Aston Martin,3,4,-1,100.0
+2023,1,Azerbaijan Grand Prix,Baku,4,4,31,McLaren,9,9,0,100.0
+2023,1,Azerbaijan Grand Prix,Baku,22,22,25,AlphaTauri,7,10,-3,100.0
+2023,1,Azerbaijan Grand Prix,Baku,18,18,32,Aston Martin,6,7,-1,100.0
+2023,1,Azerbaijan Grand Prix,Baku,81,81,24,McLaren,11,11,0,100.0
+2023,1,Azerbaijan Grand Prix,Baku,63,63,31,Mercedes,9,8,1,100.0
+2023,1,Azerbaijan Grand Prix,Baku,23,23,35,Williams,8,12,-4,100.0
+2023,1,Azerbaijan Grand Prix,Baku,77,77,34,Alfa Romeo,14,18,-4,100.0
+2023,1,Azerbaijan Grand Prix,Baku,2,2,35,Williams,12,16,-4,100.0
+2023,1,Azerbaijan Grand Prix,Baku,24,24,35,Alfa Romeo,15,19,-4,100.0
+2023,1,Azerbaijan Grand Prix,Baku,20,20,27,Haas F1 Team,10,13,-3,100.0
+2023,1,Azerbaijan Grand Prix,Baku,10,10,27,Alpine,12,14,-2,100.0
+2023,1,Azerbaijan Grand Prix,Baku,21,21,28,AlphaTauri,17,20,-3,100.0
+2023,1,Azerbaijan Grand Prix,Baku,31,31,31,Alpine,13,15,-2,100.0
+2023,1,Azerbaijan Grand Prix,Baku,27,27,28,Haas F1 Team,14,17,-3,100.0
+2023,1,Miami Grand Prix,Miami,11,11,31,Red Bull Racing,4,2,2,100.0
+2023,1,Miami Grand Prix,Miami,14,14,33,Aston Martin,2,3,-1,100.0
+2023,1,Miami Grand Prix,Miami,55,55,24,Ferrari,6,5,1,100.0
+2023,1,Miami Grand Prix,Miami,20,20,35,Haas F1 Team,7,10,-3,100.0
+2023,1,Miami Grand Prix,Miami,10,10,33,Alpine,6,8,-2,100.0
+2023,1,Miami Grand Prix,Miami,63,63,32,Mercedes,5,4,1,100.0
+2023,1,Miami Grand Prix,Miami,16,16,29,Ferrari,8,7,1,100.0
+2023,1,Miami Grand Prix,Miami,31,31,26,Alpine,7,9,-2,100.0
+2023,1,Miami Grand Prix,Miami,1,1,36,Red Bull Racing,3,1,2,100.0
+2023,1,Miami Grand Prix,Miami,77,77,31,Alfa Romeo,9,13,-4,100.0
+2023,1,Miami Grand Prix,Miami,23,23,32,Williams,10,14,-4,100.0
+2023,1,Miami Grand Prix,Miami,27,27,29,Haas F1 Team,12,15,-3,100.0
+2023,1,Miami Grand Prix,Miami,44,44,34,Mercedes,7,6,1,100.0
+2023,1,Miami Grand Prix,Miami,24,24,30,Alfa Romeo,12,16,-4,100.0
+2023,1,Miami Grand Prix,Miami,21,21,24,AlphaTauri,15,18,-3,100.0
+2023,1,Miami Grand Prix,Miami,4,4,28,McLaren,17,17,0,100.0
+2023,1,Miami Grand Prix,Miami,22,22,28,AlphaTauri,8,11,-3,100.0
+2023,1,Miami Grand Prix,Miami,18,18,33,Aston Martin,11,12,-1,100.0
+2023,1,Miami Grand Prix,Miami,81,81,27,McLaren,19,19,0,100.0
+2023,1,Miami Grand Prix,Miami,2,2,29,Williams,16,20,-4,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,1,1,30,Red Bull Racing,3,1,2,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,14,14,32,Aston Martin,1,2,-1,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,31,31,24,Alpine,1,3,-2,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,55,55,29,Ferrari,9,8,1,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,44,44,30,Mercedes,5,4,1,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,16,16,26,Ferrari,7,6,1,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,10,10,31,Alpine,5,7,-2,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,63,63,28,Mercedes,6,5,1,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,22,22,32,AlphaTauri,12,15,-3,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,4,4,28,McLaren,9,9,0,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,81,81,32,McLaren,10,10,0,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,21,21,33,AlphaTauri,9,12,-3,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,23,23,27,Williams,10,14,-4,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,18,18,32,Aston Martin,19,20,-1,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,77,77,28,Alfa Romeo,7,11,-4,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,2,2,33,Williams,14,18,-4,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,20,20,32,Haas F1 Team,16,19,-3,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,27,27,26,Haas F1 Team,14,17,-3,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,24,24,27,Alfa Romeo,9,13,-4,100.0
+2023,1,Monaco Grand Prix,Monte Carlo,11,11,32,Red Bull Racing,18,16,2,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,1,1,33,Red Bull Racing,3,1,2,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,55,55,34,Ferrari,6,5,1,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,4,4,29,McLaren,17,17,0,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,44,44,25,Mercedes,3,2,1,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,18,18,30,Aston Martin,5,6,-1,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,31,31,25,Alpine,6,8,-2,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,27,27,34,Haas F1 Team,12,15,-3,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,14,14,25,Aston Martin,6,7,-1,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,81,81,34,McLaren,13,13,0,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,10,10,24,Alpine,8,10,-2,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,11,11,34,Red Bull Racing,6,4,2,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,63,63,34,Mercedes,4,3,1,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,24,24,35,Alfa Romeo,5,9,-4,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,21,21,34,AlphaTauri,11,14,-3,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,22,22,26,AlphaTauri,9,12,-3,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,77,77,29,Alfa Romeo,15,19,-4,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,20,20,31,Haas F1 Team,15,18,-3,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,23,23,32,Williams,12,16,-4,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,16,16,30,Ferrari,12,11,1,100.0
+2023,1,Spanish Grand Prix,Spanish Grand Prix,2,2,27,Williams,16,20,-4,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,1,1,29,Red Bull Racing,3,1,2,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,14,14,28,Aston Martin,1,2,-1,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,44,44,31,Mercedes,4,3,1,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,63,63,24,Mercedes,20,19,1,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,27,27,24,Haas F1 Team,12,15,-3,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,31,31,36,Alpine,6,8,-2,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,4,4,34,McLaren,13,13,0,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,81,81,29,McLaren,11,11,0,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,23,23,33,Williams,3,7,-4,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,16,16,35,Ferrari,5,4,1,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,55,55,25,Ferrari,6,5,1,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,11,11,28,Red Bull Racing,8,6,2,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,20,20,24,Haas F1 Team,14,17,-3,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,77,77,30,Alfa Romeo,6,10,-4,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,10,10,24,Alpine,10,12,-2,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,18,18,27,Aston Martin,8,9,-1,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,21,21,32,AlphaTauri,15,18,-3,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,2,2,24,Williams,16,20,-4,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,22,22,27,AlphaTauri,11,14,-3,100.0
+2023,1,Canadian Grand Prix,Canadian Grand Prix,24,24,29,Alfa Romeo,12,16,-4,100.0
+2023,1,Austrian Grand Prix,Spielberg,1,1,29,Red Bull Racing,3,1,2,100.0
+2023,1,Austrian Grand Prix,Spielberg,16,16,35,Ferrari,3,2,1,100.0
+2023,1,Austrian Grand Prix,Spielberg,55,55,36,Ferrari,5,4,1,100.0
+2023,1,Austrian Grand Prix,Spielberg,4,4,31,McLaren,5,5,0,100.0
+2023,1,Austrian Grand Prix,Spielberg,44,44,24,Mercedes,8,7,1,100.0
+2023,1,Austrian Grand Prix,Spielberg,18,18,30,Aston Martin,9,10,-1,100.0
+2023,1,Austrian Grand Prix,Spielberg,14,14,24,Aston Martin,5,6,-1,100.0
+2023,1,Austrian Grand Prix,Spielberg,27,27,36,Haas F1 Team,17,20,-3,100.0
+2023,1,Austrian Grand Prix,Spielberg,10,10,30,Alpine,7,9,-2,100.0
+2023,1,Austrian Grand Prix,Spielberg,23,23,26,Williams,7,11,-4,100.0
+2023,1,Austrian Grand Prix,Spielberg,63,63,34,Mercedes,9,8,1,100.0
+2023,1,Austrian Grand Prix,Spielberg,31,31,31,Alpine,10,12,-2,100.0
+2023,1,Austrian Grand Prix,Spielberg,81,81,26,McLaren,17,17,0,100.0
+2023,1,Austrian Grand Prix,Spielberg,77,77,36,Alfa Romeo,12,16,-4,100.0
+2023,1,Austrian Grand Prix,Spielberg,11,11,24,Red Bull Racing,5,3,2,100.0
+2023,1,Austrian Grand Prix,Spielberg,22,22,36,AlphaTauri,15,18,-3,100.0
+2023,1,Austrian Grand Prix,Spielberg,24,24,36,Alfa Romeo,10,14,-4,100.0
+2023,1,Austrian Grand Prix,Spielberg,2,2,31,Williams,9,13,-4,100.0
+2023,1,Austrian Grand Prix,Spielberg,20,20,26,Haas F1 Team,16,19,-3,100.0
+2023,1,Austrian Grand Prix,Spielberg,21,21,25,AlphaTauri,12,15,-3,100.0
+2023,1,British Grand Prix,Silverstone,1,1,24,Red Bull Racing,3,1,2,100.0
+2023,1,British Grand Prix,Silverstone,4,4,26,McLaren,2,2,0,100.0
+2023,1,British Grand Prix,Silverstone,81,81,25,McLaren,4,4,0,100.0
+2023,1,British Grand Prix,Silverstone,16,16,25,Ferrari,10,9,1,100.0
+2023,1,British Grand Prix,Silverstone,55,55,29,Ferrari,11,10,1,100.0
+2023,1,British Grand Prix,Silverstone,63,63,35,Mercedes,6,5,1,100.0
+2023,1,British Grand Prix,Silverstone,44,44,24,Mercedes,4,3,1,100.0
+2023,1,British Grand Prix,Silverstone,23,23,25,Williams,4,8,-4,100.0
+2023,1,British Grand Prix,Silverstone,14,14,29,Aston Martin,6,7,-1,100.0
+2023,1,British Grand Prix,Silverstone,10,10,26,Alpine,16,18,-2,100.0
+2023,1,British Grand Prix,Silverstone,27,27,27,Haas F1 Team,10,13,-3,100.0
+2023,1,British Grand Prix,Silverstone,18,18,24,Aston Martin,13,14,-1,100.0
+2023,1,British Grand Prix,Silverstone,31,31,31,Alpine,18,20,-2,100.0
+2023,1,British Grand Prix,Silverstone,2,2,36,Williams,7,11,-4,100.0
+2023,1,British Grand Prix,Silverstone,11,11,30,Red Bull Racing,8,6,2,100.0
+2023,1,British Grand Prix,Silverstone,22,22,30,AlphaTauri,13,16,-3,100.0
+2023,1,British Grand Prix,Silverstone,24,24,26,Alfa Romeo,11,15,-4,100.0
+2023,1,British Grand Prix,Silverstone,21,21,33,AlphaTauri,14,17,-3,100.0
+2023,1,British Grand Prix,Silverstone,20,20,33,Haas F1 Team,16,19,-3,100.0
+2023,1,British Grand Prix,Silverstone,77,77,26,Alfa Romeo,8,12,-4,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,44,44,25,Mercedes,5,4,1,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,1,1,35,Red Bull Racing,3,1,2,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,4,4,24,McLaren,2,2,0,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,81,81,30,McLaren,5,5,0,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,24,24,30,Alfa Romeo,12,16,-4,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,16,16,35,Ferrari,8,7,1,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,77,77,25,Alfa Romeo,8,12,-4,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,14,14,30,Aston Martin,8,9,-1,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,11,11,36,Red Bull Racing,5,3,2,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,27,27,31,Haas F1 Team,11,14,-3,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,55,55,24,Ferrari,9,8,1,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,31,31,32,Alpine,17,19,-2,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,3,3,30,AlphaTauri,10,13,-3,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,18,18,26,Aston Martin,9,10,-1,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,10,10,31,Alpine,18,20,-2,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,23,23,30,Williams,7,11,-4,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,22,22,34,AlphaTauri,12,15,-3,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,63,63,36,Mercedes,7,6,1,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,20,20,31,Haas F1 Team,14,17,-3,100.0
+2023,1,Hungarian Grand Prix,Hungarian Grand Prix,2,2,29,Williams,14,18,-4,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,16,16,32,Ferrari,4,3,1,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,11,11,28,Red Bull Racing,4,2,2,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,44,44,26,Mercedes,5,4,1,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,55,55,26,Ferrari,20,19,1,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,81,81,24,McLaren,20,20,0,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,1,1,35,Red Bull Racing,3,1,2,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,4,4,31,McLaren,7,7,0,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,63,63,25,Mercedes,7,6,1,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,14,14,26,Aston Martin,4,5,-1,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,18,18,31,Aston Martin,8,9,-1,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,22,22,31,AlphaTauri,7,10,-3,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,10,10,34,Alpine,9,11,-2,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,77,77,27,Alfa Romeo,8,12,-4,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,31,31,27,Alpine,6,8,-2,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,23,23,28,Williams,10,14,-4,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,20,20,29,Haas F1 Team,12,15,-3,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,24,24,28,Alfa Romeo,9,13,-4,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,2,2,30,Williams,13,17,-4,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,3,3,25,AlphaTauri,13,16,-3,100.0
+2023,1,Belgian Grand Prix,Belgian Grand Prix,27,27,30,Haas F1 Team,15,18,-3,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,1,1,33,Red Bull Racing,3,1,2,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,4,4,30,McLaren,7,7,0,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,63,63,24,Mercedes,18,17,1,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,23,23,30,Williams,4,8,-4,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,14,14,28,Aston Martin,1,2,-1,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,55,55,26,Ferrari,6,5,1,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,11,11,36,Red Bull Racing,6,4,2,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,81,81,26,McLaren,9,9,0,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,16,16,27,Ferrari,20,19,1,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,2,2,36,Williams,16,20,-4,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,18,18,35,Aston Martin,10,11,-1,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,10,10,25,Alpine,1,3,-2,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,44,44,25,Mercedes,7,6,1,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,27,27,24,Haas F1 Team,9,12,-3,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,24,24,28,Alfa Romeo,14,18,-4,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,31,31,27,Alpine,8,10,-2,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,22,22,34,AlphaTauri,13,16,-3,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,77,77,33,Alfa Romeo,11,15,-4,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,40,40,25,AlphaTauri,10,13,-3,100.0
+2023,1,Dutch Grand Prix,Dutch Grand Prix,20,20,26,Haas F1 Team,11,14,-3,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,55,55,30,Ferrari,4,3,1,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,1,1,30,Red Bull Racing,3,1,2,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,16,16,35,Ferrari,5,4,1,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,63,63,27,Mercedes,6,5,1,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,11,11,28,Red Bull Racing,4,2,2,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,23,23,28,Williams,3,7,-4,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,81,81,29,McLaren,12,12,0,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,44,44,32,Mercedes,7,6,1,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,4,4,25,McLaren,8,8,0,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,14,14,28,Aston Martin,8,9,-1,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,22,22,35,AlphaTauri,17,20,-3,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,40,40,26,AlphaTauri,8,11,-3,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,27,27,27,Haas F1 Team,14,17,-3,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,77,77,33,Alfa Romeo,6,10,-4,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,2,2,29,Williams,9,13,-4,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,24,24,35,Alfa Romeo,10,14,-4,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,10,10,31,Alpine,13,15,-2,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,31,31,24,Alpine,17,19,-2,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,20,20,33,Haas F1 Team,15,18,-3,100.0
+2023,1,Italian Grand Prix,Italian Grand Prix,18,18,31,Aston Martin,15,16,-1,100.0
+2023,1,Singapore Grand Prix,Marina Bay,55,55,34,Ferrari,2,1,1,100.0
+2023,1,Singapore Grand Prix,Marina Bay,63,63,30,Mercedes,17,16,1,100.0
+2023,1,Singapore Grand Prix,Marina Bay,16,16,24,Ferrari,5,4,1,100.0
+2023,1,Singapore Grand Prix,Marina Bay,4,4,25,McLaren,2,2,0,100.0
+2023,1,Singapore Grand Prix,Marina Bay,44,44,26,Mercedes,4,3,1,100.0
+2023,1,Singapore Grand Prix,Marina Bay,20,20,24,Haas F1 Team,7,10,-3,100.0
+2023,1,Singapore Grand Prix,Marina Bay,14,14,32,Aston Martin,14,15,-1,100.0
+2023,1,Singapore Grand Prix,Marina Bay,31,31,31,Alpine,16,18,-2,100.0
+2023,1,Singapore Grand Prix,Marina Bay,27,27,25,Haas F1 Team,10,13,-3,100.0
+2023,1,Singapore Grand Prix,Marina Bay,40,40,36,AlphaTauri,6,9,-3,100.0
+2023,1,Singapore Grand Prix,Marina Bay,1,1,32,Red Bull Racing,7,5,2,100.0
+2023,1,Singapore Grand Prix,Marina Bay,10,10,30,Alpine,4,6,-2,100.0
+2023,1,Singapore Grand Prix,Marina Bay,11,11,32,Red Bull Racing,10,8,2,100.0
+2023,1,Singapore Grand Prix,Marina Bay,23,23,29,Williams,7,11,-4,100.0
+2023,1,Singapore Grand Prix,Marina Bay,22,22,29,AlphaTauri,16,19,-3,100.0
+2023,1,Singapore Grand Prix,Marina Bay,77,77,34,Alfa Romeo,13,17,-4,100.0
+2023,1,Singapore Grand Prix,Marina Bay,81,81,27,McLaren,7,7,0,100.0
+2023,1,Singapore Grand Prix,Marina Bay,2,2,33,Williams,10,14,-4,100.0
+2023,1,Singapore Grand Prix,Marina Bay,24,24,33,Alfa Romeo,8,12,-4,100.0
+2023,1,Japanese Grand Prix,Suzuka,1,1,36,Red Bull Racing,3,1,2,100.0
+2023,1,Japanese Grand Prix,Suzuka,81,81,36,McLaren,3,3,0,100.0
+2023,1,Japanese Grand Prix,Suzuka,4,4,25,McLaren,2,2,0,100.0
+2023,1,Japanese Grand Prix,Suzuka,16,16,30,Ferrari,5,4,1,100.0
+2023,1,Japanese Grand Prix,Suzuka,11,11,28,Red Bull Racing,21,19,2,100.0
+2023,1,Japanese Grand Prix,Suzuka,55,55,34,Ferrari,7,6,1,100.0
+2023,1,Japanese Grand Prix,Suzuka,44,44,29,Mercedes,6,5,1,100.0
+2023,1,Japanese Grand Prix,Suzuka,63,63,25,Mercedes,8,7,1,100.0
+2023,1,Japanese Grand Prix,Suzuka,22,22,28,AlphaTauri,9,12,-3,100.0
+2023,1,Japanese Grand Prix,Suzuka,14,14,33,Aston Martin,7,8,-1,100.0
+2023,1,Japanese Grand Prix,Suzuka,40,40,27,AlphaTauri,8,11,-3,100.0
+2023,1,Japanese Grand Prix,Suzuka,10,10,32,Alpine,8,10,-2,100.0
+2023,1,Japanese Grand Prix,Suzuka,23,23,29,Williams,12,16,-4,100.0
+2023,1,Japanese Grand Prix,Suzuka,31,31,25,Alpine,7,9,-2,100.0
+2023,1,Japanese Grand Prix,Suzuka,20,20,24,Haas F1 Team,12,15,-3,100.0
+2023,1,Japanese Grand Prix,Suzuka,77,77,28,Alfa Romeo,16,20,-4,100.0
+2023,1,Japanese Grand Prix,Suzuka,18,18,32,Aston Martin,17,18,-1,100.0
+2023,1,Japanese Grand Prix,Suzuka,27,27,29,Haas F1 Team,11,14,-3,100.0
+2023,1,Japanese Grand Prix,Suzuka,24,24,33,Alfa Romeo,9,13,-4,100.0
+2023,1,Japanese Grand Prix,Suzuka,2,2,35,Williams,13,17,-4,100.0
+2024,1,Bahrain Grand Prix,Sakhir,1,1,30,Red Bull Racing,3,1,2,100.0
+2024,1,Bahrain Grand Prix,Sakhir,16,16,28,Ferrari,5,4,1,100.0
+2024,1,Bahrain Grand Prix,Sakhir,63,63,33,Mercedes,6,5,1,100.0
+2024,1,Bahrain Grand Prix,Sakhir,55,55,29,Ferrari,4,3,1,100.0
+2024,1,Bahrain Grand Prix,Sakhir,11,11,28,Red Bull Racing,4,2,2,100.0
+2024,1,Bahrain Grand Prix,Sakhir,14,14,34,Aston Martin,8,9,-1,100.0
+2024,1,Bahrain Grand Prix,Sakhir,4,4,32,McLaren,6,6,0,100.0
+2024,1,Bahrain Grand Prix,Sakhir,81,81,29,McLaren,8,8,0,100.0
+2024,1,Bahrain Grand Prix,Sakhir,44,44,34,Mercedes,8,7,1,100.0
+2024,1,Bahrain Grand Prix,Sakhir,27,27,31,Haas F1 Team,13,16,-3,100.0
+2024,1,Bahrain Grand Prix,Sakhir,22,22,25,RB,14,14,0,100.0
+2024,1,Bahrain Grand Prix,Sakhir,18,18,35,Aston Martin,9,10,-1,100.0
+2024,1,Bahrain Grand Prix,Sakhir,23,23,36,Williams,11,15,-4,100.0
+2024,1,Bahrain Grand Prix,Sakhir,3,3,32,RB,13,13,0,100.0
+2024,1,Bahrain Grand Prix,Sakhir,20,20,28,Haas F1 Team,9,12,-3,100.0
+2024,1,Bahrain Grand Prix,Sakhir,77,77,30,Kick Sauber,16,19,-3,100.0
+2024,1,Bahrain Grand Prix,Sakhir,24,24,33,Kick Sauber,8,11,-3,100.0
+2024,1,Bahrain Grand Prix,Sakhir,2,2,36,Williams,16,20,-4,100.0
+2024,1,Bahrain Grand Prix,Sakhir,31,31,24,Alpine,15,17,-2,100.0
+2024,1,Bahrain Grand Prix,Sakhir,10,10,33,Alpine,16,18,-2,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,1,1,28,Red Bull Racing,3,1,2,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,16,16,35,Ferrari,4,3,1,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,11,11,33,Red Bull Racing,4,2,2,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,14,14,25,Aston Martin,4,5,-1,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,81,81,35,McLaren,4,4,0,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,4,4,29,McLaren,8,8,0,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,63,63,34,Mercedes,7,6,1,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,44,44,24,Mercedes,10,9,1,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,22,22,26,RB,14,14,0,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,18,18,28,Aston Martin,18,19,-1,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,38,38,27,Ferrari,8,7,1,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,23,23,26,Williams,7,11,-4,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,20,20,33,Haas F1 Team,9,12,-3,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,3,3,36,RB,16,16,0,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,27,27,28,Haas F1 Team,7,10,-3,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,77,77,34,Kick Sauber,14,17,-3,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,31,31,31,Alpine,11,13,-2,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,10,10,34,Alpine,18,20,-2,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,2,2,27,Williams,11,15,-4,100.0
+2024,1,Saudi Arabian Grand Prix,Jeddah,24,24,24,Kick Sauber,15,18,-3,100.0
+2024,1,Australian Grand Prix,Melbourne,1,1,34,Red Bull Racing,21,19,2,100.0
+2024,1,Australian Grand Prix,Melbourne,55,55,30,Ferrari,2,1,1,100.0
+2024,1,Australian Grand Prix,Melbourne,4,4,31,McLaren,3,3,0,100.0
+2024,1,Australian Grand Prix,Melbourne,16,16,26,Ferrari,3,2,1,100.0
+2024,1,Australian Grand Prix,Melbourne,81,81,29,McLaren,4,4,0,100.0
+2024,1,Australian Grand Prix,Melbourne,11,11,25,Red Bull Racing,7,5,2,100.0
+2024,1,Australian Grand Prix,Melbourne,63,63,30,Mercedes,18,17,1,100.0
+2024,1,Australian Grand Prix,Melbourne,22,22,31,RB,8,8,0,100.0
+2024,1,Australian Grand Prix,Melbourne,18,18,29,Aston Martin,6,7,-1,100.0
+2024,1,Australian Grand Prix,Melbourne,14,14,29,Aston Martin,5,6,-1,100.0
+2024,1,Australian Grand Prix,Melbourne,44,44,28,Mercedes,19,18,1,100.0
+2024,1,Australian Grand Prix,Melbourne,23,23,31,Williams,7,11,-4,100.0
+2024,1,Australian Grand Prix,Melbourne,77,77,24,Kick Sauber,11,14,-3,100.0
+2024,1,Australian Grand Prix,Melbourne,20,20,33,Haas F1 Team,7,10,-3,100.0
+2024,1,Australian Grand Prix,Melbourne,31,31,27,Alpine,14,16,-2,100.0
+2024,1,Australian Grand Prix,Melbourne,27,27,27,Haas F1 Team,6,9,-3,100.0
+2024,1,Australian Grand Prix,Melbourne,10,10,26,Alpine,11,13,-2,100.0
+2024,1,Australian Grand Prix,Melbourne,3,3,26,RB,12,12,0,100.0
+2024,1,Australian Grand Prix,Melbourne,24,24,27,Kick Sauber,12,15,-3,100.0
+2024,1,Japanese Grand Prix,Suzuka,1,1,34,Red Bull Racing,3,1,2,100.0
+2024,1,Japanese Grand Prix,Suzuka,11,11,24,Red Bull Racing,4,2,2,100.0
+2024,1,Japanese Grand Prix,Suzuka,4,4,34,McLaren,5,5,0,100.0
+2024,1,Japanese Grand Prix,Suzuka,55,55,36,Ferrari,4,3,1,100.0
+2024,1,Japanese Grand Prix,Suzuka,14,14,34,Aston Martin,5,6,-1,100.0
+2024,1,Japanese Grand Prix,Suzuka,81,81,25,McLaren,8,8,0,100.0
+2024,1,Japanese Grand Prix,Suzuka,44,44,32,Mercedes,10,9,1,100.0
+2024,1,Japanese Grand Prix,Suzuka,16,16,33,Ferrari,5,4,1,100.0
+2024,1,Japanese Grand Prix,Suzuka,63,63,25,Mercedes,8,7,1,100.0
+2024,1,Japanese Grand Prix,Suzuka,22,22,28,RB,10,10,0,100.0
+2024,1,Japanese Grand Prix,Suzuka,3,3,32,RB,19,19,0,100.0
+2024,1,Japanese Grand Prix,Suzuka,27,27,32,Haas F1 Team,8,11,-3,100.0
+2024,1,Japanese Grand Prix,Suzuka,77,77,31,Kick Sauber,11,14,-3,100.0
+2024,1,Japanese Grand Prix,Suzuka,23,23,24,Williams,16,20,-4,100.0
+2024,1,Japanese Grand Prix,Suzuka,31,31,24,Alpine,13,15,-2,100.0
+2024,1,Japanese Grand Prix,Suzuka,18,18,32,Aston Martin,11,12,-1,100.0
+2024,1,Japanese Grand Prix,Suzuka,10,10,36,Alpine,14,16,-2,100.0
+2024,1,Japanese Grand Prix,Suzuka,20,20,34,Haas F1 Team,10,13,-3,100.0
+2024,1,Japanese Grand Prix,Suzuka,2,2,31,Williams,13,17,-4,100.0
+2024,1,Japanese Grand Prix,Suzuka,24,24,33,Kick Sauber,15,18,-3,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,1,1,32,Red Bull Racing,3,1,2,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,11,11,30,Red Bull Racing,5,3,2,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,14,14,26,Aston Martin,6,7,-1,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,4,4,26,McLaren,2,2,0,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,81,81,25,McLaren,8,8,0,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,16,16,28,Ferrari,5,4,1,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,55,55,35,Ferrari,6,5,1,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,63,63,35,Mercedes,7,6,1,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,27,27,26,Haas F1 Team,7,10,-3,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,77,77,29,Kick Sauber,17,20,-3,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,18,18,25,Aston Martin,14,15,-1,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,3,3,35,RB,18,18,0,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,31,31,26,Alpine,9,11,-2,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,23,23,28,Williams,8,12,-4,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,10,10,35,Alpine,11,13,-2,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,24,24,34,Kick Sauber,11,14,-3,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,20,20,34,Haas F1 Team,13,16,-3,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,44,44,24,Mercedes,10,9,1,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,22,22,36,RB,19,19,0,100.0
+2024,1,Chinese Grand Prix,Chinese Grand Prix,2,2,24,Williams,13,17,-4,100.0
+2024,1,Miami Grand Prix,Miami,1,1,33,Red Bull Racing,4,2,2,100.0
+2024,1,Miami Grand Prix,Miami,16,16,32,Ferrari,4,3,1,100.0
+2024,1,Miami Grand Prix,Miami,55,55,30,Ferrari,5,4,1,100.0
+2024,1,Miami Grand Prix,Miami,11,11,24,Red Bull Racing,7,5,2,100.0
+2024,1,Miami Grand Prix,Miami,4,4,35,McLaren,1,1,0,100.0
+2024,1,Miami Grand Prix,Miami,81,81,31,McLaren,13,13,0,100.0
+2024,1,Miami Grand Prix,Miami,63,63,26,Mercedes,9,8,1,100.0
+2024,1,Miami Grand Prix,Miami,44,44,31,Mercedes,7,6,1,100.0
+2024,1,Miami Grand Prix,Miami,27,27,28,Haas F1 Team,8,11,-3,100.0
+2024,1,Miami Grand Prix,Miami,22,22,24,RB,7,7,0,100.0
+2024,1,Miami Grand Prix,Miami,18,18,30,Aston Martin,16,17,-1,100.0
+2024,1,Miami Grand Prix,Miami,10,10,28,Alpine,10,12,-2,100.0
+2024,1,Miami Grand Prix,Miami,31,31,29,Alpine,8,10,-2,100.0
+2024,1,Miami Grand Prix,Miami,23,23,29,Williams,15,19,-4,100.0
+2024,1,Miami Grand Prix,Miami,14,14,31,Aston Martin,8,9,-1,100.0
+2024,1,Miami Grand Prix,Miami,77,77,32,Kick Sauber,13,16,-3,100.0
+2024,1,Miami Grand Prix,Miami,2,2,25,Williams,16,20,-4,100.0
+2024,1,Miami Grand Prix,Miami,20,20,32,Haas F1 Team,15,18,-3,100.0
+2024,1,Miami Grand Prix,Miami,24,24,35,Kick Sauber,11,14,-3,100.0
+2024,1,Miami Grand Prix,Miami,3,3,34,RB,15,15,0,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,1,1,33,Red Bull Racing,3,1,2,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,4,4,32,McLaren,2,2,0,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,16,16,36,Ferrari,4,3,1,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,55,55,33,Ferrari,6,5,1,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,81,81,33,McLaren,4,4,0,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,63,63,30,Mercedes,8,7,1,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,22,22,24,RB,10,10,0,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,44,44,30,Mercedes,7,6,1,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,3,3,33,RB,13,13,0,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,27,27,28,Haas F1 Team,8,11,-3,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,11,11,29,Red Bull Racing,10,8,2,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,31,31,33,Alpine,12,14,-2,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,18,18,30,Aston Martin,8,9,-1,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,23,23,28,Williams,16,20,-4,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,10,10,30,Alpine,14,16,-2,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,77,77,32,Kick Sauber,15,18,-3,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,24,24,26,Kick Sauber,12,15,-3,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,20,20,31,Haas F1 Team,9,12,-3,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,2,2,25,Williams,13,17,-4,100.0
+2024,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,14,14,34,Aston Martin,18,19,-1,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,16,16,30,Ferrari,2,1,1,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,81,81,36,McLaren,2,2,0,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,55,55,25,Ferrari,4,3,1,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,4,4,27,McLaren,4,4,0,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,63,63,30,Mercedes,6,5,1,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,1,1,26,Red Bull Racing,8,6,2,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,44,44,25,Mercedes,8,7,1,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,22,22,34,RB,8,8,0,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,23,23,33,Williams,5,9,-4,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,10,10,30,Alpine,8,10,-2,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,31,31,24,Alpine,15,17,-2,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,3,3,31,RB,12,12,0,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,18,18,26,Aston Martin,13,14,-1,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,14,14,35,Aston Martin,10,11,-1,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,2,2,35,Williams,11,15,-4,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,11,11,36,Red Bull Racing,20,18,2,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,77,77,25,Kick Sauber,10,13,-3,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,24,24,26,Kick Sauber,13,16,-3,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,27,27,28,Haas F1 Team,16,19,-3,100.0
+2024,1,Monaco Grand Prix,Monte Carlo,20,20,34,Haas F1 Team,17,20,-3,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,63,63,31,Mercedes,4,3,1,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,1,1,33,Red Bull Racing,3,1,2,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,4,4,30,McLaren,2,2,0,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,81,81,30,McLaren,5,5,0,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,3,3,35,RB,8,8,0,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,14,14,30,Aston Martin,5,6,-1,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,44,44,31,Mercedes,5,4,1,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,22,22,24,RB,14,14,0,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,18,18,27,Aston Martin,6,7,-1,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,23,23,36,Williams,13,17,-4,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,16,16,29,Ferrari,20,19,1,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,55,55,32,Ferrari,17,16,1,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,2,2,36,Williams,16,20,-4,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,20,20,25,Haas F1 Team,9,12,-3,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,10,10,24,Alpine,7,9,-2,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,11,11,36,Red Bull Racing,20,18,2,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,27,27,33,Haas F1 Team,8,11,-3,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,31,31,35,Alpine,8,10,-2,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,77,77,25,Kick Sauber,10,13,-3,100.0
+2024,1,Canadian Grand Prix,Canadian Grand Prix,24,24,30,Kick Sauber,12,15,-3,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,4,4,26,McLaren,2,2,0,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,1,1,33,Red Bull Racing,3,1,2,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,44,44,25,Mercedes,4,3,1,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,63,63,34,Mercedes,5,4,1,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,16,16,30,Ferrari,6,5,1,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,55,55,36,Ferrari,7,6,1,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,10,10,36,Alpine,7,9,-2,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,31,31,25,Alpine,8,10,-2,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,81,81,26,McLaren,7,7,0,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,14,14,34,Aston Martin,11,12,-1,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,11,11,30,Red Bull Racing,10,8,2,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,77,77,27,Kick Sauber,13,16,-3,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,27,27,36,Haas F1 Team,8,11,-3,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,18,18,24,Aston Martin,13,14,-1,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,24,24,36,Kick Sauber,10,13,-3,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,20,20,28,Haas F1 Team,14,17,-3,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,22,22,35,RB,19,19,0,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,3,3,32,RB,15,15,0,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,2,2,31,Williams,16,20,-4,100.0
+2024,1,Spanish Grand Prix,Spanish Grand Prix,23,23,35,Williams,14,18,-4,100.0
+2024,1,Austrian Grand Prix,Spielberg,1,1,32,Red Bull Racing,7,5,2,100.0
+2024,1,Austrian Grand Prix,Spielberg,4,4,33,McLaren,20,20,0,100.0
+2024,1,Austrian Grand Prix,Spielberg,63,63,32,Mercedes,2,1,1,100.0
+2024,1,Austrian Grand Prix,Spielberg,55,55,30,Ferrari,4,3,1,100.0
+2024,1,Austrian Grand Prix,Spielberg,44,44,27,Mercedes,5,4,1,100.0
+2024,1,Austrian Grand Prix,Spielberg,16,16,28,Ferrari,12,11,1,100.0
+2024,1,Austrian Grand Prix,Spielberg,81,81,24,McLaren,2,2,0,100.0
+2024,1,Austrian Grand Prix,Spielberg,11,11,24,Red Bull Racing,9,7,2,100.0
+2024,1,Austrian Grand Prix,Spielberg,27,27,26,Haas F1 Team,3,6,-3,100.0
+2024,1,Austrian Grand Prix,Spielberg,31,31,36,Alpine,10,12,-2,100.0
+2024,1,Austrian Grand Prix,Spielberg,3,3,31,RB,9,9,0,100.0
+2024,1,Austrian Grand Prix,Spielberg,20,20,25,Haas F1 Team,5,8,-3,100.0
+2024,1,Austrian Grand Prix,Spielberg,10,10,27,Alpine,8,10,-2,100.0
+2024,1,Austrian Grand Prix,Spielberg,22,22,25,RB,14,14,0,100.0
+2024,1,Austrian Grand Prix,Spielberg,14,14,28,Aston Martin,17,18,-1,100.0
+2024,1,Austrian Grand Prix,Spielberg,23,23,32,Williams,11,15,-4,100.0
+2024,1,Austrian Grand Prix,Spielberg,18,18,24,Aston Martin,12,13,-1,100.0
+2024,1,Austrian Grand Prix,Spielberg,77,77,28,Kick Sauber,13,16,-3,100.0
+2024,1,Austrian Grand Prix,Spielberg,2,2,32,Williams,15,19,-4,100.0
+2024,1,Austrian Grand Prix,Spielberg,24,24,24,Kick Sauber,14,17,-3,100.0
+2024,1,British Grand Prix,Silverstone,63,63,32,Mercedes,20,19,1,100.0
+2024,1,British Grand Prix,Silverstone,44,44,31,Mercedes,2,1,1,100.0
+2024,1,British Grand Prix,Silverstone,4,4,27,McLaren,3,3,0,100.0
+2024,1,British Grand Prix,Silverstone,1,1,35,Red Bull Racing,4,2,2,100.0
+2024,1,British Grand Prix,Silverstone,81,81,34,McLaren,4,4,0,100.0
+2024,1,British Grand Prix,Silverstone,27,27,33,Haas F1 Team,3,6,-3,100.0
+2024,1,British Grand Prix,Silverstone,55,55,28,Ferrari,6,5,1,100.0
+2024,1,British Grand Prix,Silverstone,18,18,36,Aston Martin,6,7,-1,100.0
+2024,1,British Grand Prix,Silverstone,23,23,28,Williams,5,9,-4,100.0
+2024,1,British Grand Prix,Silverstone,14,14,34,Aston Martin,7,8,-1,100.0
+2024,1,British Grand Prix,Silverstone,16,16,35,Ferrari,15,14,1,100.0
+2024,1,British Grand Prix,Silverstone,2,2,29,Williams,7,11,-4,100.0
+2024,1,British Grand Prix,Silverstone,22,22,30,RB,10,10,0,100.0
+2024,1,British Grand Prix,Silverstone,24,24,31,Kick Sauber,15,18,-3,100.0
+2024,1,British Grand Prix,Silverstone,3,3,31,RB,13,13,0,100.0
+2024,1,British Grand Prix,Silverstone,77,77,34,Kick Sauber,12,15,-3,100.0
+2024,1,British Grand Prix,Silverstone,20,20,36,Haas F1 Team,9,12,-3,100.0
+2024,1,British Grand Prix,Silverstone,31,31,25,Alpine,14,16,-2,100.0
+2024,1,British Grand Prix,Silverstone,10,10,32,Alpine,18,20,-2,100.0
+2024,1,British Grand Prix,Silverstone,11,11,30,Red Bull Racing,19,17,2,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,4,4,27,McLaren,2,2,0,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,81,81,27,McLaren,1,1,0,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,1,1,34,Red Bull Racing,7,5,2,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,55,55,31,Ferrari,7,6,1,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,44,44,27,Mercedes,4,3,1,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,16,16,36,Ferrari,5,4,1,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,14,14,29,Aston Martin,10,11,-1,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,18,18,28,Aston Martin,9,10,-1,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,3,3,26,RB,12,12,0,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,22,22,36,RB,9,9,0,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,27,27,33,Haas F1 Team,10,13,-3,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,77,77,34,Kick Sauber,13,16,-3,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,23,23,25,Williams,10,14,-4,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,2,2,32,Williams,13,17,-4,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,20,20,33,Haas F1 Team,12,15,-3,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,11,11,32,Red Bull Racing,9,7,2,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,63,63,24,Mercedes,9,8,1,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,24,24,33,Kick Sauber,16,19,-3,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,31,31,26,Alpine,16,18,-2,100.0
+2024,1,Hungarian Grand Prix,Hungarian Grand Prix,10,10,31,Alpine,18,20,-2,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,16,16,29,Ferrari,5,4,1,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,11,11,28,Red Bull Racing,10,8,2,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,44,44,28,Mercedes,3,2,1,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,4,4,29,McLaren,6,6,0,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,81,81,30,McLaren,3,3,0,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,63,63,24,Mercedes,2,1,1,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,55,55,32,Ferrari,8,7,1,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,14,14,26,Aston Martin,8,9,-1,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,31,31,27,Alpine,8,10,-2,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,23,23,33,Williams,9,13,-4,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,1,1,24,Red Bull Racing,7,5,2,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,10,10,36,Alpine,12,14,-2,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,3,3,34,RB,11,11,0,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,77,77,33,Kick Sauber,13,16,-3,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,18,18,26,Aston Martin,11,12,-1,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,27,27,25,Haas F1 Team,16,19,-3,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,20,20,25,Haas F1 Team,12,15,-3,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,2,2,24,Williams,14,18,-4,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,24,24,31,Kick Sauber,17,20,-3,100.0
+2024,1,Belgian Grand Prix,Belgian Grand Prix,22,22,26,RB,17,17,0,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,4,4,26,McLaren,1,1,0,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,1,1,29,Red Bull Racing,4,2,2,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,81,81,36,McLaren,4,4,0,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,63,63,31,Mercedes,8,7,1,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,11,11,36,Red Bull Racing,8,6,2,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,16,16,32,Ferrari,4,3,1,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,14,14,32,Aston Martin,9,10,-1,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,18,18,27,Aston Martin,12,13,-1,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,10,10,28,Alpine,7,9,-2,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,55,55,25,Ferrari,6,5,1,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,22,22,34,RB,17,17,0,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,27,27,32,Haas F1 Team,8,11,-3,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,3,3,31,RB,12,12,0,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,44,44,26,Mercedes,9,8,1,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,31,31,34,Alpine,13,15,-2,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,77,77,35,Kick Sauber,16,19,-3,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,24,24,36,Kick Sauber,17,20,-3,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,2,2,32,Williams,12,16,-4,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,23,23,26,Williams,10,14,-4,100.0
+2024,1,Dutch Grand Prix,Dutch Grand Prix,20,20,32,Haas F1 Team,15,18,-3,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,4,4,25,McLaren,3,3,0,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,81,81,35,McLaren,2,2,0,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,63,63,33,Mercedes,8,7,1,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,16,16,32,Ferrari,2,1,1,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,55,55,31,Ferrari,5,4,1,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,44,44,32,Mercedes,6,5,1,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,1,1,28,Red Bull Racing,8,6,2,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,11,11,34,Red Bull Racing,10,8,2,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,23,23,34,Williams,5,9,-4,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,27,27,25,Haas F1 Team,14,17,-3,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,14,14,31,Aston Martin,10,11,-1,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,3,3,35,RB,13,13,0,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,20,20,29,Haas F1 Team,7,10,-3,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,10,10,31,Alpine,13,15,-2,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,31,31,34,Alpine,12,14,-2,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,22,22,28,RB,20,20,0,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,18,18,33,Aston Martin,18,19,-1,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,43,43,25,Williams,8,12,-4,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,77,77,29,Kick Sauber,13,16,-3,100.0
+2024,1,Italian Grand Prix,Italian Grand Prix,24,24,28,Kick Sauber,15,18,-3,100.0
+2024,1,Azerbaijan Grand Prix,Baku,16,16,35,Ferrari,3,2,1,100.0
+2024,1,Azerbaijan Grand Prix,Baku,81,81,36,McLaren,1,1,0,100.0
+2024,1,Azerbaijan Grand Prix,Baku,55,55,35,Ferrari,19,18,1,100.0
+2024,1,Azerbaijan Grand Prix,Baku,11,11,28,Red Bull Racing,19,17,2,100.0
+2024,1,Azerbaijan Grand Prix,Baku,63,63,36,Mercedes,4,3,1,100.0
+2024,1,Azerbaijan Grand Prix,Baku,1,1,24,Red Bull Racing,7,5,2,100.0
+2024,1,Azerbaijan Grand Prix,Baku,14,14,25,Aston Martin,5,6,-1,100.0
+2024,1,Azerbaijan Grand Prix,Baku,43,43,31,Williams,4,8,-4,100.0
+2024,1,Azerbaijan Grand Prix,Baku,23,23,36,Williams,3,7,-4,100.0
+2024,1,Azerbaijan Grand Prix,Baku,50,50,36,Haas F1 Team,7,10,-3,100.0
+2024,1,Azerbaijan Grand Prix,Baku,22,22,26,RB,20,20,0,100.0
+2024,1,Azerbaijan Grand Prix,Baku,27,27,33,Haas F1 Team,8,11,-3,100.0
+2024,1,Azerbaijan Grand Prix,Baku,18,18,26,Aston Martin,18,19,-1,100.0
+2024,1,Azerbaijan Grand Prix,Baku,3,3,31,RB,13,13,0,100.0
+2024,1,Azerbaijan Grand Prix,Baku,4,4,31,McLaren,4,4,0,100.0
+2024,1,Azerbaijan Grand Prix,Baku,77,77,25,Kick Sauber,13,16,-3,100.0
+2024,1,Azerbaijan Grand Prix,Baku,24,24,31,Kick Sauber,11,14,-3,100.0
+2024,1,Azerbaijan Grand Prix,Baku,10,10,34,Alpine,10,12,-2,100.0
+2024,1,Azerbaijan Grand Prix,Baku,44,44,36,Mercedes,10,9,1,100.0
+2024,1,Azerbaijan Grand Prix,Baku,31,31,36,Alpine,13,15,-2,100.0
+2024,1,Singapore Grand Prix,Marina Bay,4,4,24,McLaren,1,1,0,100.0
+2024,1,Singapore Grand Prix,Marina Bay,1,1,29,Red Bull Racing,4,2,2,100.0
+2024,1,Singapore Grand Prix,Marina Bay,44,44,31,Mercedes,7,6,1,100.0
+2024,1,Singapore Grand Prix,Marina Bay,63,63,26,Mercedes,5,4,1,100.0
+2024,1,Singapore Grand Prix,Marina Bay,81,81,31,McLaren,3,3,0,100.0
+2024,1,Singapore Grand Prix,Marina Bay,27,27,35,Haas F1 Team,6,9,-3,100.0
+2024,1,Singapore Grand Prix,Marina Bay,14,14,24,Aston Martin,7,8,-1,100.0
+2024,1,Singapore Grand Prix,Marina Bay,22,22,34,RB,12,12,0,100.0
+2024,1,Singapore Grand Prix,Marina Bay,16,16,34,Ferrari,6,5,1,100.0
+2024,1,Singapore Grand Prix,Marina Bay,55,55,32,Ferrari,8,7,1,100.0
+2024,1,Singapore Grand Prix,Marina Bay,23,23,36,Williams,16,20,-4,100.0
+2024,1,Singapore Grand Prix,Marina Bay,43,43,34,Williams,7,11,-4,100.0
+2024,1,Singapore Grand Prix,Marina Bay,11,11,36,Red Bull Racing,12,10,2,100.0
+2024,1,Singapore Grand Prix,Marina Bay,20,20,32,Haas F1 Team,16,19,-3,100.0
+2024,1,Singapore Grand Prix,Marina Bay,31,31,28,Alpine,11,13,-2,100.0
+2024,1,Singapore Grand Prix,Marina Bay,3,3,33,RB,18,18,0,100.0
+2024,1,Singapore Grand Prix,Marina Bay,18,18,27,Aston Martin,13,14,-1,100.0
+2024,1,Singapore Grand Prix,Marina Bay,10,10,34,Alpine,15,17,-2,100.0
+2024,1,Singapore Grand Prix,Marina Bay,77,77,29,Kick Sauber,13,16,-3,100.0
+2024,1,Singapore Grand Prix,Marina Bay,24,24,35,Kick Sauber,12,15,-3,100.0
+2024,1,United States Grand Prix,United States Grand Prix,4,4,30,McLaren,4,4,0,100.0
+2024,1,United States Grand Prix,United States Grand Prix,1,1,28,Red Bull Racing,5,3,2,100.0
+2024,1,United States Grand Prix,United States Grand Prix,55,55,34,Ferrari,3,2,1,100.0
+2024,1,United States Grand Prix,United States Grand Prix,16,16,36,Ferrari,2,1,1,100.0
+2024,1,United States Grand Prix,United States Grand Prix,81,81,33,McLaren,5,5,0,100.0
+2024,1,United States Grand Prix,United States Grand Prix,10,10,32,Alpine,10,12,-2,100.0
+2024,1,United States Grand Prix,United States Grand Prix,14,14,26,Aston Martin,12,13,-1,100.0
+2024,1,United States Grand Prix,United States Grand Prix,20,20,30,Haas F1 Team,8,11,-3,100.0
+2024,1,United States Grand Prix,United States Grand Prix,11,11,33,Red Bull Racing,9,7,2,100.0
+2024,1,United States Grand Prix,United States Grand Prix,22,22,33,RB,14,14,0,100.0
+2024,1,United States Grand Prix,United States Grand Prix,27,27,34,Haas F1 Team,5,8,-3,100.0
+2024,1,United States Grand Prix,United States Grand Prix,31,31,28,Alpine,16,18,-2,100.0
+2024,1,United States Grand Prix,United States Grand Prix,18,18,30,Aston Martin,14,15,-1,100.0
+2024,1,United States Grand Prix,United States Grand Prix,23,23,25,Williams,12,16,-4,100.0
+2024,1,United States Grand Prix,United States Grand Prix,43,43,27,Williams,6,10,-4,100.0
+2024,1,United States Grand Prix,United States Grand Prix,77,77,25,Kick Sauber,14,17,-3,100.0
+2024,1,United States Grand Prix,United States Grand Prix,44,44,36,Mercedes,21,20,1,100.0
+2024,1,United States Grand Prix,United States Grand Prix,24,24,36,Kick Sauber,16,19,-3,100.0
+2024,1,United States Grand Prix,United States Grand Prix,30,30,35,RB,9,9,0,100.0
+2024,1,United States Grand Prix,United States Grand Prix,63,63,30,Mercedes,7,6,1,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,55,55,25,Ferrari,2,1,1,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,1,1,36,Red Bull Racing,8,6,2,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,4,4,34,McLaren,2,2,0,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,16,16,24,Ferrari,4,3,1,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,63,63,32,Mercedes,6,5,1,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,44,44,24,Mercedes,5,4,1,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,20,20,31,Haas F1 Team,4,7,-3,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,10,10,25,Alpine,8,10,-2,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,23,23,35,Williams,15,19,-4,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,27,27,31,Haas F1 Team,6,9,-3,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,22,22,36,RB,20,20,0,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,30,30,26,RB,16,16,0,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,14,14,29,Aston Martin,17,18,-1,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,18,18,26,Aston Martin,10,11,-1,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,77,77,30,Kick Sauber,11,14,-3,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,43,43,33,Williams,8,12,-4,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,81,81,32,McLaren,8,8,0,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,11,11,25,Red Bull Racing,19,17,2,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,24,24,35,Kick Sauber,12,15,-3,100.0
+2024,1,Mexico City Grand Prix,Hermanos Rodriguez,31,31,35,Alpine,11,13,-2,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,4,4,28,McLaren,6,6,0,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,63,63,36,Mercedes,5,4,1,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,22,22,29,RB,7,7,0,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,31,31,27,Alpine,1,2,-1,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,30,30,27,RB,9,9,0,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,16,16,27,Ferrari,6,5,1,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,23,23,25,Williams,15,19,-4,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,81,81,27,McLaren,8,8,0,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,14,14,34,Aston Martin,13,14,-1,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,18,18,24,Aston Martin,19,20,-1,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,77,77,35,Kick Sauber,10,13,-3,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,11,11,29,Red Bull Racing,13,11,2,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,10,10,24,Alpine,1,3,-2,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,44,44,33,Mercedes,11,10,1,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,50,50,29,Haas F1 Team,9,12,-3,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,43,43,24,Williams,13,17,-4,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,1,1,29,Red Bull Racing,3,1,2,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,27,27,33,Haas F1 Team,15,18,-3,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,24,24,31,Kick Sauber,12,15,-3,100.0
+2024,1,São Paulo Grand Prix,São Paulo Grand Prix,55,55,34,Ferrari,17,16,1,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,63,63,25,Mercedes,2,1,1,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,55,55,25,Ferrari,4,3,1,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,10,10,36,Alpine,18,20,-2,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,16,16,35,Ferrari,5,4,1,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,1,1,27,Red Bull Racing,7,5,2,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,4,4,34,McLaren,6,6,0,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,22,22,26,RB,9,9,0,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,81,81,27,McLaren,7,7,0,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,27,27,36,Haas F1 Team,5,8,-3,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,44,44,35,Mercedes,3,2,1,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,31,31,30,Alpine,15,17,-2,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,20,20,36,Haas F1 Team,9,12,-3,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,24,24,34,Kick Sauber,10,13,-3,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,30,30,24,RB,16,16,0,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,11,11,29,Red Bull Racing,12,10,2,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,14,14,26,Aston Martin,10,11,-1,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,23,23,34,Williams,15,19,-4,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,18,18,33,Aston Martin,14,15,-1,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,77,77,30,Kick Sauber,15,18,-3,100.0
+2024,1,Las Vegas Grand Prix,Las Vegas Grand Prix,43,43,33,Williams,10,14,-4,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,63,63,25,Mercedes,5,4,1,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,1,1,25,Red Bull Racing,3,1,2,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,4,4,36,McLaren,10,10,0,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,81,81,27,McLaren,3,3,0,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,16,16,24,Ferrari,3,2,1,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,44,44,26,Mercedes,13,12,1,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,55,55,36,Ferrari,7,6,1,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,14,14,32,Aston Martin,6,7,-1,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,11,11,30,Red Bull Racing,19,17,2,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,20,20,30,Haas F1 Team,6,9,-3,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,10,10,36,Alpine,3,5,-2,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,24,24,36,Kick Sauber,5,8,-3,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,77,77,34,Kick Sauber,8,11,-3,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,22,22,27,RB,13,13,0,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,18,18,25,Aston Martin,17,18,-1,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,23,23,27,Williams,11,15,-4,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,30,30,29,RB,14,14,0,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,27,27,34,Haas F1 Team,13,16,-3,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,43,43,34,Williams,15,19,-4,100.0
+2024,1,Qatar Grand Prix,Qatar Grand Prix,31,31,26,Alpine,18,20,-2,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,4,4,24,McLaren,1,1,0,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,81,81,35,McLaren,10,10,0,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,55,55,31,Ferrari,3,2,1,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,1,1,35,Red Bull Racing,8,6,2,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,10,10,36,Alpine,5,7,-2,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,63,63,28,Mercedes,6,5,1,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,27,27,28,Haas F1 Team,5,8,-3,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,14,14,34,Aston Martin,8,9,-1,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,77,77,27,Kick Sauber,15,18,-3,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,11,11,29,Red Bull Racing,22,20,2,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,22,22,26,RB,12,12,0,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,30,30,32,RB,17,17,0,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,18,18,28,Aston Martin,13,14,-1,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,20,20,26,Haas F1 Team,13,16,-3,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,24,24,34,Kick Sauber,10,13,-3,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,44,44,24,Mercedes,5,4,1,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,61,61,33,Alpine,13,15,-2,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,23,23,35,Williams,7,11,-4,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,16,16,29,Ferrari,4,3,1,100.0
+2024,1,Abu Dhabi Grand Prix,Yas Island,43,43,25,Williams,15,19,-4,100.0
+2025,1,Australian Grand Prix,Melbourne,4,4,36,McLaren,1,1,0,100.0
+2025,1,Australian Grand Prix,Melbourne,81,81,26,McLaren,9,9,0,100.0
+2025,1,Australian Grand Prix,Melbourne,1,1,24,Red Bull Racing,4,2,2,100.0
+2025,1,Australian Grand Prix,Melbourne,63,63,32,Mercedes,4,3,1,100.0
+2025,1,Australian Grand Prix,Melbourne,22,22,31,Racing Bulls,12,12,0,100.0
+2025,1,Australian Grand Prix,Melbourne,23,23,35,Williams,1,4,-3,100.0
+2025,1,Australian Grand Prix,Melbourne,16,16,25,Ferrari,9,8,1,100.0
+2025,1,Australian Grand Prix,Melbourne,44,44,35,Ferrari,11,10,1,100.0
+2025,1,Australian Grand Prix,Melbourne,10,10,34,Alpine,9,11,-2,100.0
+2025,1,Australian Grand Prix,Melbourne,55,55,31,Williams,14,18,-4,100.0
+2025,1,Australian Grand Prix,Melbourne,6,6,35,Racing Bulls,19,19,0,100.0
+2025,1,Australian Grand Prix,Melbourne,14,14,32,Aston Martin,16,17,-1,100.0
+2025,1,Australian Grand Prix,Melbourne,18,18,24,Aston Martin,5,6,-1,100.0
+2025,1,Australian Grand Prix,Melbourne,7,7,36,Alpine,18,20,-2,100.0
+2025,1,Australian Grand Prix,Melbourne,5,5,28,Kick Sauber,13,16,-3,100.0
+2025,1,Australian Grand Prix,Melbourne,12,12,31,Mercedes,6,5,1,100.0
+2025,1,Australian Grand Prix,Melbourne,27,27,34,Kick Sauber,4,7,-3,100.0
+2025,1,Australian Grand Prix,Melbourne,30,30,25,Red Bull Racing,17,15,2,100.0
+2025,1,Australian Grand Prix,Melbourne,31,31,27,Haas F1 Team,10,13,-3,100.0
+2025,1,Australian Grand Prix,Melbourne,87,87,30,Haas F1 Team,11,14,-3,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,81,81,26,McLaren,1,1,0,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,63,63,36,Mercedes,4,3,1,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,4,4,35,McLaren,2,2,0,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,1,1,28,Red Bull Racing,6,4,2,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,44,44,31,Ferrari,7,6,1,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,16,16,35,Ferrari,6,5,1,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,6,6,33,Racing Bulls,14,14,0,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,12,12,26,Mercedes,9,8,1,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,22,22,27,Racing Bulls,19,19,0,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,23,23,32,Williams,5,9,-4,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,31,31,30,Haas F1 Team,4,7,-3,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,27,27,24,Kick Sauber,15,18,-3,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,14,14,35,Aston Martin,19,20,-1,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,18,18,27,Aston Martin,11,12,-1,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,55,55,27,Williams,9,13,-4,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,10,10,32,Alpine,9,11,-2,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,87,87,29,Haas F1 Team,7,10,-3,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,7,7,32,Alpine,14,16,-2,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,5,5,35,Kick Sauber,14,17,-3,100.0
+2025,1,Chinese Grand Prix,Chinese Grand Prix,30,30,29,Red Bull Racing,17,15,2,100.0
+2025,1,Japanese Grand Prix,Suzuka,1,1,29,Red Bull Racing,3,1,2,100.0
+2025,1,Japanese Grand Prix,Suzuka,4,4,28,McLaren,2,2,0,100.0
+2025,1,Japanese Grand Prix,Suzuka,81,81,28,McLaren,3,3,0,100.0
+2025,1,Japanese Grand Prix,Suzuka,16,16,25,Ferrari,5,4,1,100.0
+2025,1,Japanese Grand Prix,Suzuka,63,63,31,Mercedes,6,5,1,100.0
+2025,1,Japanese Grand Prix,Suzuka,12,12,31,Mercedes,7,6,1,100.0
+2025,1,Japanese Grand Prix,Suzuka,6,6,34,Racing Bulls,8,8,0,100.0
+2025,1,Japanese Grand Prix,Suzuka,44,44,36,Ferrari,8,7,1,100.0
+2025,1,Japanese Grand Prix,Suzuka,23,23,24,Williams,5,9,-4,100.0
+2025,1,Japanese Grand Prix,Suzuka,87,87,31,Haas F1 Team,7,10,-3,100.0
+2025,1,Japanese Grand Prix,Suzuka,10,10,28,Alpine,11,13,-2,100.0
+2025,1,Japanese Grand Prix,Suzuka,14,14,25,Aston Martin,10,11,-1,100.0
+2025,1,Japanese Grand Prix,Suzuka,30,30,25,Racing Bulls,17,17,0,100.0
+2025,1,Japanese Grand Prix,Suzuka,22,22,29,Red Bull Racing,14,12,2,100.0
+2025,1,Japanese Grand Prix,Suzuka,55,55,34,Williams,10,14,-4,100.0
+2025,1,Japanese Grand Prix,Suzuka,27,27,36,Kick Sauber,13,16,-3,100.0
+2025,1,Japanese Grand Prix,Suzuka,5,5,32,Kick Sauber,16,19,-3,100.0
+2025,1,Japanese Grand Prix,Suzuka,31,31,24,Haas F1 Team,15,18,-3,100.0
+2025,1,Japanese Grand Prix,Suzuka,7,7,35,Alpine,13,15,-2,100.0
+2025,1,Japanese Grand Prix,Suzuka,18,18,29,Aston Martin,19,20,-1,100.0
+2025,1,Bahrain Grand Prix,Sakhir,81,81,32,McLaren,1,1,0,100.0
+2025,1,Bahrain Grand Prix,Sakhir,16,16,31,Ferrari,5,4,1,100.0
+2025,1,Bahrain Grand Prix,Sakhir,63,63,34,Mercedes,3,2,1,100.0
+2025,1,Bahrain Grand Prix,Sakhir,10,10,29,Alpine,5,7,-2,100.0
+2025,1,Bahrain Grand Prix,Sakhir,12,12,26,Mercedes,12,11,1,100.0
+2025,1,Bahrain Grand Prix,Sakhir,4,4,31,McLaren,3,3,0,100.0
+2025,1,Bahrain Grand Prix,Sakhir,1,1,32,Red Bull Racing,8,6,2,100.0
+2025,1,Bahrain Grand Prix,Sakhir,55,55,24,Williams,16,20,-4,100.0
+2025,1,Bahrain Grand Prix,Sakhir,44,44,35,Ferrari,6,5,1,100.0
+2025,1,Bahrain Grand Prix,Sakhir,22,22,32,Red Bull Racing,11,9,2,100.0
+2025,1,Bahrain Grand Prix,Sakhir,7,7,29,Alpine,13,15,-2,100.0
+2025,1,Bahrain Grand Prix,Sakhir,6,6,29,Racing Bulls,14,14,0,100.0
+2025,1,Bahrain Grand Prix,Sakhir,14,14,35,Aston Martin,15,16,-1,100.0
+2025,1,Bahrain Grand Prix,Sakhir,31,31,27,Haas F1 Team,5,8,-3,100.0
+2025,1,Bahrain Grand Prix,Sakhir,23,23,24,Williams,8,12,-4,100.0
+2025,1,Bahrain Grand Prix,Sakhir,27,27,33,Kick Sauber,10,13,-3,100.0
+2025,1,Bahrain Grand Prix,Sakhir,30,30,31,Racing Bulls,17,17,0,100.0
+2025,1,Bahrain Grand Prix,Sakhir,5,5,25,Kick Sauber,16,19,-3,100.0
+2025,1,Bahrain Grand Prix,Sakhir,18,18,35,Aston Martin,17,18,-1,100.0
+2025,1,Bahrain Grand Prix,Sakhir,87,87,24,Haas F1 Team,7,10,-3,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,1,1,25,Red Bull Racing,4,2,2,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,81,81,24,McLaren,1,1,0,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,63,63,24,Mercedes,6,5,1,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,16,16,32,Ferrari,4,3,1,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,12,12,36,Mercedes,7,6,1,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,55,55,24,Williams,4,8,-4,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,44,44,36,Ferrari,8,7,1,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,22,22,27,Red Bull Racing,21,19,2,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,10,10,33,Alpine,18,20,-2,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,4,4,29,McLaren,4,4,0,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,23,23,30,Williams,5,9,-4,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,30,30,25,Racing Bulls,12,12,0,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,14,14,29,Aston Martin,10,11,-1,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,6,6,30,Racing Bulls,10,10,0,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,87,87,33,Haas F1 Team,10,13,-3,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,18,18,33,Aston Martin,15,16,-1,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,7,7,25,Alpine,15,17,-2,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,27,27,25,Kick Sauber,12,15,-3,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,31,31,33,Haas F1 Team,11,14,-3,100.0
+2025,1,Saudi Arabian Grand Prix,Jeddah,5,5,30,Kick Sauber,15,18,-3,100.0
+2025,1,Miami Grand Prix,Miami,1,1,35,Red Bull Racing,6,4,2,100.0
+2025,1,Miami Grand Prix,Miami,4,4,24,McLaren,2,2,0,100.0
+2025,1,Miami Grand Prix,Miami,12,12,31,Mercedes,7,6,1,100.0
+2025,1,Miami Grand Prix,Miami,81,81,34,McLaren,1,1,0,100.0
+2025,1,Miami Grand Prix,Miami,63,63,36,Mercedes,4,3,1,100.0
+2025,1,Miami Grand Prix,Miami,55,55,26,Williams,5,9,-4,100.0
+2025,1,Miami Grand Prix,Miami,23,23,34,Williams,1,5,-4,100.0
+2025,1,Miami Grand Prix,Miami,16,16,29,Ferrari,8,7,1,100.0
+2025,1,Miami Grand Prix,Miami,31,31,32,Haas F1 Team,9,12,-3,100.0
+2025,1,Miami Grand Prix,Miami,22,22,29,Red Bull Racing,12,10,2,100.0
+2025,1,Miami Grand Prix,Miami,6,6,32,Racing Bulls,11,11,0,100.0
+2025,1,Miami Grand Prix,Miami,44,44,30,Ferrari,9,8,1,100.0
+2025,1,Miami Grand Prix,Miami,5,5,32,Kick Sauber,15,18,-3,100.0
+2025,1,Miami Grand Prix,Miami,7,7,25,Alpine,18,20,-2,100.0
+2025,1,Miami Grand Prix,Miami,30,30,35,Racing Bulls,17,17,0,100.0
+2025,1,Miami Grand Prix,Miami,27,27,31,Kick Sauber,11,14,-3,100.0
+2025,1,Miami Grand Prix,Miami,14,14,31,Aston Martin,14,15,-1,100.0
+2025,1,Miami Grand Prix,Miami,18,18,25,Aston Martin,15,16,-1,100.0
+2025,1,Miami Grand Prix,Miami,87,87,35,Haas F1 Team,16,19,-3,100.0
+2025,1,Miami Grand Prix,Miami,10,10,27,Alpine,11,13,-2,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,81,81,34,McLaren,3,3,0,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,1,1,30,Red Bull Racing,3,1,2,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,63,63,34,Mercedes,8,7,1,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,4,4,27,McLaren,2,2,0,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,14,14,27,Aston Martin,10,11,-1,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,55,55,29,Williams,4,8,-4,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,23,23,33,Williams,1,5,-4,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,18,18,29,Aston Martin,14,15,-1,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,6,6,33,Racing Bulls,9,9,0,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,10,10,26,Alpine,11,13,-2,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,16,16,32,Ferrari,7,6,1,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,44,44,35,Ferrari,5,4,1,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,12,12,33,Mercedes,20,19,1,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,5,5,34,Kick Sauber,15,18,-3,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,30,30,25,Racing Bulls,14,14,0,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,43,43,29,Alpine,14,16,-2,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,27,27,35,Kick Sauber,9,12,-3,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,31,31,30,Haas F1 Team,17,20,-3,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,87,87,35,Haas F1 Team,14,17,-3,100.0
+2025,1,Emilia Romagna Grand Prix,Emilia Romagna Grand Prix,22,22,36,Red Bull Racing,12,10,2,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,4,4,32,McLaren,1,1,0,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,16,16,36,Ferrari,3,2,1,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,81,81,26,McLaren,3,3,0,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,1,1,33,Red Bull Racing,6,4,2,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,6,6,26,Racing Bulls,6,6,0,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,14,14,30,Aston Martin,18,19,-1,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,44,44,27,Ferrari,6,5,1,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,31,31,36,Haas F1 Team,4,7,-3,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,30,30,31,Racing Bulls,8,8,0,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,23,23,36,Williams,5,9,-4,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,55,55,30,Williams,6,10,-4,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,22,22,28,Red Bull Racing,19,17,2,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,27,27,30,Kick Sauber,13,16,-3,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,63,63,26,Mercedes,12,11,1,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,12,12,35,Mercedes,19,18,1,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,5,5,25,Kick Sauber,11,14,-3,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,10,10,29,Alpine,18,20,-2,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,43,43,25,Alpine,11,13,-2,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,18,18,26,Aston Martin,14,15,-1,100.0
+2025,1,Monaco Grand Prix,Monte Carlo,87,87,29,Haas F1 Team,9,12,-3,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,81,81,28,McLaren,1,1,0,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,4,4,31,McLaren,2,2,0,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,1,1,32,Red Bull Racing,12,10,2,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,63,63,34,Mercedes,5,4,1,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,44,44,26,Ferrari,7,6,1,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,12,12,35,Mercedes,19,18,1,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,16,16,33,Ferrari,4,3,1,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,10,10,26,Alpine,6,8,-2,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,6,6,26,Racing Bulls,7,7,0,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,14,14,36,Aston Martin,8,9,-1,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,23,23,36,Williams,15,19,-4,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,5,5,29,Kick Sauber,9,12,-3,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,30,30,24,Racing Bulls,11,11,0,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,87,87,30,Haas F1 Team,14,17,-3,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,27,27,35,Kick Sauber,2,5,-3,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,31,31,24,Haas F1 Team,13,16,-3,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,55,55,28,Williams,10,14,-4,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,43,43,33,Alpine,13,15,-2,100.0
+2025,1,Spanish Grand Prix,Spanish Grand Prix,22,22,36,Red Bull Racing,15,13,2,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,63,63,31,Mercedes,2,1,1,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,1,1,27,Red Bull Racing,4,2,2,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,81,81,28,McLaren,4,4,0,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,12,12,27,Mercedes,4,3,1,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,44,44,35,Ferrari,7,6,1,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,14,14,35,Aston Martin,6,7,-1,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,4,4,27,McLaren,18,18,0,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,16,16,35,Ferrari,6,5,1,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,23,23,31,Williams,16,20,-4,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,43,43,25,Alpine,11,13,-2,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,27,27,24,Kick Sauber,5,8,-3,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,6,6,26,Racing Bulls,16,16,0,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,87,87,32,Haas F1 Team,8,11,-3,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,31,31,27,Haas F1 Team,6,9,-3,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,5,5,33,Kick Sauber,11,14,-3,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,55,55,28,Williams,6,10,-4,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,18,18,25,Aston Martin,16,17,-1,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,22,22,27,Red Bull Racing,14,12,2,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,30,30,25,Racing Bulls,19,19,0,100.0
+2025,1,Canadian Grand Prix,Canadian Grand Prix,10,10,25,Alpine,13,15,-2,100.0
+2025,1,Austrian Grand Prix,Spielberg,4,4,27,McLaren,1,1,0,100.0
+2025,1,Austrian Grand Prix,Spielberg,16,16,29,Ferrari,4,3,1,100.0
+2025,1,Austrian Grand Prix,Spielberg,81,81,30,McLaren,2,2,0,100.0
+2025,1,Austrian Grand Prix,Spielberg,44,44,33,Ferrari,5,4,1,100.0
+2025,1,Austrian Grand Prix,Spielberg,63,63,26,Mercedes,6,5,1,100.0
+2025,1,Austrian Grand Prix,Spielberg,30,30,26,Racing Bulls,6,6,0,100.0
+2025,1,Austrian Grand Prix,Spielberg,1,1,33,Red Bull Racing,20,18,2,100.0
+2025,1,Austrian Grand Prix,Spielberg,5,5,29,Kick Sauber,5,8,-3,100.0
+2025,1,Austrian Grand Prix,Spielberg,12,12,36,Mercedes,20,19,1,100.0
+2025,1,Austrian Grand Prix,Spielberg,10,10,35,Alpine,11,13,-2,100.0
+2025,1,Austrian Grand Prix,Spielberg,14,14,26,Aston Martin,6,7,-1,100.0
+2025,1,Austrian Grand Prix,Spielberg,23,23,36,Williams,13,17,-4,100.0
+2025,1,Austrian Grand Prix,Spielberg,6,6,25,Racing Bulls,12,12,0,100.0
+2025,1,Austrian Grand Prix,Spielberg,43,43,31,Alpine,13,15,-2,100.0
+2025,1,Austrian Grand Prix,Spielberg,87,87,28,Haas F1 Team,8,11,-3,100.0
+2025,1,Austrian Grand Prix,Spielberg,18,18,24,Aston Martin,13,14,-1,100.0
+2025,1,Austrian Grand Prix,Spielberg,31,31,26,Haas F1 Team,7,10,-3,100.0
+2025,1,Austrian Grand Prix,Spielberg,22,22,33,Red Bull Racing,18,16,2,100.0
+2025,1,Austrian Grand Prix,Spielberg,55,55,31,Williams,16,20,-4,100.0
+2025,1,Austrian Grand Prix,Spielberg,27,27,27,Kick Sauber,6,9,-3,100.0
+2025,1,British Grand Prix,Silverstone,1,1,30,Red Bull Racing,7,5,2,100.0
+2025,1,British Grand Prix,Silverstone,81,81,33,McLaren,2,2,0,100.0
+2025,1,British Grand Prix,Silverstone,4,4,35,McLaren,1,1,0,100.0
+2025,1,British Grand Prix,Silverstone,63,63,25,Mercedes,11,10,1,100.0
+2025,1,British Grand Prix,Silverstone,44,44,30,Ferrari,5,4,1,100.0
+2025,1,British Grand Prix,Silverstone,16,16,28,Ferrari,15,14,1,100.0
+2025,1,British Grand Prix,Silverstone,14,14,28,Aston Martin,8,9,-1,100.0
+2025,1,British Grand Prix,Silverstone,10,10,29,Alpine,4,6,-2,100.0
+2025,1,British Grand Prix,Silverstone,55,55,36,Williams,8,12,-4,100.0
+2025,1,British Grand Prix,Silverstone,12,12,32,Mercedes,17,16,1,100.0
+2025,1,British Grand Prix,Silverstone,22,22,29,Red Bull Racing,17,15,2,100.0
+2025,1,British Grand Prix,Silverstone,6,6,35,Racing Bulls,17,17,0,100.0
+2025,1,British Grand Prix,Silverstone,23,23,36,Williams,4,8,-4,100.0
+2025,1,British Grand Prix,Silverstone,31,31,31,Haas F1 Team,10,13,-3,100.0
+2025,1,British Grand Prix,Silverstone,30,30,30,Racing Bulls,19,19,0,100.0
+2025,1,British Grand Prix,Silverstone,5,5,32,Kick Sauber,15,18,-3,100.0
+2025,1,British Grand Prix,Silverstone,18,18,27,Aston Martin,6,7,-1,100.0
+2025,1,British Grand Prix,Silverstone,87,87,25,Haas F1 Team,8,11,-3,100.0
+2025,1,British Grand Prix,Silverstone,27,27,30,Kick Sauber,1,3,-2,100.0
+2025,1,British Grand Prix,Silverstone,43,43,29,Alpine,18,20,-2,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,4,4,24,McLaren,2,2,0,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,81,81,34,McLaren,1,1,0,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,16,16,32,Ferrari,4,3,1,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,1,1,32,Red Bull Racing,6,4,2,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,23,23,35,Williams,2,6,-4,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,63,63,25,Mercedes,6,5,1,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,22,22,26,Red Bull Racing,15,13,2,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,6,6,28,Racing Bulls,20,20,0,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,30,30,28,Racing Bulls,8,8,0,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,5,5,24,Kick Sauber,6,9,-3,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,31,31,31,Haas F1 Team,12,15,-3,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,87,87,35,Haas F1 Team,8,11,-3,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,10,10,31,Alpine,8,10,-2,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,27,27,27,Kick Sauber,9,12,-3,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,43,43,36,Alpine,17,19,-2,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,18,18,30,Aston Martin,13,14,-1,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,55,55,34,Williams,14,18,-4,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,44,44,33,Ferrari,8,7,1,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,12,12,26,Mercedes,17,16,1,100.0
+2025,1,Belgian Grand Prix,Belgian Grand Prix,14,14,29,Aston Martin,16,17,-1,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,16,16,33,Ferrari,5,4,1,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,81,81,36,McLaren,2,2,0,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,4,4,33,McLaren,1,1,0,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,63,63,35,Mercedes,4,3,1,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,14,14,32,Aston Martin,4,5,-1,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,18,18,24,Aston Martin,6,7,-1,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,5,5,28,Kick Sauber,3,6,-3,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,1,1,27,Red Bull Racing,11,9,2,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,30,30,31,Racing Bulls,8,8,0,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,6,6,34,Racing Bulls,11,11,0,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,87,87,35,Haas F1 Team,17,20,-3,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,44,44,24,Ferrari,13,12,1,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,55,55,32,Williams,10,14,-4,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,43,43,29,Alpine,16,18,-2,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,12,12,27,Mercedes,11,10,1,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,10,10,35,Alpine,17,19,-2,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,31,31,32,Haas F1 Team,13,16,-3,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,27,27,34,Kick Sauber,10,13,-3,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,23,23,28,Williams,11,15,-4,100.0
+2025,1,Hungarian Grand Prix,Hungarian Grand Prix,22,22,28,Red Bull Racing,19,17,2,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,81,81,35,McLaren,1,1,0,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,4,4,28,McLaren,18,18,0,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,1,1,24,Red Bull Racing,4,2,2,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,6,6,24,Racing Bulls,3,3,0,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,63,63,31,Mercedes,5,4,1,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,16,16,35,Ferrari,20,19,1,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,44,44,31,Ferrari,21,20,1,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,30,30,35,Racing Bulls,12,12,0,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,55,55,29,Williams,9,13,-4,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,14,14,35,Aston Martin,7,8,-1,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,12,12,34,Mercedes,17,16,1,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,22,22,36,Red Bull Racing,11,9,2,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,5,5,27,Kick Sauber,12,15,-3,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,10,10,25,Alpine,15,17,-2,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,23,23,25,Williams,1,5,-4,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,43,43,32,Alpine,9,11,-2,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,27,27,28,Kick Sauber,11,14,-3,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,31,31,27,Haas F1 Team,7,10,-3,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,18,18,33,Aston Martin,6,7,-1,100.0
+2025,1,Dutch Grand Prix,Dutch Grand Prix,87,87,36,Haas F1 Team,3,6,-3,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,1,1,24,Red Bull Racing,3,1,2,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,4,4,30,McLaren,2,2,0,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,81,81,26,McLaren,3,3,0,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,16,16,29,Ferrari,5,4,1,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,63,63,28,Mercedes,6,5,1,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,12,12,28,Mercedes,10,9,1,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,5,5,34,Kick Sauber,5,8,-3,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,14,14,28,Aston Martin,18,19,-1,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,22,22,24,Red Bull Racing,15,13,2,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,44,44,24,Ferrari,7,6,1,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,87,87,26,Haas F1 Team,9,12,-3,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,27,27,35,Kick Sauber,17,20,-3,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,55,55,33,Williams,7,11,-4,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,23,23,27,Williams,3,7,-4,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,31,31,28,Haas F1 Team,12,15,-3,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,18,18,25,Aston Martin,17,18,-1,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,43,43,31,Alpine,15,17,-2,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,30,30,34,Racing Bulls,14,14,0,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,6,6,34,Racing Bulls,10,10,0,100.0
+2025,1,Italian Grand Prix,Italian Grand Prix,10,10,25,Alpine,14,16,-2,100.0
+2025,1,Azerbaijan Grand Prix,Baku,1,1,32,Red Bull Racing,3,1,2,100.0
+2025,1,Azerbaijan Grand Prix,Baku,55,55,25,Williams,1,3,-2,100.0
+2025,1,Azerbaijan Grand Prix,Baku,30,30,36,Racing Bulls,5,5,0,100.0
+2025,1,Azerbaijan Grand Prix,Baku,12,12,32,Mercedes,5,4,1,100.0
+2025,1,Azerbaijan Grand Prix,Baku,63,63,30,Mercedes,3,2,1,100.0
+2025,1,Azerbaijan Grand Prix,Baku,22,22,31,Red Bull Racing,8,6,2,100.0
+2025,1,Azerbaijan Grand Prix,Baku,4,4,34,McLaren,7,7,0,100.0
+2025,1,Azerbaijan Grand Prix,Baku,6,6,25,Racing Bulls,10,10,0,100.0
+2025,1,Azerbaijan Grand Prix,Baku,81,81,30,McLaren,20,20,0,100.0
+2025,1,Azerbaijan Grand Prix,Baku,16,16,35,Ferrari,10,9,1,100.0
+2025,1,Azerbaijan Grand Prix,Baku,14,14,29,Aston Martin,14,15,-1,100.0
+2025,1,Azerbaijan Grand Prix,Baku,44,44,27,Ferrari,9,8,1,100.0
+2025,1,Azerbaijan Grand Prix,Baku,5,5,30,Kick Sauber,8,11,-3,100.0
+2025,1,Azerbaijan Grand Prix,Baku,18,18,36,Aston Martin,16,17,-1,100.0
+2025,1,Azerbaijan Grand Prix,Baku,87,87,27,Haas F1 Team,9,12,-3,100.0
+2025,1,Azerbaijan Grand Prix,Baku,43,43,25,Alpine,17,19,-2,100.0
+2025,1,Azerbaijan Grand Prix,Baku,27,27,33,Kick Sauber,13,16,-3,100.0
+2025,1,Azerbaijan Grand Prix,Baku,10,10,35,Alpine,16,18,-2,100.0
+2025,1,Azerbaijan Grand Prix,Baku,23,23,30,Williams,9,13,-4,100.0
+2025,1,Azerbaijan Grand Prix,Baku,31,31,31,Haas F1 Team,11,14,-3,100.0
+2025,1,Singapore Grand Prix,Marina Bay,63,63,25,Mercedes,2,1,1,100.0
+2025,1,Singapore Grand Prix,Marina Bay,1,1,28,Red Bull Racing,4,2,2,100.0
+2025,1,Singapore Grand Prix,Marina Bay,81,81,24,McLaren,4,4,0,100.0
+2025,1,Singapore Grand Prix,Marina Bay,12,12,30,Mercedes,6,5,1,100.0
+2025,1,Singapore Grand Prix,Marina Bay,4,4,31,McLaren,3,3,0,100.0
+2025,1,Singapore Grand Prix,Marina Bay,44,44,36,Ferrari,8,7,1,100.0
+2025,1,Singapore Grand Prix,Marina Bay,16,16,29,Ferrari,7,6,1,100.0
+2025,1,Singapore Grand Prix,Marina Bay,6,6,28,Racing Bulls,11,11,0,100.0
+2025,1,Singapore Grand Prix,Marina Bay,87,87,29,Haas F1 Team,6,9,-3,100.0
+2025,1,Singapore Grand Prix,Marina Bay,14,14,25,Aston Martin,7,8,-1,100.0
+2025,1,Singapore Grand Prix,Marina Bay,27,27,24,Kick Sauber,17,20,-3,100.0
+2025,1,Singapore Grand Prix,Marina Bay,30,30,30,Racing Bulls,15,15,0,100.0
+2025,1,Singapore Grand Prix,Marina Bay,22,22,30,Red Bull Racing,14,12,2,100.0
+2025,1,Singapore Grand Prix,Marina Bay,5,5,33,Kick Sauber,14,17,-3,100.0
+2025,1,Singapore Grand Prix,Marina Bay,18,18,34,Aston Martin,12,13,-1,100.0
+2025,1,Singapore Grand Prix,Marina Bay,43,43,33,Alpine,14,16,-2,100.0
+2025,1,Singapore Grand Prix,Marina Bay,31,31,25,Haas F1 Team,15,18,-3,100.0
+2025,1,Singapore Grand Prix,Marina Bay,55,55,25,Williams,6,10,-4,100.0
+2025,1,Singapore Grand Prix,Marina Bay,10,10,24,Alpine,17,19,-2,100.0
+2025,1,Singapore Grand Prix,Marina Bay,23,23,33,Williams,10,14,-4,100.0
+2025,1,United States Grand Prix,United States Grand Prix,1,1,31,Red Bull Racing,3,1,2,100.0
+2025,1,United States Grand Prix,United States Grand Prix,4,4,31,McLaren,2,2,0,100.0
+2025,1,United States Grand Prix,United States Grand Prix,16,16,24,Ferrari,4,3,1,100.0
+2025,1,United States Grand Prix,United States Grand Prix,63,63,35,Mercedes,7,6,1,100.0
+2025,1,United States Grand Prix,United States Grand Prix,44,44,34,Ferrari,5,4,1,100.0
+2025,1,United States Grand Prix,United States Grand Prix,81,81,31,McLaren,5,5,0,100.0
+2025,1,United States Grand Prix,United States Grand Prix,12,12,32,Mercedes,14,13,1,100.0
+2025,1,United States Grand Prix,United States Grand Prix,87,87,27,Haas F1 Team,6,9,-3,100.0
+2025,1,United States Grand Prix,United States Grand Prix,55,55,24,Williams,16,20,-4,100.0
+2025,1,United States Grand Prix,United States Grand Prix,14,14,24,Aston Martin,9,10,-1,100.0
+2025,1,United States Grand Prix,United States Grand Prix,27,27,26,Kick Sauber,5,8,-3,100.0
+2025,1,United States Grand Prix,United States Grand Prix,30,30,28,Racing Bulls,11,11,0,100.0
+2025,1,United States Grand Prix,United States Grand Prix,22,22,28,Red Bull Racing,9,7,2,100.0
+2025,1,United States Grand Prix,United States Grand Prix,10,10,32,Alpine,17,19,-2,100.0
+2025,1,United States Grand Prix,United States Grand Prix,43,43,33,Alpine,15,17,-2,100.0
+2025,1,United States Grand Prix,United States Grand Prix,5,5,35,Kick Sauber,15,18,-3,100.0
+2025,1,United States Grand Prix,United States Grand Prix,31,31,25,Haas F1 Team,12,15,-3,100.0
+2025,1,United States Grand Prix,United States Grand Prix,23,23,25,Williams,10,14,-4,100.0
+2025,1,United States Grand Prix,United States Grand Prix,18,18,29,Aston Martin,11,12,-1,100.0
+2025,1,United States Grand Prix,United States Grand Prix,6,6,32,Racing Bulls,16,16,0,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,4,4,24,McLaren,1,1,0,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,16,16,32,Ferrari,3,2,1,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,44,44,32,Ferrari,9,8,1,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,63,63,36,Mercedes,8,7,1,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,1,1,32,Red Bull Racing,5,3,2,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,12,12,28,Mercedes,7,6,1,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,81,81,36,McLaren,5,5,0,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,6,6,32,Racing Bulls,13,13,0,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,87,87,34,Haas F1 Team,1,4,-3,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,22,22,27,Red Bull Racing,13,11,2,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,31,31,25,Haas F1 Team,6,9,-3,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,55,55,36,Williams,13,17,-4,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,27,27,29,Kick Sauber,16,19,-3,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,14,14,27,Aston Martin,17,18,-1,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,30,30,29,Racing Bulls,20,20,0,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,5,5,26,Kick Sauber,7,10,-3,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,23,23,29,Williams,8,12,-4,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,10,10,25,Alpine,13,15,-2,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,18,18,25,Aston Martin,13,14,-1,100.0
+2025,1,Mexico City Grand Prix,Hermanos Rodriguez,43,43,36,Alpine,14,16,-2,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,4,4,32,McLaren,1,1,0,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,12,12,30,Mercedes,3,2,1,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,16,16,26,Ferrari,20,19,1,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,81,81,36,McLaren,5,5,0,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,6,6,34,Racing Bulls,8,8,0,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,63,63,24,Mercedes,5,4,1,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,30,30,31,Racing Bulls,7,7,0,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,87,87,29,Haas F1 Team,3,6,-3,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,10,10,30,Alpine,8,10,-2,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,27,27,32,Kick Sauber,6,9,-3,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,14,14,28,Aston Martin,13,14,-1,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,23,23,24,Williams,7,11,-4,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,44,44,35,Ferrari,19,18,1,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,18,18,33,Aston Martin,15,16,-1,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,55,55,30,Williams,9,13,-4,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,43,43,28,Alpine,13,15,-2,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,22,22,26,Red Bull Racing,19,17,2,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,5,5,35,Kick Sauber,17,20,-3,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,1,1,36,Red Bull Racing,5,3,2,100.0
+2025,1,São Paulo Grand Prix,São Paulo Grand Prix,31,31,32,Haas F1 Team,9,12,-3,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,4,4,24,McLaren,2,2,0,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,1,1,24,Red Bull Racing,3,1,2,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,55,55,24,Williams,3,7,-4,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,63,63,26,Mercedes,4,3,1,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,81,81,35,McLaren,4,4,0,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,30,30,29,Racing Bulls,16,16,0,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,14,14,33,Aston Martin,12,13,-1,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,6,6,34,Racing Bulls,8,8,0,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,16,16,26,Ferrari,7,6,1,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,10,10,31,Alpine,13,15,-2,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,27,27,33,Kick Sauber,6,9,-3,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,18,18,25,Aston Martin,19,20,-1,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,31,31,32,Haas F1 Team,8,11,-3,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,87,87,26,Haas F1 Team,9,12,-3,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,43,43,28,Alpine,15,17,-2,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,23,23,33,Williams,14,18,-4,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,12,12,31,Mercedes,6,5,1,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,5,5,25,Kick Sauber,16,19,-3,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,44,44,29,Ferrari,11,10,1,100.0
+2025,1,Las Vegas Grand Prix,Las Vegas Grand Prix,22,22,35,Red Bull Racing,16,14,2,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,81,81,28,McLaren,2,2,0,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,4,4,36,McLaren,4,4,0,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,1,1,33,Red Bull Racing,3,1,2,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,63,63,32,Mercedes,7,6,1,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,12,12,35,Mercedes,6,5,1,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,6,6,28,Racing Bulls,18,18,0,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,55,55,25,Williams,1,3,-2,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,14,14,28,Aston Martin,6,7,-1,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,10,10,35,Alpine,14,16,-2,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,16,16,27,Ferrari,9,8,1,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,27,27,34,Kick Sauber,17,20,-3,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,30,30,30,Racing Bulls,9,9,0,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,87,87,29,Haas F1 Team,16,19,-3,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,23,23,25,Williams,7,11,-4,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,22,22,35,Red Bull Racing,12,10,2,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,31,31,34,Haas F1 Team,12,15,-3,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,44,44,34,Ferrari,13,12,1,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,18,18,36,Aston Martin,16,17,-1,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,5,5,28,Kick Sauber,10,13,-3,100.0
+2025,1,Qatar Grand Prix,Qatar Grand Prix,43,43,30,Alpine,12,14,-2,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,1,1,34,Red Bull Racing,3,1,2,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,4,4,30,McLaren,3,3,0,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,81,81,28,McLaren,2,2,0,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,63,63,35,Mercedes,6,5,1,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,16,16,32,Ferrari,5,4,1,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,14,14,27,Aston Martin,5,6,-1,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,5,5,34,Kick Sauber,8,11,-3,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,31,31,26,Haas F1 Team,4,7,-3,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,6,6,27,Racing Bulls,17,17,0,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,22,22,28,Red Bull Racing,16,14,2,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,87,87,36,Haas F1 Team,9,12,-3,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,55,55,29,Williams,9,13,-4,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,30,30,26,Racing Bulls,18,18,0,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,12,12,25,Mercedes,16,15,1,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,18,18,36,Aston Martin,9,10,-1,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,44,44,27,Ferrari,9,8,1,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,23,23,28,Williams,12,16,-4,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,27,27,27,Kick Sauber,6,9,-3,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,10,10,34,Alpine,17,19,-2,100.0
+2025,1,Abu Dhabi Grand Prix,Yas Island,43,43,36,Alpine,18,20,-2,100.0
