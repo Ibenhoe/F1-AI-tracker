@@ -9,6 +9,7 @@ import numpy as np
 import xgboost as xgb
 from sklearn.preprocessing import LabelEncoder
 import os
+import warnings
 import threading
 
 
@@ -24,6 +25,8 @@ class PreRaceModel:
         self.driver_id_map = {}  # Mapping from driver code to driverId
         self.constructor_id_map = {}  # Mapping from constructor to constructorId
         self.loaded = False
+        self.circuit_stats = None # Store circuit stats for prediction
+        self.nationality_map = {}
     
     def load(self, csv_path="unprocessed_f1_training_data.csv"):
         """Load and train model from CSV - separates ML logic from Flask"""
@@ -67,10 +70,78 @@ class PreRaceModel:
             traceback.print_exc()
             return False
     
+    # --- HELPER FUNCTIONS FROM MAIN.PY ---
+    @staticmethod
+    def parse_time_str(t_str):
+        """Converts '1:30.123' or '90.123' to seconds (float)."""
+        if pd.isna(t_str) or str(t_str).strip() == '' or '\\N' in str(t_str): return np.nan
+        try:
+            t_str = str(t_str).strip()
+            if ':' in t_str:
+                parts = t_str.split(':')
+                return float(parts[0]) * 60 + float(parts[1])
+            return float(t_str)
+        except:
+            return np.nan
+
+    @staticmethod
+    def get_team_continuity_id(row):
+        name = str(row.get('name_team', '')).lower()
+        cid = row['constructorId']
+        if 'mercedes' in name or 'brawn' in name or 'honda' in name or 'bar' in name: return 131
+        if 'red bull' in name or 'jaguar' in name or 'stewart' in name: return 9
+        if 'alpine' in name or 'renault' in name or 'lotus' in name: return 214
+        if 'aston martin' in name or 'racing point' in name or 'force india' in name or 'spyker' in name or 'jordan' in name: return 117
+        if 'rb' in name or 'alphatauri' in name or 'toro rosso' in name or 'minardi' in name: return 213
+        if 'sauber' in name or 'alfa romeo' in name: return 15
+        return cid
+
+    @staticmethod
+    def calculate_elo_history(df):
+        driver_elo = {}      # Huidige rating per coureur
+        constructor_elo = {} # Huidige rating per team
+        
+        # Opslag voor de dataframe
+        d_elo_vals = []
+        c_elo_vals = []
+        
+        # Elo parameters
+        START_ELO = 1500.0
+        K_FACTOR = 20 # Hoe snel verandert de rating?
+        
+        # We itereren per race (chronologisch)
+        for race_id, group in df.groupby('raceId', sort=False):
+            # 1. Huidige ratings ophalen (DIT zijn de features voor de voorspelling)
+            current_d_elos = [driver_elo.get(d, START_ELO) for d in group['driverId']]
+            current_c_elos = [constructor_elo.get(c, START_ELO) for c in group['team_continuity_id']]
+            
+            # Opslaan in de lijsten
+            d_elo_vals.extend(current_d_elos)
+            c_elo_vals.extend(current_c_elos)
+            
+            # 2. Ratings updaten op basis van uitslag
+            avg_d_elo = np.mean(current_d_elos)
+            avg_c_elo = np.mean(current_c_elos)
+            
+            count = len(group)
+            for d_id, c_id, pos in zip(group['driverId'], group['team_continuity_id'], group['positionOrder']):
+                actual_score = (count - pos) / (count - 1) if count > 1 else 0.5
+                
+                d_curr = driver_elo.get(d_id, START_ELO)
+                d_exp = 1 / (1 + 10 ** ((avg_d_elo - d_curr) / 400))
+                driver_elo[d_id] = d_curr + K_FACTOR * (actual_score - d_exp)
+                
+                c_curr = constructor_elo.get(c_id, START_ELO)
+                c_exp = 1 / (1 + 10 ** ((avg_c_elo - c_curr) / 400))
+                constructor_elo[c_id] = c_curr + K_FACTOR * (actual_score - c_exp)
+                
+        return d_elo_vals, c_elo_vals
+
     def _engineer_features(self):
         """Feature engineering - extracted to separate method"""
         df = self.df
         
+        # --- 1. BASIC PREP ---
         # Basic preprocessing
         df['date'] = pd.to_datetime(df['date'])
         df = df.sort_values(by='date')
@@ -83,18 +154,76 @@ class PreRaceModel:
             self.driver_id_map = df.groupby('driver_code')['driverId'].first().to_dict()
         if 'team' in df.columns:
             self.constructor_id_map = df.groupby('team')['constructorId'].first().to_dict()
+
+        # --- 2. ELO RATINGS (FULL HISTORY) ---
+        df['team_continuity_id'] = df.apply(self.get_team_continuity_id, axis=1)
         
-        # Home race
+        # Elo berekenen op de HELE dataset
+        d_elos, c_elos = self.calculate_elo_history(df)
+        if len(d_elos) == len(df):
+            df['driver_elo'] = d_elos
+            df['constructor_elo'] = c_elos
+        else:
+            df['driver_elo'] = 1500.0
+            df['constructor_elo'] = 1500.0
+
+        # --- 3. TRACK CHARACTERISTICS (FULL HISTORY) ---
+        if 'fastestLapSpeed' in df.columns:
+            df['fastestLapSpeed_num'] = pd.to_numeric(df['fastestLapSpeed'], errors='coerce')
+            
+            # Circuit Type bepalen
+            circuit_stats = df.groupby('circuitId')['fastestLapSpeed_num'].mean().reset_index()
+            circuit_stats.rename(columns={'fastestLapSpeed_num': 'circuit_avg_speed'}, inplace=True)
+            
+            low_threshold = circuit_stats['circuit_avg_speed'].quantile(0.33)
+            high_threshold = circuit_stats['circuit_avg_speed'].quantile(0.66)
+            
+            def get_track_type(speed):
+                if pd.isna(speed): return 'Medium' 
+                if speed < low_threshold: return 'Twisty'
+                if speed > high_threshold: return 'HighSpeed'
+                return 'Medium'
+            
+            circuit_stats['track_type'] = circuit_stats['circuit_avg_speed'].apply(get_track_type)
+            self.circuit_stats = circuit_stats # Store for prediction
+            df = df.merge(circuit_stats[['circuitId', 'track_type']], on='circuitId', how='left')
+
+            # Circuit Length & Street Circuit
+            if 'fastest_lap_seconds' not in df.columns:
+                df['temp_seconds'] = pd.to_numeric(df['fastestLapTime'].str.replace(r'.*:', '', regex=True), errors='coerce')
+            else:
+                df['temp_seconds'] = df['fastest_lap_seconds']
+                
+            df['calc_length'] = (df['fastestLapSpeed_num'] * df['temp_seconds']) / 3600
+            circuit_len = df.groupby('circuitId')['calc_length'].mean().rename('circuit_length_km')
+            df = df.merge(circuit_len, on='circuitId', how='left')
+            
+            street_circuits = [6, 73, 15, 77, 79, 80, 1, 7] 
+            df['is_street_circuit'] = df['circuitId'].isin(street_circuits).astype(int)
+            df['alt'] = pd.to_numeric(df['alt'], errors='coerce').fillna(0)
+        else:
+            df['track_type'] = 'Medium'
+            df['circuit_length_km'] = 5.0
+            df['is_street_circuit'] = 0
+            df['alt'] = 0
+
+        # --- 4. FILTER 2015+ ---
+        df = df[df['year'] >= 2015].copy()
+        
+        # Driver Experience (re-calculated after filter as per main.py logic)
+        df['driver_experience'] = df.groupby('driverId').cumcount()
+
+        # --- 5. HOME RACE ---
         if 'country' not in df.columns:
             df['country'] = 'Unknown'
         
-        nationality_map = {
+        self.nationality_map = {
             'British': 'UK', 'German': 'Germany', 'Spanish': 'Spain', 'French': 'France',
             'Italian': 'Italy', 'Dutch': 'Netherlands', 'Australian': 'Australia',
             'Monegasque': 'Monaco', 'American': 'USA', 'Japanese': 'Japan', 'Canadian': 'Canada',
             'Mexican': 'Mexico', 'Brazilian': 'Brazil'
         }
-        df['mapped_nationality'] = df['nationality'].map(nationality_map).fillna(df['nationality'])
+        df['mapped_nationality'] = df['nationality'].map(self.nationality_map).fillna(df['nationality'])
         df['is_home_race'] = np.where(df['mapped_nationality'] == df['country'], 1, 0)
         
         # Binning
@@ -109,7 +238,12 @@ class PreRaceModel:
         df['grid_bin_code'] = self.le_grid.fit_transform(df['grid_bin'].astype(str))
         df['age_bin_code'] = self.le_age.fit_transform(df['age_bin'].astype(str))
         
-        # Recent form calculation
+        # --- 6. OVERTAKING DIFFICULTY ---
+        df['pos_change_abs'] = (df['grid'] - df['positionOrder']).abs()
+        df['circuit_overtake_index'] = df.groupby('circuitId')['pos_change_abs'].transform(lambda x: x.expanding().mean().shift(1))
+        df['circuit_overtake_index'] = df['circuit_overtake_index'].fillna(df['pos_change_abs'].mean())
+
+        # --- 7. RECENT FORM ---
         def calculate_rolling_avg(group, window=5):
             def weighted_mean(x):
                 weights = np.arange(1, len(x) + 1)
@@ -121,7 +255,7 @@ class PreRaceModel:
         df['driver_recent_form'] = df['driver_recent_form'].fillna(12.0)
         df['constructor_recent_form'] = df['constructor_recent_form'].fillna(12.0)
         
-        # Pitstop features
+        # --- 8. PITSTOP FEATURES ---
         global_pit_mean = 24000.0
         if 'pit_stops_duration_ms' in df.columns and 'pit_stops_count' in df.columns:
             df['pit_stops_count'] = df['pit_stops_count'].fillna(0)
@@ -134,14 +268,57 @@ class PreRaceModel:
             global_pit_mean = pit_mean if not pd.isna(pit_mean) else 24000.0
             df['avg_pit_duration_filled'] = df['avg_pit_duration'].fillna(global_pit_mean)
             df['driver_recent_pit_avg'] = df.groupby('driverId')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
-            df['constructor_recent_pit_avg'] = df.groupby('constructorId')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
+            df['constructor_recent_pit_avg'] = df.groupby('team_continuity_id')['avg_pit_duration_filled'].transform(calculate_rolling_avg)
             df['driver_recent_pit_avg'] = df['driver_recent_pit_avg'].fillna(global_pit_mean)
             df['constructor_recent_pit_avg'] = df['constructor_recent_pit_avg'].fillna(global_pit_mean)
         else:
             df['driver_recent_pit_avg'] = global_pit_mean
             df['constructor_recent_pit_avg'] = global_pit_mean
         
-        # Weather
+        # --- 9. TIRE STRATEGY ---
+        df['circuit_avg_stops'] = df.groupby('circuitId')['pit_stops_count'].transform(lambda x: x.expanding().mean().shift(1))
+        df['circuit_avg_stops'] = df['circuit_avg_stops'].fillna(1.5)
+        
+        race_stint_avg = df.groupby('raceId')['avg_stint_length'].transform('mean')
+        df['tire_strategy_ratio'] = df['avg_stint_length'] / race_stint_avg
+        df['tire_strategy_ratio'] = df['tire_strategy_ratio'].fillna(1.0)
+        df['driver_tire_strategy'] = df.groupby('driverId')['tire_strategy_ratio'].transform(calculate_rolling_avg)
+        df['driver_tire_strategy'] = df['driver_tire_strategy'].fillna(1.0)
+
+        # --- 10. RELIABILITY (DNF) ---
+        if 'status' in df.columns:
+            df['is_dnf'] = ~df['status'].astype(str).str.match(r'(Finished|\+\d+\sLaps)').fillna(False)
+            df['is_dnf'] = df['is_dnf'].astype(int)
+            df['driver_dnf_rate'] = df.groupby('driverId')['is_dnf'].transform(calculate_rolling_avg)
+            df['constructor_dnf_rate'] = df.groupby('team_continuity_id')['is_dnf'].transform(calculate_rolling_avg)
+            df['driver_dnf_rate'] = df['driver_dnf_rate'].fillna(0.2)
+            df['constructor_dnf_rate'] = df['constructor_dnf_rate'].fillna(0.2)
+        else:
+            df['driver_dnf_rate'] = 0.2
+            df['constructor_dnf_rate'] = 0.2
+
+        # --- 11. QUALIFYING PACE ---
+        for col in ['q1', 'q2', 'q3']:
+            if col in df.columns:
+                df[f'{col}_sec'] = df[col].apply(self.parse_time_str)
+        
+        df['best_quali_time'] = df[['q1_sec', 'q2_sec', 'q3_sec']].min(axis=1)
+        pole_times = df.groupby('raceId')['best_quali_time'].min().rename('pole_time')
+        df = df.merge(pole_times, on='raceId', how='left')
+        df['quali_pace_deficit'] = df['best_quali_time'] / df['pole_time']
+        df['quali_pace_deficit'] = df['quali_pace_deficit'].fillna(1.07)
+
+        # --- 12. TEAMMATE BATTLE ---
+        df['teammate_form_diff'] = df.groupby(['raceId', 'team_continuity_id'])['driver_recent_form'].transform(lambda x: x - x.mean())
+
+        # --- 13. DRIVER STYLE AFFINITY ---
+        df['driver_type_form'] = df.groupby(['driverId', 'track_type'])['positionOrder'].transform(
+            lambda x: x.shift(1).expanding().mean()
+        )
+        df['driver_type_form'] = df['driver_type_form'].fillna(12.0)
+        df['driver_style_affinity'] = df['driver_recent_form'] - df['driver_type_form']
+
+        # --- 14. WEATHER ---
         for col in ['weather_temp_c', 'weather_precip_mm', 'weather_cloud_pct']:
             if col not in df.columns:
                 if col == 'weather_temp_c':
@@ -151,11 +328,11 @@ class PreRaceModel:
                 else:
                     df[col] = 50.0
         
-        df['weather_temp_c'] = df['weather_temp_c'].fillna(df['weather_temp_c'].mean())
+        df['weather_temp_c'] = df['weather_temp_c'].fillna(df['weather_temp_c'].median())
         df['weather_precip_mm'] = df['weather_precip_mm'].fillna(0.0)
         df['weather_cloud_pct'] = df['weather_cloud_pct'].fillna(50.0)
         
-        # Track history
+        # --- 15. TRACK HISTORY ---
         def calculate_expanding_mean(group):
             return group.shift(1).expanding().mean()
         
@@ -170,6 +347,57 @@ class PreRaceModel:
         df['driver_track_avg_grid'] = df['driver_track_avg_grid'].fillna(12.0)
         df['driver_track_avg_finish'] = df['driver_track_avg_finish'].fillna(12.0)
         df['driver_track_podiums'] = df['driver_track_podiums'].fillna(0.0)
+
+        # --- 16. AGGRESSIVENESS & CONSISTENCY ---
+        if 'fastestLapTime' in df.columns:
+            df['fastest_lap_seconds'] = df['fastestLapTime'].apply(self.parse_time_str)
+            race_best_times = df.groupby('raceId')['fastest_lap_seconds'].min().reset_index().rename(columns={'fastest_lap_seconds': 'race_best_time'})
+            df = df.merge(race_best_times, on='raceId', how='left')
+            df['speed_ratio'] = df['fastest_lap_seconds'] / df['race_best_time']
+            df['speed_ratio'] = df['speed_ratio'].fillna(1.10)
+            df['driver_recent_speed'] = df.groupby('driverId')['speed_ratio'].transform(calculate_rolling_avg)
+            df['driver_recent_speed'] = df['driver_recent_speed'].fillna(1.10)
+            
+            df['circuit_speed_index'] = df.groupby('circuitId')['fastest_lap_seconds'].transform(lambda x: x.expanding().mean().shift(1))
+            global_lap_mean = df['fastest_lap_seconds'].mean()
+            df['circuit_speed_index'] = df['circuit_speed_index'].fillna(global_lap_mean)
+            
+            df['fastest_lap_rank'] = df.groupby('raceId')['fastest_lap_seconds'].rank(method='min')
+            df['aggression_score'] = df['positionOrder'] - df['fastest_lap_rank']
+            df['driver_aggression'] = df.groupby('driverId')['aggression_score'].transform(calculate_rolling_avg)
+            df['driver_aggression'] = df['driver_aggression'].fillna(0.0)
+            
+            if 'std_lap_time_ms' in df.columns:
+                df['driver_consistency'] = df.groupby('driverId')['std_lap_time_ms'].transform(calculate_rolling_avg)
+                df['driver_consistency'] = df['driver_consistency'].fillna(5000.0)
+            else:
+                df['driver_consistency'] = 5000.0
+        else:
+            df['driver_recent_speed'] = 1.10
+            df['circuit_speed_index'] = 90.0
+            df['driver_consistency'] = 5000.0
+
+        # --- 17. POINTS & PENALTIES ---
+        df['points_before_race'] = (df.groupby(['year', 'driverId'])['points'].cumsum() - df['points']).fillna(0)
+        if 'quali_position' in df.columns:
+            df['quali_pos_filled'] = df['quali_position'].fillna(df['grid'])
+        else:
+            df['quali_pos_filled'] = df['grid']
+        df['grid_penalty'] = df['grid'] - df['quali_pos_filled']
+
+        # --- 18. WEATHER CONFIDENCE ---
+        df['is_wet_race'] = df['weather_precip_mm'] > 0.1
+        wet_avg = df[df['is_wet_race']].groupby('driverId')['positionOrder'].transform(lambda x: x.expanding().mean().shift(1))
+        dry_avg = df[~df['is_wet_race']].groupby('driverId')['positionOrder'].transform(lambda x: x.expanding().mean().shift(1))
+        df['avg_finish_wet'] = wet_avg
+        df['avg_finish_dry'] = dry_avg
+        df['avg_finish_dry'] = df['avg_finish_dry'].fillna(12.0)
+        df['avg_finish_wet'] = df['avg_finish_wet'].fillna(df['avg_finish_dry'])
+        df['weather_confidence_diff'] = df['avg_finish_wet'] - df['avg_finish_dry']
+
+        # --- 19. OVERTAKE RATE ---
+        df['positions_gained'] = df['grid'] - df['positionOrder']
+        df['driver_overtake_rate'] = df.groupby('driverId')['positions_gained'].transform(calculate_rolling_avg).fillna(0.0)
         
         self.df = df
     
@@ -300,11 +528,44 @@ class PreRaceModel:
         try:
             # Define features - ENHANCED with better discriminatory power
             self.feature_cols = [
-                'grid', 'circuitId', 'driver_age', 'driver_experience', 'is_home_race',
-                'grid_bin_code', 'age_bin_code', 'driver_recent_form', 'constructor_recent_form',
-                'driver_track_avg_grid', 'driver_track_avg_finish', 'driver_track_podiums',
-                'weather_temp_c', 'weather_precip_mm', 'weather_cloud_pct',
-                'driver_recent_pit_avg', 'constructor_recent_pit_avg'
+                'grid', 
+                'grid_penalty',
+                'circuitId', 
+                'circuit_speed_index',
+                'circuit_overtake_index',
+                'driver_age',
+                'driver_experience',
+                'is_home_race',
+                'grid_bin_code',
+                'age_bin_code',
+                'driver_recent_form',
+                'constructor_recent_form',
+                'driver_track_avg_grid',
+                'driver_track_avg_finish',
+                'driver_track_podiums',
+                'weather_temp_c',
+                'weather_precip_mm',
+                'weather_cloud_pct',
+                'weather_confidence_diff',
+                'driver_aggression',
+                'driver_overtake_rate',
+                'driver_consistency',
+                'driver_recent_pit_avg',
+                'constructor_recent_pit_avg',
+                'driver_dnf_rate',
+                'constructor_dnf_rate',
+                'circuit_avg_stops',
+                'driver_tire_strategy',
+                'driver_recent_speed',
+                'points_before_race',
+                'quali_pace_deficit',
+                'teammate_form_diff',
+                'driver_elo',
+                'constructor_elo',
+                'driver_style_affinity',
+                'circuit_length_km',
+                'is_street_circuit',
+                'alt'
             ]
             
             # Check all features exist
@@ -435,13 +696,6 @@ class PreRaceModel:
         print(f"\n[PRERACE PREDICT] Starting predictions for race {race_num}")
         print(f"[PRERACE PREDICT] Using {len(self.feature_cols)} features: {self.feature_cols}")
         
-        nationality_map = {
-            'British': 'UK', 'German': 'Germany', 'Spanish': 'Spain', 'French': 'France',
-            'Italian': 'Italy', 'Dutch': 'Netherlands', 'Australian': 'Australia',
-            'Monegasque': 'Monaco', 'American': 'USA', 'Japanese': 'Japan', 'Canadian': 'Canada',
-            'Mexican': 'Mexico', 'Brazilian': 'Brazil'
-        }
-        
         # Build prediction data
         X_next_list = []
         for i, driver_info in enumerate(grid_data):
@@ -454,29 +708,59 @@ class PreRaceModel:
             
             # Get historical data
             driver_experience = self._get_experience(driver_id)
-            driver_recent_form = self._get_recent_form('driverId', driver_id)
-            constructor_recent_form = self._get_recent_form('constructorId', constructor_id)
-            driver_recent_pit_avg = self._get_pit_average('driverId', driver_id)
-            constructor_recent_pit_avg = self._get_pit_average('constructorId', constructor_id)
+            
+            # Determine track type for this race
+            track_type = 'Medium'
+            if self.circuit_stats is not None:
+                track_row = self.circuit_stats[self.circuit_stats['circuitId'] == int(race_num)]
+                if not track_row.empty:
+                    track_type = track_row.iloc[0]['track_type']
+            
+            # Get latest values for all features
+            # Note: We use helper methods to fetch the latest known value from history
+            
+            # Team Continuity ID for lookups
+            team_cont_id = self.get_team_continuity_id({'name_team': team, 'constructorId': constructor_id})
             
             X_next_list.append({
                 'grid': int(driver_info.get('grid_pos', i + 1)),
+                'grid_penalty': 0, # Assuming no penalty for prediction unless known
                 'circuitId': int(race_num),
+                'circuit_speed_index': self._get_latest_value('circuitId', int(race_num), 'circuit_speed_index', 90.0),
+                'circuit_overtake_index': self._get_latest_value('circuitId', int(race_num), 'circuit_overtake_index', 2.0),
                 'driver_age': 25,  # Default
                 'driver_experience': int(driver_experience),
                 'is_home_race': 0,
                 'grid_bin_code': int(self.le_grid.transform(['Top3' if i < 5 else 'Points'])[0]),
                 'age_bin_code': int(self.le_age.transform(['Prime'])[0]),
-                'driver_recent_form': float(driver_recent_form),
-                'constructor_recent_form': float(constructor_recent_form),
-                'driver_track_avg_grid': 12.0,
-                'driver_track_avg_finish': 12.0,
-                'driver_track_podiums': 0.0,
+                'driver_recent_form': float(self._get_recent_form('driverId', driver_id)),
+                'constructor_recent_form': float(self._get_recent_form('team_continuity_id', team_cont_id)),
+                'driver_track_avg_grid': self._get_track_history(driver_id, int(race_num), 'grid'),
+                'driver_track_avg_finish': self._get_track_history(driver_id, int(race_num), 'positionOrder'),
+                'driver_track_podiums': self._get_track_history(driver_id, int(race_num), 'is_podium', agg='sum'),
                 'weather_temp_c': 20.0,
                 'weather_precip_mm': 0.5,
                 'weather_cloud_pct': 50.0,
-                'driver_recent_pit_avg': driver_recent_pit_avg,
-                'constructor_recent_pit_avg': constructor_recent_pit_avg
+                'weather_confidence_diff': self._get_latest_value('driverId', driver_id, 'weather_confidence_diff', 0.0),
+                'driver_aggression': self._get_recent_form('driverId', driver_id, 'aggression_score', 0.0),
+                'driver_overtake_rate': self._get_recent_form('driverId', driver_id, 'positions_gained', 0.0),
+                'driver_consistency': self._get_recent_form('driverId', driver_id, 'std_lap_time_ms', 5000.0),
+                'driver_recent_pit_avg': self._get_pit_average('driverId', driver_id),
+                'constructor_recent_pit_avg': self._get_pit_average('team_continuity_id', team_cont_id),
+                'driver_dnf_rate': self._get_recent_form('driverId', driver_id, 'is_dnf', 0.2),
+                'constructor_dnf_rate': self._get_recent_form('team_continuity_id', team_cont_id, 'is_dnf', 0.2),
+                'circuit_avg_stops': self._get_latest_value('circuitId', int(race_num), 'circuit_avg_stops', 1.5),
+                'driver_tire_strategy': self._get_recent_form('driverId', driver_id, 'tire_strategy_ratio', 1.0),
+                'driver_recent_speed': self._get_recent_form('driverId', driver_id, 'speed_ratio', 1.10),
+                'points_before_race': self._get_current_points(driver_id),
+                'quali_pace_deficit': 1.0 + (int(driver_info.get('grid_pos', i + 1)) - 1) * 0.003, # Estimate
+                'teammate_form_diff': 0.0, # Simplified
+                'driver_elo': self._get_latest_value('driverId', driver_id, 'driver_elo', 1500.0),
+                'constructor_elo': self._get_latest_value('team_continuity_id', team_cont_id, 'constructor_elo', 1500.0),
+                'driver_style_affinity': self._get_style_affinity(driver_id, track_type),
+                'circuit_length_km': self._get_latest_value('circuitId', int(race_num), 'circuit_length_km', 5.0),
+                'is_street_circuit': self._get_latest_value('circuitId', int(race_num), 'is_street_circuit', 0),
+                'alt': self._get_latest_value('circuitId', int(race_num), 'alt', 0)
             })
         
         X_next = pd.DataFrame(X_next_list)
@@ -609,6 +893,42 @@ class PreRaceModel:
             return float(avg) if not pd.isna(avg) else default_val
         except:
             return default_val
+
+    def _get_latest_value(self, id_col, id_val, target_col, default_val):
+        """Get the latest known value for a column"""
+        try:
+            val = self.df[self.df[id_col] == id_val].sort_values(by='date').iloc[-1][target_col]
+            return float(val) if not pd.isna(val) else default_val
+        except:
+            return default_val
+
+    def _get_track_history(self, driver_id, circuit_id, target_col, agg='mean'):
+        """Get historical performance on a specific track"""
+        try:
+            history = self.df[(self.df['driverId'] == driver_id) & (self.df['circuitId'] == circuit_id)]
+            if len(history) == 0: return 12.0 if agg == 'mean' else 0.0
+            if agg == 'sum': return float(history[target_col].sum())
+            return float(history[target_col].mean())
+        except:
+            return 12.0 if agg == 'mean' else 0.0
+
+    def _get_current_points(self, driver_id):
+        """Get total points for current season (approximate using latest year in data)"""
+        try:
+            latest_year = self.df['year'].max()
+            return float(self.df[(self.df['driverId'] == driver_id) & (self.df['year'] == latest_year)]['points'].sum())
+        except:
+            return 0.0
+
+    def _get_style_affinity(self, driver_id, track_type):
+        try:
+            type_history = self.df[(self.df['driverId'] == driver_id) & (self.df['track_type'] == track_type)]
+            if len(type_history) == 0: return 0.0
+            avg_pos = type_history['positionOrder'].mean()
+            recent_form = self._get_recent_form('driverId', driver_id)
+            return float(recent_form - avg_pos)
+        except:
+            return 0.0
 
 
 # Global instance with lazy loading (thread-safe)
