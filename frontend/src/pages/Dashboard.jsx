@@ -181,6 +181,7 @@ export default function Dashboard() {
                   .toString(36)
                   .substr(2, 9)}`,
                 type: e.type || "info",
+                color_code: e.color_code || undefined,  // Add color_code from backend
                 message: e.message,
                 time: new Date().toLocaleTimeString(),
                 lapNumber: data.lap_number,
