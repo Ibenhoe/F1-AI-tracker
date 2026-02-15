@@ -49,6 +49,9 @@ class PreRaceModel:
                 return False
             
             print(f"[PRERACE] Loaded {len(self.df)} rows from CSV")
+            print(f"[PRERACE] CSV Columns: {self.df.columns.tolist()}")
+            print(f"[PRERACE] First few rows sample:")
+            print(self.df.head(2))
             
             # Feature Engineering
             self._engineer_features()
@@ -150,10 +153,28 @@ class PreRaceModel:
         df['driver_experience'] = df.groupby('driverId').cumcount()
         
         # Build ID mappings for better lookup in predictions
-        if 'driver_code' in df.columns:
-            self.driver_id_map = df.groupby('driver_code')['driverId'].first().to_dict()
+        # Create mapping from driver name to driverId (since grid_data uses names from FastF1)
+        print(f"[PRERACE MAPPING DEBUG] Trying to build driver_id_map...")
+        print(f"[PRERACE MAPPING DEBUG] Available columns: {df.columns.tolist()}")
+        
+        # Create mapping from driver name to driverId
+        if 'name' in df.columns:
+            print(f"[PRERACE MAPPING DEBUG] Found 'name' column")
+            print(f"[PRERACE MAPPING DEBUG] Unique driver names: {df['name'].nunique()}")
+            print(f"[PRERACE MAPPING DEBUG] Sample names: {df['name'].unique()[:10]}")
+            # Map full name to driverId
+            self.driver_id_map = df.groupby('name')['driverId'].first().to_dict()
+            print(f"[PRERACE] Built driver_id_map from 'name' column: {len(self.driver_id_map)} drivers")
+            print(f"[PRERACE] Sample mappings: {list(self.driver_id_map.items())[:5]}")
+        else:
+            print(f"[PRERACE] ERROR: Could not find driver name column. Available columns: {df.columns.tolist()}")
+            self.driver_id_map = {}
+        
         if 'team' in df.columns:
             self.constructor_id_map = df.groupby('team')['constructorId'].first().to_dict()
+        elif 'TeamName' in df.columns:
+            self.constructor_id_map = df.groupby('TeamName')['constructorId'].first().to_dict()
+            print(f"[PRERACE] Built constructor_id_map from 'TeamName' column: {len(self.constructor_id_map)} teams")
 
         # --- 2. ELO RATINGS (FULL HISTORY) ---
         df['team_continuity_id'] = df.apply(self.get_team_continuity_id, axis=1)
@@ -688,7 +709,7 @@ class PreRaceModel:
             race_num: Race circuit ID
         
         Returns:
-            List of prediction dicts sorted by AI score
+            List of prediction dicts sorted by AI score with full driver names
         """
         # Validate model is fitted before attempting prediction
         self._validate_model_fitted()
@@ -696,18 +717,58 @@ class PreRaceModel:
         print(f"\n[PRERACE PREDICT] Starting predictions for race {race_num}")
         print(f"[PRERACE PREDICT] Using {len(self.feature_cols)} features: {self.feature_cols}")
         
+        # Build reverse mapping: driverId -> driver name (for display)
+        # Primary: Use driver NUMBER to full name (most reliable)
+        # Fallback: Use driver CODE to full name (if number missing)
+        driver_number_to_name = {
+            63: 'George Russell', 4: 'Lando Norris', 22: 'Yuki Tsunoda',
+            31: 'Esteban Ocon', 30: 'Liam Lawson', 16: 'Charles Leclerc',
+            23: 'Alexander Albon', 1: 'Max Verstappen', 11: 'Sergio Perez',
+            44: 'Lewis Hamilton', 81: 'Oscar Piastri', 55: 'Carlos Sainz',
+            14: 'Fernando Alonso', 18: 'Lance Stroll', 10: 'Pierre Gasly',
+            20: 'Kevin Magnussen', 27: 'Nico Hulkenberg', 77: 'Valtteri Bottas',
+            24: 'Zhou Guanyu', 3: 'Daniel Ricciardo', 2: 'Logan Sargeant',
+            43: 'Lance Stroll', 50: 'Oliver Bearman'
+        }
+        
+        driver_code_to_name = {
+            'VER': 'Max Verstappen', 'LEC': 'Charles Leclerc', 'SAI': 'Carlos Sainz',
+            'PIA': 'Oscar Piastri', 'NOR': 'Lando Norris', 'HAM': 'Lewis Hamilton',
+            'RUS': 'George Russell', 'ALO': 'Fernando Alonso', 'STR': 'Lance Stroll',
+            'GAS': 'Pierre Gasly', 'OCO': 'Esteban Ocon', 'MAG': 'Kevin Magnussen',
+            'HUL': 'Nico Hulkenberg', 'BOT': 'Valtteri Bottas', 'ZHO': 'Zhou Guanyu',
+            'TSU': 'Yuki Tsunoda', 'ALB': 'Alexander Albon', 'SAR': 'Logan Sargeant',
+            'PER': 'Sergio Perez', 'RIC': 'Daniel Ricciardo', 'LAW': 'Liam Lawson'
+        }
+        
+        driver_id_to_name = {}
+        for driver_info in grid_data:
+            driver_id = int(driver_info.get('number', 0))
+            driver_code = driver_info.get('driver', '')
+            
+            # Priority: 1) driver_name field, 2) number mapping, 3) code mapping, 4) code itself
+            display_name = (driver_info.get('driver_name') or 
+                          driver_number_to_name.get(driver_id) or
+                          driver_code_to_name.get(driver_code, driver_code))
+            
+            if driver_id > 0 and display_name:
+                driver_id_to_name[driver_id] = display_name
+                print(f"[PRERACE PREDICT] Mapped driver #{driver_id} ({driver_code}) -> {display_name}")
+        
+        print(f"[PRERACE PREDICT] Built driver_id_to_name mapping: {len(driver_id_to_name)} drivers")
+        
         # Build prediction data
         X_next_list = []
         for i, driver_info in enumerate(grid_data):
             driver_code = driver_info.get('driver', f'DRV{i}')
             team = driver_info.get('team', 'Unknown')
             
-            # Use better ID lookup
-            driver_id = self.driver_id_map.get(driver_code, i + 1)
+            # Use car number for feature engineering (grid position indicator)
+            current_driver_id = int(driver_info.get('number', i + 1))
             constructor_id = self.constructor_id_map.get(team, i + 100)
             
             # Get historical data
-            driver_experience = self._get_experience(driver_id)
+            driver_experience = self._get_experience(current_driver_id)
             
             # Determine track type for this race
             track_type = 'Medium'
@@ -733,31 +794,31 @@ class PreRaceModel:
                 'is_home_race': 0,
                 'grid_bin_code': int(self.le_grid.transform(['Top3' if i < 5 else 'Points'])[0]),
                 'age_bin_code': int(self.le_age.transform(['Prime'])[0]),
-                'driver_recent_form': float(self._get_recent_form('driverId', driver_id)),
+                'driver_recent_form': float(self._get_recent_form('driverId', current_driver_id)),
                 'constructor_recent_form': float(self._get_recent_form('team_continuity_id', team_cont_id)),
-                'driver_track_avg_grid': self._get_track_history(driver_id, int(race_num), 'grid'),
-                'driver_track_avg_finish': self._get_track_history(driver_id, int(race_num), 'positionOrder'),
-                'driver_track_podiums': self._get_track_history(driver_id, int(race_num), 'is_podium', agg='sum'),
+                'driver_track_avg_grid': self._get_track_history(current_driver_id, int(race_num), 'grid'),
+                'driver_track_avg_finish': self._get_track_history(current_driver_id, int(race_num), 'positionOrder'),
+                'driver_track_podiums': self._get_track_history(current_driver_id, int(race_num), 'is_podium', agg='sum'),
                 'weather_temp_c': 20.0,
                 'weather_precip_mm': 0.5,
                 'weather_cloud_pct': 50.0,
-                'weather_confidence_diff': self._get_latest_value('driverId', driver_id, 'weather_confidence_diff', 0.0),
-                'driver_aggression': self._get_recent_form('driverId', driver_id, 'aggression_score', 0.0),
-                'driver_overtake_rate': self._get_recent_form('driverId', driver_id, 'positions_gained', 0.0),
-                'driver_consistency': self._get_recent_form('driverId', driver_id, 'std_lap_time_ms', 5000.0),
-                'driver_recent_pit_avg': self._get_pit_average('driverId', driver_id),
+                'weather_confidence_diff': self._get_latest_value('driverId', current_driver_id, 'weather_confidence_diff', 0.0),
+                'driver_aggression': self._get_recent_form('driverId', current_driver_id, 'aggression_score', 0.0),
+                'driver_overtake_rate': self._get_recent_form('driverId', current_driver_id, 'positions_gained', 0.0),
+                'driver_consistency': self._get_recent_form('driverId', current_driver_id, 'std_lap_time_ms', 5000.0),
+                'driver_recent_pit_avg': self._get_pit_average('driverId', current_driver_id),
                 'constructor_recent_pit_avg': self._get_pit_average('team_continuity_id', team_cont_id),
-                'driver_dnf_rate': self._get_recent_form('driverId', driver_id, 'is_dnf', 0.2),
+                'driver_dnf_rate': self._get_recent_form('driverId', current_driver_id, 'is_dnf', 0.2),
                 'constructor_dnf_rate': self._get_recent_form('team_continuity_id', team_cont_id, 'is_dnf', 0.2),
                 'circuit_avg_stops': self._get_latest_value('circuitId', int(race_num), 'circuit_avg_stops', 1.5),
-                'driver_tire_strategy': self._get_recent_form('driverId', driver_id, 'tire_strategy_ratio', 1.0),
-                'driver_recent_speed': self._get_recent_form('driverId', driver_id, 'speed_ratio', 1.10),
-                'points_before_race': self._get_current_points(driver_id),
+                'driver_tire_strategy': self._get_recent_form('driverId', current_driver_id, 'tire_strategy_ratio', 1.0),
+                'driver_recent_speed': self._get_recent_form('driverId', current_driver_id, 'speed_ratio', 1.10),
+                'points_before_race': self._get_current_points(current_driver_id),
                 'quali_pace_deficit': 1.0 + (int(driver_info.get('grid_pos', i + 1)) - 1) * 0.003, # Estimate
                 'teammate_form_diff': 0.0, # Simplified
-                'driver_elo': self._get_latest_value('driverId', driver_id, 'driver_elo', 1500.0),
+                'driver_elo': self._get_latest_value('driverId', current_driver_id, 'driver_elo', 1500.0),
                 'constructor_elo': self._get_latest_value('team_continuity_id', team_cont_id, 'constructor_elo', 1500.0),
-                'driver_style_affinity': self._get_style_affinity(driver_id, track_type),
+                'driver_style_affinity': self._get_style_affinity(current_driver_id, track_type),
                 'circuit_length_km': self._get_latest_value('circuitId', int(race_num), 'circuit_length_km', 5.0),
                 'is_street_circuit': self._get_latest_value('circuitId', int(race_num), 'is_street_circuit', 0),
                 'alt': self._get_latest_value('circuitId', int(race_num), 'alt', 0)
@@ -841,12 +902,17 @@ class PreRaceModel:
             results.append({
                 'position': i + 1,
                 'driver': driver_info.get('driver', f'Driver {i+1}'),
+                'driver_name': driver_info.get('driver_name', driver_code),  # Use driver_name field directly from grid_data
                 'number': int(driver_info.get('number', 0)),
                 'team': driver_info.get('team', 'Unknown'),
                 'grid_position': int(driver_info.get('grid_pos', i + 1)),
                 'ai_score': float(score),
                 'confidence': float(confidence)
             })
+            
+            # Debug: print first 3 drivers with mapping lookup
+            if i < 3:
+                print(f"[PRERACE] Driver {i}: {driver_info.get('driver')} ({driver_info.get('driver_name')})")
         
         # Print debug info
         if debug_info:
@@ -860,6 +926,14 @@ class PreRaceModel:
         # Sort by AI score (ascending = best predictions first)
         # Lower score = better predicted position
         results.sort(key=lambda x: x['ai_score'])
+        
+        # DETECT ANOMALIES: Drivers to watch out for
+        anomalies = self._detect_grid_anomalies(grid_data, results)
+        
+        # Add anomalies to results
+        for result in results:
+            result['anomaly'] = next((a for a in anomalies if a['driver'] == result['driver']), None)
+        
         return results
     
     def _get_experience(self, driver_id):
@@ -929,6 +1003,142 @@ class PreRaceModel:
             return float(recent_form - avg_pos)
         except:
             return 0.0
+
+    def _detect_grid_anomalies(self, grid_data, predictions):
+        """
+        Detect anomalies: Drivers whose qualifying position differs significantly
+        from their historical performance pattern.
+        
+        Returns list of anomaly dicts with type and explanation for UI display
+        """
+        anomalies = []
+        
+        print(f"\n[ANOMALY DEBUG] Starting anomaly detection for {len(grid_data)} drivers")
+        
+        all_driver_stats = []  # Track stats for all drivers
+        
+        for driver_info, pred_result in zip(grid_data, predictions):
+            driver_code = driver_info.get('driver', '?')
+            driver_name = driver_info.get('driver_name', driver_code)  # Get full driver name from grid_data
+            grid_pos = int(driver_info.get('grid_pos', 15))
+            
+            # Get driver ID directly from grid_data's 'number' field
+            # FastF1 driver number matches driverId in CSV
+            driver_id = int(driver_info.get('number', -1))
+            
+            if driver_id < 1:
+                print(f"[ANOMALY DEBUG] {driver_code}: No valid driver number/ID found")
+                continue
+            
+            # Get driver's historical average finishing position
+            try:
+                driver_records = self.df[self.df['driverId'] == driver_id]
+                if len(driver_records) == 0:
+                    print(f"[ANOMALY DEBUG] {driver_code} (ID {driver_id}): No historical records")
+                    continue
+                
+                avg_finish = driver_records['positionOrder'].mean()
+                print(f"[ANOMALY DEBUG] {driver_code}: Grid P{grid_pos}, Avg Finish P{avg_finish:.1f}, Records: {len(driver_records)}")
+                
+                all_driver_stats.append({
+                    'driver': driver_code,
+                    'grid': grid_pos,
+                    'avg_finish': avg_finish,
+                    'records': len(driver_records)
+                })
+                
+                # ANOMALY 1: Good driver qualifying badly
+                # Flag ANY top performer who qualifies outside their normal range
+                # Either: historically top-10 driver but qualified P11+, OR any 5+ position drop
+                if (avg_finish <= 10 and grid_pos >= 11) or (grid_pos - avg_finish >= 5):
+                    position_gap = grid_pos - avg_finish
+                    if position_gap >= 1:  # Any noticeable gap
+                        print(f"[ANOMALY DEBUG] {driver_code}: UNDERPERFORMING_GRID detected (gap: {position_gap:.1f})")
+                        anomalies.append({
+                            'driver': driver_code,
+                            'driver_name': driver_name,
+                            'type': 'UNDERPERFORMING_GRID',
+                            'severity': min(3, max(1, int(position_gap / 3))),
+                            'message': f"⚠️ {driver_name} is {int(position_gap)} positions worse than usual! Normally finishes ~P{int(avg_finish)}, qualified P{grid_pos}.",
+                            'explanation': 'Watch for strong comeback potential - this driver may have had a bad qualifying lap.',
+                            'avg_finish': float(avg_finish),
+                            'grid_pos': grid_pos
+                        })
+                
+                # ANOMALY 2: Surprising qualifying performance
+                # Flag when grid position differs significantly from average (5+ positions either way)
+                position_diff = abs(grid_pos - avg_finish)
+                if position_diff >= 5:  # Big surprise either direction
+                    if grid_pos < avg_finish:
+                        # Qualified better than usual
+                        print(f"[ANOMALY DEBUG] {driver_code}: OVERPERFORMING_GRID detected (gain: {position_diff:.1f})")
+                        anomalies.append({
+                            'driver': driver_code,
+                            'driver_name': driver_name,
+                            'type': 'OVERPERFORMING_GRID',
+                            'severity': min(3, max(1, int(position_diff / 5))),
+                            'message': f"🚀 {driver_name} qualified MUCH BETTER than usual! Normally finishes ~P{int(avg_finish)}, now P{grid_pos}.",
+                            'explanation': 'Exceptional qualifying performance - might struggle with race pace or tire management.',
+                            'avg_finish': float(avg_finish),
+                            'grid_pos': grid_pos
+                        })
+                
+                # ANOMALY 3: Extreme form shifts
+                if len(driver_records) >= 3:
+                    recent_avg = driver_records.sort_values('date').tail(5)['positionOrder'].mean()
+                    recent_vs_career = abs(recent_avg - avg_finish)
+                    
+                    if recent_vs_career >= 2:  # Very low threshold for testing
+                        if recent_avg < avg_finish:
+                            print(f"[ANOMALY DEBUG] {driver_code}: FORM_IMPROVEMENT detected (diff: {recent_vs_career:.1f})")
+                            anomalies.append({
+                                'driver': driver_code,
+                                'driver_name': driver_name,
+                                'type': 'FORM_IMPROVEMENT',
+                                'severity': min(2, max(1, int(recent_vs_career / 2))),
+                                'message': f"📈 {driver_name} in RISING FORM! Recent avg: P{int(recent_avg)} vs career P{int(avg_finish)}.",
+                                'explanation': 'Driver may be gaining confidence and setup understanding.',
+                                'recent_avg': float(recent_avg),
+                                'career_avg': float(avg_finish)
+                            })
+                        elif recent_avg > avg_finish:  # Only if significantly worse recently
+                            if recent_vs_career >= 3:  # Require bigger gap for decline
+                                print(f"[ANOMALY DEBUG] {driver_code}: FORM_DECLINE detected (diff: {recent_vs_career:.1f})")
+                                anomalies.append({
+                                    'driver': driver_code,
+                                    'driver_name': driver_name,
+                                    'type': 'FORM_DECLINE',
+                                    'severity': min(2, max(1, int(recent_vs_career / 2))),
+                                    'message': f"📉 {driver_name} in DECLINING FORM. Recent avg: P{int(recent_avg)} vs career P{int(avg_finish)}.",
+                                    'explanation': 'Watch for potential car/setup issues or driver adjustment period.',
+                                    'recent_avg': float(recent_avg),
+                                    'career_avg': float(avg_finish)
+                                })
+            
+            except Exception as e:
+                print(f"[ANOMALY DEBUG] Error analyzing {driver_code}: {e}")
+                import traceback
+                traceback.print_exc()
+                continue
+        
+        # Print all driver stats for analysis
+        if all_driver_stats:
+            print(f"\n[ANOMALY DEBUG] All driver stats:")
+            for stat in sorted(all_driver_stats, key=lambda x: x['avg_finish']):
+                print(f"  {stat['driver']:3s}: Grid P{stat['grid']}, Avg P{stat['avg_finish']:5.1f}, Records: {stat['records']}")
+            print()
+        
+        # Sort by severity (descending) for UI priority
+        anomalies.sort(key=lambda x: x['severity'], reverse=True)
+        
+        print(f"[ANOMALY DETECTION] Found {len(anomalies)} anomalies total")
+        if anomalies:
+            print(f"[ANOMALY DETECTION] Anomalies detected:")
+            for anom in anomalies:
+                print(f"  [{anom['type']}] {anom['message']}")
+        print()
+        
+        return anomalies
 
 
 # Global instance with lazy loading (thread-safe)

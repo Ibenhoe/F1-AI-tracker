@@ -305,7 +305,12 @@ def get_prerace_analysis():
         print(f"[PRERACE API] ✓ Generated {len(predictions)} predictions for Race {race_num} ({race_name})")
         print(f"[PRERACE API] Top 5 predictions:")
         for i, pred in enumerate(predictions[:5], 1):
-            print(f"    {i}. {pred.get('driver'):3s} (Grid P{pred.get('grid_position'):2d}) - Confidence: {pred.get('confidence', 0):.1f}%")
+            has_anomaly = 'anomaly' in pred and pred.get('anomaly') is not None
+            print(f"    {i}. {pred.get('driver'):3s} (Grid P{pred.get('grid_position'):2d}) - Confidence: {pred.get('confidence', 0):.1f}% - Has Anomaly: {has_anomaly}")
+        
+        # Count total anomalies
+        anomaly_count = sum(1 for p in predictions if 'anomaly' in p and p.get('anomaly') is not None)
+        print(f"[PRERACE API] Total predictions with anomalies: {anomaly_count}/{len(predictions)}")
         print(f"{'='*80}\n")
         
         return jsonify({
@@ -428,6 +433,7 @@ def _fetch_qualifying_grid(race_num):
                     grid_pos = grid_idx + 1
                     grid.append({
                         'driver': driver_code,
+                        'driver_name': str(row.get('FullName', driver_code)),  # Add full driver name
                         'number': int(row.get('DriverNumber', 0)),
                         'team': str(row.get('TeamName', 'Unknown')),
                         'grid_pos': grid_pos
@@ -449,28 +455,28 @@ def _get_fallback_grid(race_num):
     
     Used when FastF1 data is not available
     """
-    # Base grid with all 20 drivers (2024 grid)
+    # Base grid with all 20 drivers (2024 grid) - now with full names
     base_grid = [
-        {'driver': 'VER', 'number': 1, 'team': 'Red Bull'},
-        {'driver': 'LEC', 'number': 16, 'team': 'Ferrari'},
-        {'driver': 'SAI', 'number': 55, 'team': 'Ferrari'},
-        {'driver': 'PIA', 'number': 81, 'team': 'McLaren'},
-        {'driver': 'NOR', 'number': 4, 'team': 'McLaren'},
-        {'driver': 'HAM', 'number': 44, 'team': 'Mercedes'},
-        {'driver': 'RUS', 'number': 63, 'team': 'Mercedes'},
-        {'driver': 'ALO', 'number': 14, 'team': 'Aston Martin'},
-        {'driver': 'STR', 'number': 18, 'team': 'Aston Martin'},
-        {'driver': 'GAS', 'number': 10, 'team': 'Alpine'},
-        {'driver': 'OCO', 'number': 31, 'team': 'Alpine'},
-        {'driver': 'MAG', 'number': 20, 'team': 'Haas'},
-        {'driver': 'HUL', 'number': 27, 'team': 'Haas'},
-        {'driver': 'BOT', 'number': 77, 'team': 'Sauber'},
-        {'driver': 'ZHO', 'number': 24, 'team': 'Sauber'},
-        {'driver': 'TSU', 'number': 22, 'team': 'Racing Bulls'},
-        {'driver': 'ALB', 'number': 23, 'team': 'Williams'},
-        {'driver': 'SARGEant', 'number': 2, 'team': 'Williams'},
-        {'driver': 'PER', 'number': 11, 'team': 'Red Bull'},
-        {'driver': 'RIC', 'number': 3, 'team': 'Racing Bulls'},
+        {'driver': 'VER', 'driver_name': 'Max Verstappen', 'number': 1, 'team': 'Red Bull'},
+        {'driver': 'LEC', 'driver_name': 'Charles Leclerc', 'number': 16, 'team': 'Ferrari'},
+        {'driver': 'SAI', 'driver_name': 'Carlos Sainz', 'number': 55, 'team': 'Ferrari'},
+        {'driver': 'PIA', 'driver_name': 'Oscar Piastri', 'number': 81, 'team': 'McLaren'},
+        {'driver': 'NOR', 'driver_name': 'Lando Norris', 'number': 4, 'team': 'McLaren'},
+        {'driver': 'HAM', 'driver_name': 'Lewis Hamilton', 'number': 44, 'team': 'Mercedes'},
+        {'driver': 'RUS', 'driver_name': 'George Russell', 'number': 63, 'team': 'Mercedes'},
+        {'driver': 'ALO', 'driver_name': 'Fernando Alonso', 'number': 14, 'team': 'Aston Martin'},
+        {'driver': 'STR', 'driver_name': 'Lance Stroll', 'number': 18, 'team': 'Aston Martin'},
+        {'driver': 'GAS', 'driver_name': 'Pierre Gasly', 'number': 10, 'team': 'Alpine'},
+        {'driver': 'OCO', 'driver_name': 'Esteban Ocon', 'number': 31, 'team': 'Alpine'},
+        {'driver': 'MAG', 'driver_name': 'Kevin Magnussen', 'number': 20, 'team': 'Haas'},
+        {'driver': 'HUL', 'driver_name': 'Nico Hulkenberg', 'number': 27, 'team': 'Haas'},
+        {'driver': 'BOT', 'driver_name': 'Valtteri Bottas', 'number': 77, 'team': 'Sauber'},
+        {'driver': 'ZHO', 'driver_name': 'Zhou Guanyu', 'number': 24, 'team': 'Sauber'},
+        {'driver': 'TSU', 'driver_name': 'Yuki Tsunoda', 'number': 22, 'team': 'Racing Bulls'},
+        {'driver': 'ALB', 'driver_name': 'Alexander Albon', 'number': 23, 'team': 'Williams'},
+        {'driver': 'SAR', 'driver_name': 'Logan Sargeant', 'number': 2, 'team': 'Williams'},
+        {'driver': 'PER', 'driver_name': 'Sergio Perez', 'number': 11, 'team': 'Red Bull'},
+        {'driver': 'RIC', 'driver_name': 'Daniel Ricciardo', 'number': 3, 'team': 'Racing Bulls'},
     ]
     
     # Race-specific variations
@@ -491,6 +497,7 @@ def _get_fallback_grid(race_num):
         grid_pos = max(1, min(20, grid_pos))
         grid.append({
             'driver': driver['driver'],
+            'driver_name': driver['driver_name'],
             'number': driver['number'],
             'team': driver['team'],
             'grid_pos': grid_pos
@@ -500,7 +507,7 @@ def _get_fallback_grid(race_num):
     print(f"  [GRID] Top 10 drivers in fallback grid:")
     sorted_grid = sorted(grid, key=lambda x: x['grid_pos'])[:10]
     for driver in sorted_grid:
-        print(f"    P{driver['grid_pos']:2d}: {driver['driver']:3s} - {driver['team']}")
+        print(f"    P{driver['grid_pos']:2d}: {driver['driver']:3s} ({driver['driver_name']}) - {driver['team']}")
     return grid
 
 

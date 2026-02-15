@@ -11,15 +11,12 @@ export default function PreRaceAnalysis() {
   const [error, setError] = useState(null)
   const [analysis, setAnalysis] = useState(null)
   const [circuitAnalysis, setCircuitAnalysis] = useState(null)
-  const [validationMetrics, setValidationMetrics] = useState(null)
   const retryTimerRef = useRef(null)
 
   // Fetch both pre-race analysis and tire strategy when race changes
   useEffect(() => {
     if (raceNumber) {
       fetchPreRaceData(raceNumber)
-      // Also fetch validation metrics once
-      fetchValidationMetrics()
     }
     
     // Cleanup retry timer on unmount
@@ -88,22 +85,6 @@ export default function PreRaceAnalysis() {
 
   const handleRaceSelect = (raceId) => {
     setRaceNumber(raceId)
-  }
-
-  const fetchValidationMetrics = async () => {
-    try {
-      const response = await fetch('http://localhost:5000/api/race/validation-metrics', {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      
-      if (response.ok) {
-        const data = await response.json()
-        setValidationMetrics(data)
-      }
-    } catch (err) {
-      console.warn('Could not fetch validation metrics:', err)
-    }
   }
 
   const getConfidenceColor = (confidence) => {
@@ -190,7 +171,7 @@ export default function PreRaceAnalysis() {
                         <tr key={idx} className="border-b border-neutral-100 dark:border-neutral-800 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition">
                           <td className="py-3 px-4 font-semibold text-neutral-900 dark:text-neutral-100">{idx + 1}</td>
                           <td className="py-3 px-4">
-                            <div className="font-semibold text-neutral-900 dark:text-neutral-100">{pred.driver}</div>
+                            <div className="font-semibold text-neutral-900 dark:text-neutral-100">{pred.driver_name || pred.driver}</div>
                             <div className="text-xs text-neutral-600 dark:text-neutral-400">#{pred.number}</div>
                           </td>
                           <td className="py-3 px-4">
@@ -227,6 +208,57 @@ export default function PreRaceAnalysis() {
                 </div>
               </div>
             </Card>
+
+            {/* 🔍 DRIVERS TO WATCH - ANOMALIES DETECTION */}
+            {predictions.some(p => p.anomaly) && (
+              <Card>
+                <div className="flex flex-col gap-6">
+                  <div>
+                    <h2 className="text-lg font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2">
+                      👀 Drivers to Watch
+                    </h2>
+                    <p className="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+                      Onverwachte prestaties in qualifying die kunnen beïnvloeden hoe de race verloopt
+                    </p>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {predictions
+                      .filter(p => p.anomaly)
+                      .map((pred, idx) => {
+                        const anom = pred.anomaly
+                        const severityColors = {
+                          1: 'border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-900/20',
+                          2: 'border-orange-200 dark:border-orange-900 bg-orange-50 dark:bg-orange-900/20',
+                          3: 'border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-900/20'
+                        }
+                        const textColor = {
+                          1: 'text-yellow-800 dark:text-yellow-200',
+                          2: 'text-orange-800 dark:text-orange-200',
+                          3: 'text-red-800 dark:text-red-200'
+                        }
+                        
+                        return (
+                          <div
+                            key={idx}
+                            className={`border-l-4 rounded-lg p-4 transition ${severityColors[anom.severity] || severityColors[1]}`}
+                          >
+                            <div className={`font-semibold ${textColor[anom.severity] || textColor[1]} mb-2`}>
+                              {anom.message}
+                            </div>
+                            <div className={`text-sm ${textColor[anom.severity] || textColor[1]}`}>
+                              💡 {anom.explanation}
+                            </div>
+                            <div className={`text-xs mt-2 ${textColor[anom.severity] || textColor[1]} opacity-75`}>
+                              [{anom.type}] Severity: Level {anom.severity}/3
+                            </div>
+                          </div>
+                        )
+                      })}
+                  </div>
+                </div>
+              </Card>
+            )}
 
             {/* Tire Strategy Panel - GENERAL STRATEGIES (1-2) */}
             {tireStrategies.length > 0 && (

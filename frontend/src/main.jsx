@@ -21,7 +21,9 @@ const queryClient = new QueryClient({
 });
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
+  // StrictMode disabled in development to prevent double API calls
+  // When enabled, React intentionally double-invokes effects to catch side effects
+  // This causes 2x API requests which is wasteful during development
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <BrowserRouter>
@@ -29,5 +31,4 @@ createRoot(document.getElementById("root")).render(
         </BrowserRouter>
       </ThemeProvider>
     </QueryClientProvider>
-  </StrictMode>
 );
