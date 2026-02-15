@@ -50,10 +50,32 @@ export default function RaceSelector({
 
   const value = Number(selectedRace ?? 1);
 
+  // Debounce timer for race selection to avoid rapid API calls while scrolling
+  const debounceTimerRef = useRef(null);
+  const pendingRaceRef = useRef(null);
+
   const emit = (id) => {
     if (disabled) return;
-    if (onSelectRace) onSelectRace(id);
-    else if (onRaceChange) onRaceChange(id);
+    
+    // Cancel previous debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Store the pending race
+    pendingRaceRef.current = id;
+    
+    // Debounce: wait 400ms after scroll stops before emitting the race change
+    // This prevents rapid API calls while user is scrolling through races
+    debounceTimerRef.current = setTimeout(() => {
+      const finalRace = pendingRaceRef.current;
+      if (finalRace !== null) {
+        if (onSelectRace) onSelectRace(finalRace);
+        else if (onRaceChange) onRaceChange(finalRace);
+      }
+      debounceTimerRef.current = null;
+      pendingRaceRef.current = null;
+    }, 400);  // Wait 400ms after last scroll event
   };
 
   // offset is in "rows", but measured in px
@@ -116,6 +138,15 @@ export default function RaceSelector({
     setOffsetPx(target);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, baseList]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // --- drag state ---
   const isDraggingRef = useRef(false);
