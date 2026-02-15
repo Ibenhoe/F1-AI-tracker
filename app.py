@@ -39,6 +39,32 @@ class RateLimiter:
         """Reset the limiter"""
         self.last_emit_time = 0
 
+# 2024 F1 Race Schedule - correct lap counts per circuit
+RACE_LAP_COUNTS = {
+    1: 57,    # Bahrain
+    2: 50,    # Saudi Arabia
+    3: 58,    # Australia
+    4: 53,    # Japan
+    5: 56,    # China
+    6: 57,    # Miami
+    7: 63,    # Emilia Romagna (Imola)
+    8: 78,    # Monaco
+    9: 70,    # Canada
+    10: 66,   # Spain
+    11: 71,   # Austria
+    12: 52,   # United Kingdom (Silverstone)
+    13: 70,   # Hungary
+    14: 44,   # Belgium
+    15: 72,   # Netherlands
+    16: 53,   # Italy (Monza)
+    17: 51,   # Azerbaijan
+    18: 62,   # Singapore
+    19: 56,   # Austin
+    20: 71,   # Mexico
+    21: 71,   # Brazil
+    22: 58,   # Abu Dhabi
+}
+
 # Setup Flask App
 app = Flask(__name__)
 
@@ -95,7 +121,7 @@ socketio = SocketIO(
 race_state = {
     'running': False,
     'current_lap': 0,
-    'total_laps': 58,
+    'total_laps': 0,  # Will be set dynamically based on actual race data
     'drivers': [],
     'predictions': [],
     'race_name': '',
@@ -175,13 +201,14 @@ def get_race_info(race_num):
     """Utility function to get race name and validate race number (P4.2 - reduce duplication)"""
     RACES_MAP = {
         1: "Bahrain", 2: "Saudi Arabia", 3: "Australia", 4: "Japan", 5: "China",
-        6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain", 10: "Austria",
-        11: "UK", 12: "Hungary", 13: "Belgium", 14: "Netherlands", 15: "Italy",
-        16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil", 21: "Abu Dhabi"
+        6: "Miami", 7: "Emilia Romagna", 8: "Monaco", 9: "Canada", 10: "Spain", 
+        11: "Austria", 12: "UK", 13: "Hungary", 14: "Belgium", 15: "Netherlands", 
+        16: "Italy", 17: "Azerbaijan", 18: "Singapore", 19: "Austin", 20: "Mexico", 
+        21: "Brazil", 22: "Abu Dhabi"
     }
     
-    if not isinstance(race_num, int) or race_num < 1 or race_num > 21:
-        raise ValueError(f'Invalid race number {race_num}. Must be 1-21.')
+    if not isinstance(race_num, int) or race_num < 1 or race_num > 22:
+        raise ValueError(f'Invalid race number {race_num}. Must be 1-22.')
     
     race_name = RACES_MAP.get(race_num, "Unknown")
     return race_name
@@ -213,21 +240,22 @@ def get_races():
         4: {"name": "Japan", "circuit": "Suzuka"},
         5: {"name": "China", "circuit": "Shanghai"},
         6: {"name": "Miami", "circuit": "USA"},
-        7: {"name": "Monaco", "circuit": "Monte Carlo"},
-        8: {"name": "Canada", "circuit": "Montreal"},
-        9: {"name": "Spain", "circuit": "Barcelona"},
-        10: {"name": "Austria", "circuit": "Spielberg"},
-        11: {"name": "United Kingdom", "circuit": "Silverstone"},
-        12: {"name": "Hungary", "circuit": "Budapest"},
-        13: {"name": "Belgium", "circuit": "Spa"},
-        14: {"name": "Netherlands", "circuit": "Zandvoort"},
-        15: {"name": "Italy", "circuit": "Monza"},
-        16: {"name": "Azerbaijan", "circuit": "Baku"},
-        17: {"name": "Singapore", "circuit": "Marina Bay"},
-        18: {"name": "Austin", "circuit": "USA"},
-        19: {"name": "Mexico", "circuit": "Mexico City"},
-        20: {"name": "Brazil", "circuit": "Interlagos"},
-        21: {"name": "Abu Dhabi", "circuit": "Yas Island"},
+        7: {"name": "Emilia Romagna", "circuit": "Imola"},
+        8: {"name": "Monaco", "circuit": "Monte Carlo"},
+        9: {"name": "Canada", "circuit": "Montreal"},
+        10: {"name": "Spain", "circuit": "Barcelona"},
+        11: {"name": "Austria", "circuit": "Spielberg"},
+        12: {"name": "United Kingdom", "circuit": "Silverstone"},
+        13: {"name": "Hungary", "circuit": "Budapest"},
+        14: {"name": "Belgium", "circuit": "Spa"},
+        15: {"name": "Netherlands", "circuit": "Zandvoort"},
+        16: {"name": "Italy", "circuit": "Monza"},
+        17: {"name": "Azerbaijan", "circuit": "Baku"},
+        18: {"name": "Singapore", "circuit": "Marina Bay"},
+        19: {"name": "Austin", "circuit": "USA"},
+        20: {"name": "Mexico", "circuit": "Mexico City"},
+        21: {"name": "Brazil", "circuit": "Interlagos"},
+        22: {"name": "Abu Dhabi", "circuit": "Yas Island"},
     }
     return jsonify(races), 200
 
@@ -773,7 +801,8 @@ def _initialize_race_background(race_num):
             print(f"[BACKGROUND] Using simple state fallback without simulator")
             race_state['drivers'] = drivers
             race_state['race_name'] = f'Race {race_num}'
-            race_state['total_laps'] = 58
+            # Use correct lap count from schedule, fallback to 58 if race not found
+            race_state['total_laps'] = RACE_LAP_COUNTS.get(race_num, 58)
             race_state['current_lap'] = 0
             race_state['race_simulator'] = None  # Mark as failed but continue
         

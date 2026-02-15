@@ -110,6 +110,18 @@ export default function Dashboard() {
 
         setRaceInitialized(true);
 
+        // Listen for race ready event when a new race is initialized
+        apiClient.on("race/ready", (data) => {
+          console.log("[DASHBOARD] Race ready event received:", data);
+          
+          setRaceData({
+            race: data.race_name || `Race ${data.race_id}`,
+            totalLaps: data.total_laps || 58,
+            currentLap: 0,
+            drivers: data.drivers || [],
+          });
+        });
+
         apiClient.on("lap/update", (data) => {
           console.log("[DASHBOARD] Lap update:", data.lap_number);
 
