@@ -1,6 +1,9 @@
 import './ModelMetricsPanel.css'
 
 export default function ModelMetricsPanel({ modelMetrics, currentLap, totalLaps }) {
+  // Debug logging
+  console.log('[ModelMetricsPanel] Received modelMetrics:', modelMetrics)
+  
   if (!modelMetrics) {
     return (
       <div className="model-metrics-container">
@@ -35,11 +38,28 @@ export default function ModelMetricsPanel({ modelMetrics, currentLap, totalLaps 
 
   return (
     <div className="model-metrics-container">
-      <div className="model-header">
-        <h3>🧠 AI Model - Real-time Learning</h3>
-        <span className={`status-badge ${modelStatus.toLowerCase().replace(' ', '-')}`}>
+      {/* Compact Update Counter */}
+      <div className="compact-metrics-bar">
+        <div className="compact-metric">
+          <span className="compact-label">Updates:</span>
+          <span className="compact-value" style={{ color: healthColor }}>
+            {modelMetrics.total_updates ?? 0}
+          </span>
+        </div>
+        <span className="metric-separator">•</span>
+        <div className="compact-metric">
+          <span className="compact-label">Maturity:</span>
+          <span className="compact-value" style={{ color: healthColor }}>
+            {Math.round(maturityPercentage)}%
+          </span>
+        </div>
+        <span className={`status-badge ${modelStatus.toLowerCase().replace(' ', '-')}`} style={{ marginLeft: 'auto' }}>
           {getStatusIcon(modelStatus)} {modelStatus}
         </span>
+      </div>
+
+      <div className="model-header">
+        <h3>🧠 AI Model - Real-time Learning</h3>
       </div>
 
       {/* Model Overview */}

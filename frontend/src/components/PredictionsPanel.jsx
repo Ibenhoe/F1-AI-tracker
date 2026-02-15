@@ -78,7 +78,7 @@ export default function PredictionsPanel({
       {/* Model meta */}
       <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
+          <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
             <span className="inline-flex items-center gap-2">
               <Activity size={14} className="text-neutral-500" />
               <span>
@@ -88,9 +88,9 @@ export default function PredictionsPanel({
                 </span>
               </span>
             </span>
+          </div>
 
-            <span className="text-neutral-400 dark:text-neutral-600">•</span>
-
+          <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
             <span>
               Maturity:{" "}
               <span className="font-medium text-neutral-900 dark:text-neutral-200 tabular-nums">
@@ -98,32 +98,6 @@ export default function PredictionsPanel({
               </span>
             </span>
           </div>
-
-          {hasComponents ? (
-            <div className="flex flex-wrap items-center gap-2">
-              {modelMetrics?.sgd_model_ready ? (
-                <Badge variant="neutral">SGD</Badge>
-              ) : null}
-              {modelMetrics?.mlp_model_ready ? (
-                <Badge variant="neutral">MLP</Badge>
-              ) : null}
-              {modelMetrics?.rf_classifier_ready ? (
-                <Badge variant="neutral">RF</Badge>
-              ) : null}
-            </div>
-          ) : (
-            <div className="text-xs text-neutral-600 dark:text-neutral-500">
-              Components warming up…
-            </div>
-          )}
-        </div>
-
-
-        <div className="mt-3 h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-900">
-          <div
-            className="h-2 rounded-full bg-neutral-900 dark:bg-neutral-100"
-            style={{ width: `${Math.min(100, Math.max(0, maturity))}%` }}
-          />
         </div>
       </div>
 

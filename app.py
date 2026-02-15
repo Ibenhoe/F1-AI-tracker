@@ -1001,7 +1001,8 @@ def run_simulation():
                     'drivers': lap_state['drivers'],
                     'predictions': lap_state['predictions'],
                     'events': events_to_send,
-                    'weather': lap_state.get('weather', {})
+                    'weather': lap_state.get('weather', {}),
+                    'model_metrics': lap_state.get('model_metrics', {})
                 }, to=None)
                 
                 if events_to_send:
@@ -1014,7 +1015,8 @@ def run_simulation():
                     'drivers': lap_state['drivers'],
                     'predictions': lap_state['predictions'],
                     'events': events_to_send,
-                    'weather': lap_state.get('weather', {})
+                    'weather': lap_state.get('weather', {}),
+                    'model_metrics': lap_state.get('model_metrics', {})
                 }, to=None)
                 print(f"[BROADCAST] Force-emitted lap/update with {len(events_to_send)} event(s) (bypassed rate limit)")
             

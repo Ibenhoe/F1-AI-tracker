@@ -110,6 +110,17 @@ export default function Dashboard() {
 
         setRaceInitialized(true);
 
+        // Initialize model metrics with default values
+        setModelMetrics({
+          total_updates: 0,
+          model_maturity_percentage: 0,
+          learning_status: 'Initializing',
+          model_type: 'SGD + MLP + XGBoost',
+          confidence_cap: '85%',
+          is_pretrained: true,
+          samples_processed: 0
+        });
+
         // Listen for race ready event when a new race is initialized
         apiClient.on("race/ready", (data) => {
           console.log("[DASHBOARD] Race ready event received:", data);
