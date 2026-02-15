@@ -6,6 +6,7 @@ import PredictionsPanel from "../components/PredictionsPanel";
 import NotificationsPanel from "../components/NotificationsPanel";
 import RaceControls from "../components/RaceControls";
 import RaceSelector from "../components/RaceSelector";
+import Toast from "../components/Toast";
 import apiClient from "../services/apiClient";
 
 import Card from "../components/ui/Card";
@@ -79,7 +80,9 @@ export default function Dashboard() {
   const [raceRunning, setRaceRunning] = useState(false);
   const [connected, setConnected] = useState(false);
   const [raceInitialized, setRaceInitialized] = useState(false);
+  const [raceReady, setRaceReady] = useState(false);  // True only when race/ready event received
   const [selectedRace, setSelectedRace] = useState(1);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -130,6 +133,16 @@ export default function Dashboard() {
             totalLaps: data.total_laps || 58,
             currentLap: 0,
             drivers: data.drivers || [],
+          });
+          
+          // Mark race as truly ready (when backend confirms)
+          setRaceReady(true);
+          
+          // Show toast notification that race is ready
+          setToast({
+            message: 'Race is ready! Click START to begin simulation.',
+            type: 'success',
+            duration: 3000
           });
         });
 
@@ -234,6 +247,7 @@ export default function Dashboard() {
   const handleRaceChange = async (newRaceNumber) => {
     setSelectedRace(newRaceNumber);
     setRaceInitialized(false);
+    setRaceReady(false);  // Reset ready state when race changes
     setCurrentLap(0);
     setRaceRunning(false);
   };
@@ -272,7 +286,7 @@ export default function Dashboard() {
 
         <Card className="lg:col-span-8 p-4" clip>
           <RaceControls
-            raceInitialized={raceInitialized}
+            raceReady={raceReady}
             raceRunning={raceRunning}
             connected={connected}
             raceData={raceData}
@@ -307,6 +321,16 @@ export default function Dashboard() {
           notifications={notifications}
         />
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
