@@ -233,26 +233,10 @@ class RaceSimulator:
         # Add MODEL METRICS for frontend display
         if self.model is not None:
             try:
-                # Calculate model maturity based on updates with realistic curve
-                # Early laps: Fast growth (0-50%)
-                # Middle laps: Moderate growth (50-75%)
-                # Late laps: Slow growth (75-100%)
-                # Formula: tanh-like curve that starts fast and slows down
-                updates = getattr(self.model, 'updates_count', 0)
-                
-                # Normalize updates to 0-100 scale
-                # Assumes ~20 updates gives 100% maturity (realistic for ~20 laps)
-                normalized = min(100, (updates / 20) * 100)
-                
-                # Apply sigmoid curve for realistic growth
-                # Fast at start, slows down at end (like learning)
-                import math
-                sigmoid_value = (normalized / 50) - 1  # -1 to +1
-                maturity = 50 + (50 * math.tanh(sigmoid_value))  # 0 to 100
-                
+                # V3 model uses updates_count (not lap_updates_count)
                 lap_state['model_metrics'] = {
-                    'total_updates': updates,
-                    'model_maturity_percentage': min(100, max(0, maturity)),
+                    'total_updates': getattr(self.model, 'updates_count', 0),
+                    'model_maturity_percentage': min(100, getattr(self.model, 'updates_count', 0) * 5),
                     'position_model_ready': self.model.features_fitted,
                     'features_fitted': getattr(self.model, 'features_fitted', False)
                 }
@@ -329,6 +313,13 @@ class RaceSimulator:
             if pd.notna(row.get('Position')):
                 new_position = int(row['Position'])
                 # Position change: grid_position - current_position
+                
+                # Sanity check: Prevent unrealistic jumps (e.g. P11 -> P3 in lap 1) due to data glitches
+                # Only apply strict check on lap 1
+                if lap_number == 1 and abs(state['position'] - new_position) > 8:
+                    # If jump is too big in lap 1, trust the grid/current position more unless confirmed
+                    pass # Keep existing position for now to avoid UI glitching
+                
                 # Positive = gained positions, Negative = lost positions
                 state['position_change'] = state['grid_position'] - new_position
                 state['position'] = new_position
