@@ -39,32 +39,6 @@ class RateLimiter:
         """Reset the limiter"""
         self.last_emit_time = 0
 
-# 2024 F1 Race Schedule - correct lap counts per circuit
-RACE_LAP_COUNTS = {
-    1: 57,    # Bahrain
-    2: 50,    # Saudi Arabia
-    3: 58,    # Australia
-    4: 53,    # Japan
-    5: 56,    # China
-    6: 57,    # Miami
-    7: 63,    # Emilia Romagna (Imola)
-    8: 78,    # Monaco
-    9: 70,    # Canada
-    10: 66,   # Spain
-    11: 71,   # Austria
-    12: 52,   # United Kingdom (Silverstone)
-    13: 70,   # Hungary
-    14: 44,   # Belgium
-    15: 72,   # Netherlands
-    16: 53,   # Italy (Monza)
-    17: 51,   # Azerbaijan
-    18: 62,   # Singapore
-    19: 56,   # Austin
-    20: 71,   # Mexico
-    21: 71,   # Brazil
-    22: 58,   # Abu Dhabi
-}
-
 # Setup Flask App
 app = Flask(__name__)
 
@@ -121,7 +95,7 @@ socketio = SocketIO(
 race_state = {
     'running': False,
     'current_lap': 0,
-    'total_laps': 0,  # Will be set dynamically based on actual race data
+    'total_laps': 58,
     'drivers': [],
     'predictions': [],
     'race_name': '',
@@ -201,14 +175,13 @@ def get_race_info(race_num):
     """Utility function to get race name and validate race number (P4.2 - reduce duplication)"""
     RACES_MAP = {
         1: "Bahrain", 2: "Saudi Arabia", 3: "Australia", 4: "Japan", 5: "China",
-        6: "Miami", 7: "Emilia Romagna", 8: "Monaco", 9: "Canada", 10: "Spain", 
-        11: "Austria", 12: "UK", 13: "Hungary", 14: "Belgium", 15: "Netherlands", 
-        16: "Italy", 17: "Azerbaijan", 18: "Singapore", 19: "Austin", 20: "Mexico", 
-        21: "Brazil", 22: "Abu Dhabi"
+        6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain", 10: "Austria",
+        11: "UK", 12: "Hungary", 13: "Belgium", 14: "Netherlands", 15: "Italy",
+        16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil", 21: "Abu Dhabi"
     }
     
-    if not isinstance(race_num, int) or race_num < 1 or race_num > 22:
-        raise ValueError(f'Invalid race number {race_num}. Must be 1-22.')
+    if not isinstance(race_num, int) or race_num < 1 or race_num > 21:
+        raise ValueError(f'Invalid race number {race_num}. Must be 1-21.')
     
     race_name = RACES_MAP.get(race_num, "Unknown")
     return race_name
@@ -240,22 +213,21 @@ def get_races():
         4: {"name": "Japan", "circuit": "Suzuka"},
         5: {"name": "China", "circuit": "Shanghai"},
         6: {"name": "Miami", "circuit": "USA"},
-        7: {"name": "Emilia Romagna", "circuit": "Imola"},
-        8: {"name": "Monaco", "circuit": "Monte Carlo"},
-        9: {"name": "Canada", "circuit": "Montreal"},
-        10: {"name": "Spain", "circuit": "Barcelona"},
-        11: {"name": "Austria", "circuit": "Spielberg"},
-        12: {"name": "United Kingdom", "circuit": "Silverstone"},
-        13: {"name": "Hungary", "circuit": "Budapest"},
-        14: {"name": "Belgium", "circuit": "Spa"},
-        15: {"name": "Netherlands", "circuit": "Zandvoort"},
-        16: {"name": "Italy", "circuit": "Monza"},
-        17: {"name": "Azerbaijan", "circuit": "Baku"},
-        18: {"name": "Singapore", "circuit": "Marina Bay"},
-        19: {"name": "Austin", "circuit": "USA"},
-        20: {"name": "Mexico", "circuit": "Mexico City"},
-        21: {"name": "Brazil", "circuit": "Interlagos"},
-        22: {"name": "Abu Dhabi", "circuit": "Yas Island"},
+        7: {"name": "Monaco", "circuit": "Monte Carlo"},
+        8: {"name": "Canada", "circuit": "Montreal"},
+        9: {"name": "Spain", "circuit": "Barcelona"},
+        10: {"name": "Austria", "circuit": "Spielberg"},
+        11: {"name": "United Kingdom", "circuit": "Silverstone"},
+        12: {"name": "Hungary", "circuit": "Budapest"},
+        13: {"name": "Belgium", "circuit": "Spa"},
+        14: {"name": "Netherlands", "circuit": "Zandvoort"},
+        15: {"name": "Italy", "circuit": "Monza"},
+        16: {"name": "Azerbaijan", "circuit": "Baku"},
+        17: {"name": "Singapore", "circuit": "Marina Bay"},
+        18: {"name": "Austin", "circuit": "USA"},
+        19: {"name": "Mexico", "circuit": "Mexico City"},
+        20: {"name": "Brazil", "circuit": "Interlagos"},
+        21: {"name": "Abu Dhabi", "circuit": "Yas Island"},
     }
     return jsonify(races), 200
 
@@ -305,12 +277,7 @@ def get_prerace_analysis():
         print(f"[PRERACE API] ✓ Generated {len(predictions)} predictions for Race {race_num} ({race_name})")
         print(f"[PRERACE API] Top 5 predictions:")
         for i, pred in enumerate(predictions[:5], 1):
-            has_anomaly = 'anomaly' in pred and pred.get('anomaly') is not None
-            print(f"    {i}. {pred.get('driver'):3s} (Grid P{pred.get('grid_position'):2d}) - Confidence: {pred.get('confidence', 0):.1f}% - Has Anomaly: {has_anomaly}")
-        
-        # Count total anomalies
-        anomaly_count = sum(1 for p in predictions if 'anomaly' in p and p.get('anomaly') is not None)
-        print(f"[PRERACE API] Total predictions with anomalies: {anomaly_count}/{len(predictions)}")
+            print(f"    {i}. {pred.get('driver'):3s} (Grid P{pred.get('grid_position'):2d}) - Confidence: {pred.get('confidence', 0):.1f}%")
         print(f"{'='*80}\n")
         
         return jsonify({
@@ -433,7 +400,6 @@ def _fetch_qualifying_grid(race_num):
                     grid_pos = grid_idx + 1
                     grid.append({
                         'driver': driver_code,
-                        'driver_name': str(row.get('FullName', driver_code)),  # Add full driver name
                         'number': int(row.get('DriverNumber', 0)),
                         'team': str(row.get('TeamName', 'Unknown')),
                         'grid_pos': grid_pos
@@ -455,49 +421,39 @@ def _get_fallback_grid(race_num):
     
     Used when FastF1 data is not available
     """
-    # Base grid with all 20 drivers (2024 grid) - now with full names
+    # Base grid with all 20 drivers (2024 grid)
     base_grid = [
-        {'driver': 'VER', 'driver_name': 'Max Verstappen', 'number': 1, 'team': 'Red Bull'},
-        {'driver': 'LEC', 'driver_name': 'Charles Leclerc', 'number': 16, 'team': 'Ferrari'},
-        {'driver': 'SAI', 'driver_name': 'Carlos Sainz', 'number': 55, 'team': 'Ferrari'},
-        {'driver': 'PIA', 'driver_name': 'Oscar Piastri', 'number': 81, 'team': 'McLaren'},
-        {'driver': 'NOR', 'driver_name': 'Lando Norris', 'number': 4, 'team': 'McLaren'},
-        {'driver': 'HAM', 'driver_name': 'Lewis Hamilton', 'number': 44, 'team': 'Mercedes'},
-        {'driver': 'RUS', 'driver_name': 'George Russell', 'number': 63, 'team': 'Mercedes'},
-        {'driver': 'ALO', 'driver_name': 'Fernando Alonso', 'number': 14, 'team': 'Aston Martin'},
-        {'driver': 'STR', 'driver_name': 'Lance Stroll', 'number': 18, 'team': 'Aston Martin'},
-        {'driver': 'GAS', 'driver_name': 'Pierre Gasly', 'number': 10, 'team': 'Alpine'},
-        {'driver': 'OCO', 'driver_name': 'Esteban Ocon', 'number': 31, 'team': 'Alpine'},
-        {'driver': 'MAG', 'driver_name': 'Kevin Magnussen', 'number': 20, 'team': 'Haas'},
-        {'driver': 'HUL', 'driver_name': 'Nico Hulkenberg', 'number': 27, 'team': 'Haas'},
-        {'driver': 'BOT', 'driver_name': 'Valtteri Bottas', 'number': 77, 'team': 'Sauber'},
-        {'driver': 'ZHO', 'driver_name': 'Zhou Guanyu', 'number': 24, 'team': 'Sauber'},
-        {'driver': 'TSU', 'driver_name': 'Yuki Tsunoda', 'number': 22, 'team': 'Racing Bulls'},
-        {'driver': 'ALB', 'driver_name': 'Alexander Albon', 'number': 23, 'team': 'Williams'},
-        {'driver': 'SAR', 'driver_name': 'Logan Sargeant', 'number': 2, 'team': 'Williams'},
-        {'driver': 'PER', 'driver_name': 'Sergio Perez', 'number': 11, 'team': 'Red Bull'},
-        {'driver': 'RIC', 'driver_name': 'Daniel Ricciardo', 'number': 3, 'team': 'Racing Bulls'},
+        {'driver': 'VER', 'number': 1, 'team': 'Red Bull'},
+        {'driver': 'LEC', 'number': 16, 'team': 'Ferrari'},
+        {'driver': 'SAI', 'number': 55, 'team': 'Ferrari'},
+        {'driver': 'PIA', 'number': 81, 'team': 'McLaren'},
+        {'driver': 'NOR', 'number': 4, 'team': 'McLaren'},
+        {'driver': 'HAM', 'number': 44, 'team': 'Mercedes'},
+        {'driver': 'RUS', 'number': 63, 'team': 'Mercedes'},
+        {'driver': 'ALO', 'number': 14, 'team': 'Aston Martin'},
+        {'driver': 'STR', 'number': 18, 'team': 'Aston Martin'},
+        {'driver': 'GAS', 'number': 10, 'team': 'Alpine'},
+        {'driver': 'OCO', 'number': 31, 'team': 'Alpine'},
+        {'driver': 'MAG', 'number': 20, 'team': 'Haas'},
+        {'driver': 'HUL', 'number': 27, 'team': 'Haas'},
+        {'driver': 'BOT', 'number': 77, 'team': 'Sauber'},
+        {'driver': 'ZHO', 'number': 24, 'team': 'Sauber'},
+        {'driver': 'TSU', 'number': 22, 'team': 'Racing Bulls'},
+        {'driver': 'ALB', 'number': 23, 'team': 'Williams'},
+        {'driver': 'SARGEant', 'number': 2, 'team': 'Williams'},
+        {'driver': 'PER', 'number': 11, 'team': 'Red Bull'},
+        {'driver': 'RIC', 'number': 3, 'team': 'Racing Bulls'},
     ]
     
-    # Race-specific variations
-    race_adjustments = {
-        1: [0, 1, -1, 0, 1, 0, -1, 1, 0, 2, -1, 1, 0, -1, 1, 0, 2, -1, 1, 0],  # Bahrain
-        2: [1, 0, 1, -1, 0, 1, 0, -1, 2, 1, 0, -1, 1, 0, -1, 2, 1, 0, -1, 1],  # Saudi Arabia
-        3: [-1, 1, 0, 1, 0, -1, 1, 0, 1, 0, -1, 1, 0, 1, -1, 0, 1, 0, -1, 1],  # Australia
-        4: [0, -1, 1, 0, -1, 1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, -1, 0, 1],  # Japan
-        5: [2, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1, -1, 0, 1, 0, -1, 1, 0, -1, 1], # China
-    }
-    
-    # Default to race 21 (Abu Dhabi) adjustments if not found
-    adjustments = race_adjustments.get(race_num, [0]*len(base_grid))
+    # Removed outdated race_adjustments to prevent confusion.
+    # If FastF1 fails, we use the base grid order (2024 standard)
     
     grid = []
-    for i, (driver, adj) in enumerate(zip(base_grid, adjustments)):
-        grid_pos = i + 1 + adj
+    for i, driver in enumerate(base_grid):
+        grid_pos = i + 1
         grid_pos = max(1, min(20, grid_pos))
         grid.append({
             'driver': driver['driver'],
-            'driver_name': driver['driver_name'],
             'number': driver['number'],
             'team': driver['team'],
             'grid_pos': grid_pos
@@ -507,7 +463,7 @@ def _get_fallback_grid(race_num):
     print(f"  [GRID] Top 10 drivers in fallback grid:")
     sorted_grid = sorted(grid, key=lambda x: x['grid_pos'])[:10]
     for driver in sorted_grid:
-        print(f"    P{driver['grid_pos']:2d}: {driver['driver']:3s} ({driver['driver_name']}) - {driver['team']}")
+        print(f"    P{driver['grid_pos']:2d}: {driver['driver']:3s} - {driver['team']}")
     return grid
 
 
@@ -615,44 +571,50 @@ def _fetch_fastf1_data(race_num):
             result = False
         
         if result:
-            # STEP 1: Get ONLY qualifying session for ACTUAL grid positions
-            # IMPORTANT: We use qualifying ORDER as the true grid positions, NOT race results!
-            print("[BACKGROUND] Loading qualifying session for TRUE grid positions...")
+            # STEP 1: Get drivers and grid positions from RACE session (GridPosition column)
+            # We use the actual GridPosition from the race data (includes penalties)
+            print("[BACKGROUND] Loading drivers and grid positions from Race session...")
             drivers = []
-            qual_grid_map = {}  # {driver_code: grid_position}
             session = fetcher.session  # Get session reference
             laps = None
             
             try:
-                qual_session = fastf1.get_session(2024, race_num, 'Q')
-                qual_session.load()
-                
-                if qual_session.results is not None and len(qual_session.results) > 0:
-                    # Grid positions are the ROW ORDER in qualifying results!
-                    for grid_idx, (_, qual_row) in enumerate(qual_session.results.iterrows()):
-                        driver_code = str(qual_row.get('Abbreviation', ''))
+                if hasattr(session, 'results') and session.results is not None and len(session.results) > 0:
+                    # Use GridPosition from Race results (accounts for penalties)
+                    for _, row in session.results.iterrows():
+                        driver_code = str(row.get('Abbreviation', ''))
                         if driver_code and driver_code != 'nan':
-                            grid_pos = grid_idx + 1  # 1-based position
-                            qual_grid_map[driver_code] = grid_pos
-                            driver_name = str(qual_row.get('FullName', 'Unknown'))
-                            team_name = str(qual_row.get('TeamName', 'Unknown'))
-                            driver_num = int(qual_row.get('DriverNumber', 0))
+                            # GridPosition is float, 0.0 usually means pit lane or issue
+                            grid_pos = float(row.get('GridPosition', 0.0))
+                            
+                            # Handle pit lane starts (0.0) -> put them at the back
+                            if grid_pos <= 0.1:
+                                grid_pos = 20.0 # Default to back
+                            
+                            driver_name = str(row.get('FullName', 'Unknown'))
+                            team_name = str(row.get('TeamName', 'Unknown'))
+                            driver_num = int(row.get('DriverNumber', 0))
                             
                             drivers.append({
                                 'code': driver_code,
                                 'name': driver_name,
                                 'team': team_name,
                                 'number': driver_num,
-                                'grid_position': grid_pos
+                                'grid_position': int(grid_pos)
                             })
-                            print(f"    Grid P{grid_pos:2d}: {driver_code} - {driver_name}")
                     
-                    print(f"[BACKGROUND] OK: Loaded {len(drivers)} drivers from QUALIFYING")
+                    # Sort by grid position
+                    drivers.sort(key=lambda x: x['grid_position'])
+                    
+                    # Print for debugging
+                    for d in drivers:
+                        print(f"    Grid P{d['grid_position']:2d}: {d['code']} - {d['name']}")
+                    
+                    print(f"[BACKGROUND] OK: Loaded {len(drivers)} drivers from RACE results")
                 else:
-                    print("[BACKGROUND] WARNING: No qualifying results found")
-                    
-            except Exception as qual_err:
-                print(f"[BACKGROUND] WARNING: Error loading qualifying: {qual_err}")
+                     print("[BACKGROUND] WARNING: No race results found")
+            except Exception as e:
+                print(f"[BACKGROUND] ERROR loading drivers from race: {e}")
                 # Fallback: get drivers from race session
                 if hasattr(session, 'results') and session.results is not None:
                     for idx, (_, row) in enumerate(session.results.iterrows()):
@@ -808,8 +770,7 @@ def _initialize_race_background(race_num):
             print(f"[BACKGROUND] Using simple state fallback without simulator")
             race_state['drivers'] = drivers
             race_state['race_name'] = f'Race {race_num}'
-            # Use correct lap count from schedule, fallback to 58 if race not found
-            race_state['total_laps'] = RACE_LAP_COUNTS.get(race_num, 58)
+            race_state['total_laps'] = 58
             race_state['current_lap'] = 0
             race_state['race_simulator'] = None  # Mark as failed but continue
         
@@ -1008,8 +969,7 @@ def run_simulation():
                     'drivers': lap_state['drivers'],
                     'predictions': lap_state['predictions'],
                     'events': events_to_send,
-                    'weather': lap_state.get('weather', {}),
-                    'model_metrics': lap_state.get('model_metrics', {})
+                    'weather': lap_state.get('weather', {})
                 }, to=None)
                 
                 if events_to_send:
@@ -1022,8 +982,7 @@ def run_simulation():
                     'drivers': lap_state['drivers'],
                     'predictions': lap_state['predictions'],
                     'events': events_to_send,
-                    'weather': lap_state.get('weather', {}),
-                    'model_metrics': lap_state.get('model_metrics', {})
+                    'weather': lap_state.get('weather', {})
                 }, to=None)
                 print(f"[BROADCAST] Force-emitted lap/update with {len(events_to_send)} event(s) (bypassed rate limit)")
             
