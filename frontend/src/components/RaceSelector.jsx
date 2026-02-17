@@ -56,15 +56,15 @@ export default function RaceSelector({
 
   const emit = (id) => {
     if (disabled) return;
-    
+
     // Cancel previous debounce timer
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
-    
+
     // Store the pending race
     pendingRaceRef.current = id;
-    
+
     // Debounce: wait 400ms after scroll stops before emitting the race change
     // This prevents rapid API calls while user is scrolling through races
     debounceTimerRef.current = setTimeout(() => {
@@ -275,9 +275,20 @@ export default function RaceSelector({
                   key={`${i}-${id}`}
                   className={[
                     "flex items-center justify-between rounded-xl px-3",
+                    "border border-transparent",
+                    "transition-colors",
+
+                    !active
+                      ? "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100/70 dark:hover:bg-neutral-900/30"
+                      : "",
+
                     active
-                      ? "text-neutral-950 dark:text-neutral-50"
-                      : "text-neutral-500 dark:text-neutral-400",
+                      ? [
+                        "text-neutral-950 dark:text-neutral-50",
+                        "bg-[rgb(var(--accent)_/_0.10)] dark:bg-[rgb(var(--accent)_/_0.14)]",
+                        "border-[rgb(var(--accent)_/_0.28)] dark:border-[rgb(var(--accent)_/_0.32)]",
+                      ].join(" ")
+                      : "",
                   ].join(" ")}
                   style={{ height: ITEM_H }}
                 >
@@ -288,7 +299,7 @@ export default function RaceSelector({
                     <span className="truncate">{name}</span>
                   </div>
                   {active ? (
-                    <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+                    <span className="text-xs font-medium text-[rgb(var(--accent))] opacity-80">
                       Selected
                     </span>
                   ) : null}
