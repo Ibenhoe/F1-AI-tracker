@@ -598,6 +598,635 @@ def get_init_status():
         return jsonify({'error': str(e), 'status': 'error'}), 400
 
 
+@app.route('/api/race/replay-data', methods=['GET'])
+def get_replay_data():
+    """
+    Get race replay data with track layout and frames for visualization
+    Query params:
+    - race: race number (1-22)
+    
+    Frames are cached to a JSON file to avoid regenerating on every request.
+    First request generates and caches, subsequent requests load from cache.
+    """
+    try:
+        race_num = int(request.args.get('race', 21))
+        cache_dir = 'cache'
+        cache_file = os.path.join(cache_dir, f'race_{race_num:02d}_frames.json')
+        
+        print(f"\n{'='*80}")
+        print(f"[REPLAY API] Loading replay data for race {race_num}")
+        print(f"{'='*80}")
+        
+        # Check if cached frames exist
+        cached_data = None
+        if os.path.exists(cache_file):
+            try:
+                print(f"[REPLAY API] Loading cached frames from {cache_file}...")
+                with open(cache_file, 'r') as f:
+                    cached_data = json.load(f)
+                print(f"[REPLAY API] ✓ Loaded {len(cached_data.get('frames', []))} cached frames")
+                return jsonify(cached_data), 200
+            except Exception as cache_err:
+                print(f"[REPLAY API] WARNING: Could not load cache: {cache_err}")
+                print(f"[REPLAY API] Regenerating frames...")
+        
+        # Fetch race data from FastF1
+        fetcher = FastF1DataFetcher()
+        if not fetcher.fetch_race(2024, race_num):
+            raise Exception(f"Could not fetch race {race_num} from FastF1")
+        
+        # Get race info
+        race_info = fetcher.get_race_summary()
+        
+        # Get track data for visualization
+        print("[REPLAY API] Processing track data...")
+        laps_data = fetcher.process_race_laps_streaming()
+        
+        if not laps_data:
+            raise Exception("No lap data available for this race")
+        
+        # Build track geometry from telemetry (pass session for real coordinates)
+        track_data = _build_track_geometry(laps_data, fetcher.session)
+        
+        # Get DRS zones from qualifying
+        drs_zones = _get_drs_zones(race_num)
+        
+        # Build frames for animation (each lap, key positions)
+        print(f"[REPLAY API] Building {len(laps_data)} frame data with 120fps ultra-smooth animation...")
+        frames = _build_replay_frames(laps_data, race_info)
+        
+        print(f"[REPLAY API] ✓ Generated {len(frames)} frames")
+        
+        # Prepare response
+        response_data = {
+            'status': 'success',
+            'raceName': race_info.get('event', f'Race {race_num}'),
+            'year': 2024,
+            'round': race_num,
+            'trackData': track_data,
+            'drsZones': drs_zones,
+            'frames': frames,
+            'totalFrames': len(frames),
+        }
+        
+        # Cache frames to file for faster loading next time
+        try:
+            os.makedirs(cache_dir, exist_ok=True)
+            print(f"[REPLAY API] Caching {len(frames)} frames to {cache_file}...")
+            with open(cache_file, 'w') as f:
+                json.dump(response_data, f, default=str)
+            print(f"[REPLAY API] ✓ Frames cached successfully")
+        except Exception as cache_write_err:
+            print(f"[REPLAY API] WARNING: Could not cache frames: {cache_write_err}")
+        
+        print(f"{'='*80}\n")
+        
+        return jsonify(response_data), 200
+        
+    except Exception as e:
+        print(f"[REPLAY API] ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e), 'status': 'error'}), 400
+
+
+def _generate_procedural_track():
+    """Generate a realistic F1 track circuit with straights and curves
+    
+    Creates a circuit similar to real F1 tracks with:
+    - Main straights
+    - Technical sections with multiple corners
+    - High-speed sweepers
+    """
+    import math
+    centerline = []
+    
+    # Generate a realistic circuit with multiple sections
+    # Section 1: Main straight (bottom)
+    for i in range(20):
+        t = i / 20
+        x = -400 + t * 800  # Straight from -400 to 400
+        y = -250
+        centerline.append({'x': x, 'y': y})
+    
+    # Section 2: High-speed curve (right)
+    for i in range(15):
+        t = i / 15
+        angle = -math.pi / 2 + t * (math.pi / 3)
+        x = 400 + 150 * math.cos(angle)
+        y = -250 + 150 * math.sin(angle)
+        centerline.append({'x': x, 'y': y})
+    
+    # Section 3: Technical section (top right)
+    for i in range(10):
+        t = i / 10
+        x = 450 - t * 200
+        y = -100 + t * 100
+        centerline.append({'x': x, 'y': y})
+    
+    # Section 4: Top straight
+    for i in range(20):
+        t = i / 20
+        x = 250 - t * 500
+        y = 0
+        centerline.append({'x': x, 'y': y})
+    
+    # Section 5: High-speed sweeper (top left)
+    for i in range(15):
+        t = i / 15
+        angle = math.pi / 2 + t * (math.pi / 3)
+        x = -400 + 150 * math.cos(angle)
+        y = 0 + 150 * math.sin(angle)
+        centerline.append({'x': x, 'y': y})
+    
+    # Section 6: Technical corner (left)
+    for i in range(10):
+        t = i / 10
+        x = -450 + t * 200
+        y = 150 - t * 100
+        centerline.append({'x': x, 'y': y})
+    
+    # Section 7: Left straight (back to start)
+    for i in range(10):
+        t = i / 10
+        x = -250
+        y = 50 - t * 300
+        centerline.append({'x': x, 'y': y})
+    
+    return centerline
+
+
+def _extract_track_from_telemetry(session):
+    """Extract real track geometry from FastF1 telemetry data
+    
+    Uses actual car positions from telemetry to build the true track layout.
+    Telemetry is accessed via laps[i].telemetry which contains X, Y coordinates.
+    """
+    try:
+        print("[TRACK] Extracting real telemetry coordinates from race laps...")
+        
+        # Get laps with telemetry
+        if not hasattr(session, 'laps') or session.laps is None or len(session.laps) == 0:
+            print("[TRACK] No laps available")
+            return None
+        
+        laps = session.laps
+        
+        # Collect unique coordinates from first few laps (avoid redundant data)
+        coords_set = set()
+        coords_list = []
+        
+        # Get telemetry from first 10 laps (enough to map the circuit)
+        sample_laps = min(10, len(laps))
+        for lap_idx in range(sample_laps):
+            lap = laps.iloc[lap_idx]
+            
+            # Check if lap has telemetry
+            if not hasattr(lap, 'telemetry') or lap.telemetry is None:
+                continue
+            
+            telemetry = lap.telemetry
+            
+            # Extract X, Y coordinates
+            if 'X' in telemetry.columns and 'Y' in telemetry.columns:
+                # Sample every nth point to reduce data (avoid too many duplicates)
+                step = max(1, len(telemetry) // 100)  # ~100 points per lap
+                
+                for idx in range(0, len(telemetry), step):
+                    row = telemetry.iloc[idx]
+                    try:
+                        x = float(row['X'])
+                        y = float(row['Y'])
+                        
+                        # Only add if not seen before (avoid duplicates)
+                        coord_tuple = (round(x, 1), round(y, 1))
+                        if coord_tuple not in coords_set:
+                            coords_set.add(coord_tuple)
+                            coords_list.append({'x': x, 'y': y})
+                    except (ValueError, TypeError):
+                        continue
+        
+        if len(coords_list) > 50:  # Need minimum points for valid track
+            print(f"[TRACK] ✓ Extracted {len(coords_list)} unique telemetry coordinates")
+            return coords_list
+        else:
+            print(f"[TRACK] WARNING: Only got {len(coords_list)} coordinates, using fallback")
+            return None
+            
+    except Exception as e:
+        print(f"[TRACK] Error extracting telemetry: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
+def _build_track_geometry(laps_data, session=None):
+    """Extract track geometry from FastF1 telemetry or fallback to procedural
+    
+    Priority:
+    1. Real telemetry coordinates from FastF1 session
+    2. Fallback procedural track if telemetry unavailable
+    """
+    try:
+        # First try to get real telemetry coordinates
+        centerline = None
+        if session is not None:
+            centerline = _extract_track_from_telemetry(session)
+        
+        # Fallback to procedural track
+        if not centerline or len(centerline) == 0:
+            print("[TRACK] Using procedural track layout")
+            centerline = _generate_procedural_track()
+        
+        if not centerline or len(centerline) == 0:
+            return _get_fallback_track_data()
+        
+        # Calculate bounds
+        xs = [p.get('x', 0) for p in centerline]
+        ys = [p.get('y', 0) for p in centerline]
+        
+        bounds = {
+            'minX': min(xs) if xs else -1000,
+            'maxX': max(xs) if xs else 1000,
+            'minY': min(ys) if ys else -1000,
+            'maxY': max(ys) if ys else 1000,
+        }
+        
+        return {
+            'bounds': bounds,
+            'centerline': centerline,
+            'innerBoundary': _offset_points(centerline, -150),
+            'outerBoundary': _offset_points(centerline, 150),
+            'finishLine': _get_finish_line(centerline),
+        }
+    except Exception as e:
+        print(f"[TRACK BUILD] Error building track: {e}")
+        return _get_fallback_track_data()
+
+
+def _offset_points(points, offset):
+    """Offset track points perpendicular to centerline"""
+    if len(points) < 2:
+        return []
+    
+    result = []
+    for i in range(len(points)):
+        curr = points[i]
+        next_p = points[(i + 1) % len(points)]
+        
+        # Calculate perpendicular direction
+        dx = next_p['x'] - curr['x']
+        dy = next_p['y'] - curr['y']
+        length = (dx*dx + dy*dy) ** 0.5
+        
+        if length > 0:
+            nx = -dy / length * offset
+            ny = dx / length * offset
+            result.append({'x': curr['x'] + nx, 'y': curr['y'] + ny})
+        else:
+            result.append(curr)
+    
+    return result
+
+
+def _get_finish_line(centerline):
+    """Get finish line coordinates from centerline"""
+    if len(centerline) < 2:
+        return None
+    
+    start = centerline[0]
+    end = centerline[1]
+    
+    return {
+        'start': start,
+        'end': end,
+    }
+
+
+def _get_drs_zones(race_num):
+    """Get DRS zones for the race"""
+    try:
+        # Attempt to get from qualifying session
+        quali = fastf1.get_session(2024, race_num, 'Q')
+        quali.load(telemetry=False, weather=False)
+        
+        if hasattr(quali, 'drs_zones') and quali.drs_zones:
+            return [
+                {
+                    'name': f'DRS Zone {i+1}',
+                    'points': [
+                        {'x': float(z[0]), 'y': float(z[1])}
+                        for z in zone
+                    ],
+                }
+                for i, zone in enumerate(quali.drs_zones)
+            ]
+    except:
+        pass
+    
+    return []
+
+
+def _build_replay_frames(laps_data, race_info):
+    """Build animation frames from lap telemetry with interpolation for smooth animation
+    
+    Creates multiple frames per lap with interpolated positions so drivers animate smoothly.
+    CRITICAL: Uses qualifying grid for first frame to ensure correct starting positions.
+    """
+    frames = []
+    frame_counter = 0
+    frames_per_lap = 120  # 120 frames per lap = ultra-smooth 120fps animation (8280 total frames)
+    
+    # CRITICAL: Get actual qualifying grid to fix starting positions (not race lap 1!)
+    print("[FRAMES] Loading qualifying grid for accurate starting positions...")
+    qualifying_grid = {}
+    try:
+        qual = fastf1.get_session(2024, race_info.get('round', 21), 'Q')
+        qual.load(telemetry=False, weather=False)
+        
+        if qual.results is not None:
+            for grid_pos, (_, qual_row) in enumerate(qual.results.iterrows(), 1):
+                driver_code = str(qual_row.get('Abbreviation', ''))
+                if driver_code and driver_code != 'nan':
+                    qualifying_grid[driver_code] = grid_pos
+                    if grid_pos <= 5:
+                        print(f"  P{grid_pos}: {driver_code}")
+        
+        if len(qualifying_grid) > 0:
+            print(f"[FRAMES] ✓ Loaded qualifying grid with {len(qualifying_grid)} drivers")
+        else:
+            raise Exception("Qualifying results empty")
+            
+    except Exception as e:
+        print(f"[FRAMES] WARNING: Could not load qualifying grid: {e}")
+        print("[FRAMES] Will build grid from first lap race data...")
+        # FALLBACK: Build qualifying grid from FIRST LAP positions
+        if laps_data:
+            first_lap_drivers = {}
+            for lap in laps_data:
+                lap_num = int(lap.get('lap_number', 0))
+                if lap_num == 1:  # Only use first lap data
+                    driver_code = str(lap.get('driver', ''))
+                    if driver_code and driver_code not in first_lap_drivers:
+                        first_lap_drivers[driver_code] = int(lap.get('position', 999))
+            
+            # Sort by position to get grid order
+            sorted_by_pos = sorted(first_lap_drivers.items(), key=lambda x: x[1])
+            for grid_pos, (code, _) in enumerate(sorted_by_pos, 1):
+                qualifying_grid[code] = grid_pos
+            
+            print(f"[FRAMES] ✓ Built fallback grid from lap 1 with {len(qualifying_grid)} drivers")
+    
+    # Group laps by lap number
+    DRIVER_NAMES = {
+        'VER': 'Max Verstappen', 'LEC': 'Charles Leclerc', 'SAI': 'Carlos Sainz',
+        'PIA': 'Oscar Piastri', 'NOR': 'Lando Norris', 'HAM': 'Lewis Hamilton',
+        'RUS': 'George Russell', 'ALO': 'Fernando Alonso', 'STR': 'Lance Stroll',
+        'GAS': 'Pierre Gasly', 'OCO': 'Esteban Ocon', 'MAG': 'Kevin Magnussen',
+        'HUL': 'Nico Hulkenberg', 'BOT': 'Valtteri Bottas', 'ZHO': 'Zhou Guanyu',
+        'TSU': 'Yuki Tsunoda', 'ALB': 'Alexander Albon', 'SAR': 'Logan Sargeant',
+        'PER': 'Sergio Perez', 'RIC': 'Daniel Ricciardo',
+    }
+    
+    # Group laps by lap number
+    laps_by_number = {}
+    for lap in laps_data:
+        lap_num = int(lap.get('lap_number', 0))
+        if lap_num not in laps_by_number:
+            laps_by_number[lap_num] = []
+        laps_by_number[lap_num].append(lap)
+    
+    sorted_laps = sorted(laps_by_number.keys())
+    
+    # Build complete list of ALL drivers in race (from all laps + qualifying grid)
+    # This ensures every driver who raced is included, not just those in first lap
+    all_drivers_in_race = set()
+    
+    # Add all drivers from qualifying grid (guaranteed to be complete)
+    all_drivers_in_race.update(qualifying_grid.keys())
+    
+    # Add all drivers from lap data (catches anyone in actual race)
+    for lap_records in laps_by_number.values():
+        for record in lap_records:
+            driver_code = str(record.get('driver', '')).strip()
+            if driver_code and driver_code != 'UNK':
+                all_drivers_in_race.add(driver_code)
+    
+    print(f"[DRIVERS] Total unique drivers in race: {len(all_drivers_in_race)}")
+    print(f"[DRIVERS] From qualifying: {len(qualifying_grid)}, From race data: {len(all_drivers_in_race) - len(qualifying_grid)}")
+    
+    # Generate frames with HIGH RESOLUTION interpolation for smooth 120fps playback
+    # 120 frames per lap = 8280 total frames = true 120fps animation (cinema-smooth)
+    frames_per_lap = 120  # 120 frames per lap = 120fps (ultra-smooth, 2x better than 60fps)
+    frame_counter = 0
+    frames = []
+    
+    # Track last known state for each driver (for retired drivers)
+    last_driver_state = {}
+    
+    # INITIALIZATION: Set initial positions from qualifying grid
+    # This ensures all drivers start at their correct grid position in lap 1
+    for code, grid_pos in qualifying_grid.items():
+        last_driver_state[code] = {
+            'driver': code,
+            'position': grid_pos,  # Grid position = starting position
+            'gear': 0,
+            'throttle': 0,
+            'brake': 0,
+            'speed': 0,
+            'drs_available': False,
+            'tire_compound': 'MEDIUM',
+            'tire_age': 0,
+            'pit_stops': 0,
+            'gap': '+0.000',
+            'team': 'Unknown',
+        }
+    
+    for lap_idx, lap_num in enumerate(sorted_laps):
+        lap_records = laps_by_number[lap_num]
+        
+        # IMPORTANT: For ALL laps, use actual race lap data!
+        # Even lap 1 should use race positions, not grid positions
+        # Drivers start on grid at race start, but positions change immediately
+        # We use qualifying_grid only as PREVIOUS positions for interpolation
+        drivers_by_code = {}
+        for record in lap_records:
+            code = record.get('driver', 'UNK')
+            if code not in drivers_by_code:
+                drivers_by_code[code] = record
+            else:
+                # Use the record with best position (finished lap)
+                if int(record.get('position', 999)) < int(drivers_by_code[code].get('position', 999)):
+                    drivers_by_code[code] = record
+        
+        # Get previous lap drivers for interpolation
+        prev_drivers = {}
+        if lap_idx > 0:
+            prev_lap_num = sorted_laps[lap_idx - 1]
+            prev_lap_records = laps_by_number[prev_lap_num]
+            for record in prev_lap_records:
+                code = record.get('driver', 'UNK')
+                if code not in prev_drivers:
+                    prev_drivers[code] = record
+        else:
+            # LAP 1: Use qualifying grid as "previous positions" for smooth interpolation from grid to race positions
+            # This ensures drivers animate from grid position P1, P2, P3 to their actual lap 1 race positions
+            for code, grid_pos in qualifying_grid.items():
+                prev_drivers[code] = {
+                    'driver': code,
+                    'position': grid_pos,  # Use grid position as the previous position for interpolation
+                    'gear': 0,
+                    'throttle': 0,
+                    'brake': 0,
+                    'speed': 0,
+                }
+        
+        # OPTIMIZATION: Detect if this lap has meaningful position changes
+        # Skip laps where no positions change (pit stops, safety cars, etc.)
+        has_position_changes = False
+        if prev_drivers:
+            for code in drivers_by_code:
+                current_pos = int(drivers_by_code[code].get('position', 999))
+                prev_record = prev_drivers.get(code)
+                if prev_record:
+                    prev_pos = int(prev_record.get('position', 999))
+                    if current_pos != prev_pos:
+                        has_position_changes = True
+                        break
+        else:
+            # First lap - always generate frames
+            has_position_changes = True
+        
+        # If no position changes and not first lap, use fewer frames (skip some)
+        frames_to_generate = frames_per_lap if has_position_changes or lap_idx == 0 else max(1, frames_per_lap // 10)
+        
+        # Create interpolated frames between previous and current lap
+        for frame_step in range(frames_to_generate):
+            # Smooth easing: t goes from 0 to 1
+            t = frame_step / frames_to_generate if frames_to_generate > 0 else 0
+            
+            drivers = {}
+            
+            # IMPORTANT: Iterate through ALL drivers in race, not just current lap drivers
+            # This ensures retired drivers stay visible at their last known position
+            for code in all_drivers_in_race:
+                current_record = drivers_by_code.get(code)
+                prev_record = prev_drivers.get(code)
+                
+                # Skip only if driver has NO DATA AT ALL (never raced)
+                # Don't skip if we have last_driver_state (retired driver)
+                if not current_record and not prev_record and code not in last_driver_state:
+                    continue
+                
+                # If current lap has no data for this driver, use last known state
+                if not current_record:
+                    # Driver retired or not racing this lap
+                    # Use last known state to keep them visible
+                    if code in last_driver_state:
+                        current_record = last_driver_state[code]
+                    elif prev_record:
+                        current_record = prev_record
+                    else:
+                        continue
+                
+                current_pos = int(current_record.get('position', 20) or 20)
+                current_gear = int(current_record.get('gear') or 0)
+                current_throttle = float(current_record.get('throttle') or 0)
+                current_brake = float(current_record.get('brake') or 0)
+                current_speed = float(current_record.get('speed') or 0)
+                
+                # Get previous position for interpolation
+                # CRITICAL: Always use a valid previous position to avoid wrong direction jumps
+                prev_pos = None
+                if prev_record:
+                    prev_pos = int(prev_record.get('position', None) or None)
+                
+                if prev_pos is None:
+                    # If no previous record, use last driver state if available
+                    if code in last_driver_state:
+                        prev_pos = int(last_driver_state[code].get('position', current_pos))
+                    else:
+                        # No previous data - driver just appeared or first lap
+                        # Start from current position (no interpolation needed)
+                        prev_pos = current_pos
+                
+                # ===== CRITICAL FIX: PROPER POSITION INTERPOLATION =====
+                # OLD BUG: Simple linear interpolation caused backwards movement and glitching
+                # NEW: Use easing + velocity-based smoothing to handle overtakes properly
+                
+                # Calculate position delta (how many spots gained/lost this lap)
+                position_delta = current_pos - prev_pos  # Negative = gaining positions (going UP in leaderboard)
+                
+                # EASING FUNCTION: Smooth ease-out for natural animation
+                # Acceleration phase first 30%, deceleration phase last 70%
+                if t < 0.3:
+                    # Ease in (slower at start)
+                    eased_t = (t / 0.3) ** 2 * 0.3
+                else:
+                    # Ease out (slower at end) - more natural overtake feel
+                    remaining_t = (t - 0.3) / 0.7
+                    eased_t = 0.3 + (1 - (1 - remaining_t) ** 2) * 0.7
+                
+                # POSITION ANIMATION: Smooth interpolation with bounds checking
+                position = prev_pos + position_delta * eased_t
+                # Clamp position to stay within realistic bounds (P1 to P20)
+                position = max(1.0, min(20.0, position))
+                
+                drivers[code] = {
+                    'code': code,
+                    'driver_name': DRIVER_NAMES.get(code, code),  # Consistent name from mapping
+                    'position': position,
+                    'x': None,  # No telemetry available
+                    'y': None,  # No telemetry available
+                    'speed': current_speed,
+                    'gear': current_gear,
+                    'throttle': current_throttle,
+                    'brake': current_brake,
+                    'drs': bool(current_record.get('drs_available', False)),
+                    'tire_compound': str(current_record.get('tire_compound', 'MEDIUM')),
+                    'tire_age': int(current_record.get('tire_age', 0) or 0),
+                    'pit_stops': int(current_record.get('pit_stops', 0) or 0),
+                    'gap': current_record.get('gap', '+0.000'),
+                    'team': current_record.get('team', 'Unknown'),
+                    'status': 'Running',
+                }
+                
+                # CRITICAL: Cache this driver's state for retired drivers
+                # This ensures retired drivers stay visible at their last position
+                last_driver_state[code] = current_record
+            
+            frames.append({
+                'frameIndex': frame_counter,
+                'lap': lap_num,
+                'raceTime': (lap_num - 1) * 90 + (frame_step / frames_per_lap) * 90,
+                'trackStatus': 'GREEN',
+                'drivers': drivers,
+                'predictions': [],
+            })
+            
+            frame_counter += 1
+    
+    print(f"[FRAMES] Generated {len(frames)} smooth 120fps frames from {len(sorted_laps)} laps ({frames_per_lap} frames per lap)")
+    return frames
+    return frames
+
+
+def _get_fallback_track_data():
+    """Fallback track data if real data unavailable"""
+    return {
+        'bounds': {
+            'minX': -1000,
+            'maxX': 1000,
+            'minY': -1000,
+            'maxY': 1000,
+        },
+        'centerline': [],
+        'innerBoundary': [],
+        'outerBoundary': [],
+        'finishLine': None,
+    }
+
+
 def _fetch_fastf1_data(race_num):
     """Fetch race data from FastF1 API with fallback to dummy drivers"""
     drivers = []

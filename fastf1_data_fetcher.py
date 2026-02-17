@@ -31,6 +31,7 @@ class FastF1DataFetcher:
         self.race_year = None
         self.race_round = None
         self.laps_data = []
+        self.driver_code_map = {}  # Cache driver number -> code mapping
         
     def fetch_race(self, year: int, round_number: int) -> bool:
         """
@@ -52,12 +53,36 @@ class FastF1DataFetcher:
             self.race_year = year
             self.race_round = round_number
             
+            # Build driver code mapping from session data
+            self._build_driver_code_map()
+            
             print(f"[OK] Race geladen! Locatie: {self.session.event['Location']}")
             return True
             
         except Exception as e:
             print(f"[ERROR] Fout bij laden race: {e}")
             return False
+    
+    
+    def _build_driver_code_map(self):
+        """Build mapping from driver number to 3-letter code from session results"""
+        try:
+            self.driver_code_map = {}
+            if hasattr(self.session, 'results') and self.session.results is not None:
+                for idx, row in self.session.results.iterrows():
+                    driver_num = row.get('DriverNumber')
+                    abbrev = row.get('Abbreviation')
+                    if driver_num is not None and abbrev and isinstance(abbrev, str):
+                        try:
+                            self.driver_code_map[int(driver_num)] = str(abbrev)
+                        except (ValueError, TypeError):
+                            pass
+            
+            if self.driver_code_map:
+                print(f"[OK] Built driver code map with {len(self.driver_code_map)} drivers")
+        except Exception as e:
+            print(f"[WARN] Could not build driver code map: {e}")
+    
     
     
     def get_drivers_in_race(self) -> List[str]:
@@ -71,12 +96,74 @@ class FastF1DataFetcher:
         return list(drivers)
     
     
-    def extract_lap_features(self, lap_data: pd.Series, driver: str) -> Dict:
+    def get_driver_code_from_number(self, driver_number: int) -> str:
+        """
+        Convert FastF1 driver number to 3-letter driver code (VER, HAM, LEC, etc)
+        Uses session driver abbreviations or cached mapping
+        """
+        try:
+            # First check if we have it in our cached map (built from session.results)
+            if driver_number in self.driver_code_map:
+                return self.driver_code_map[driver_number]
+            
+            # Try to get from session results directly
+            if hasattr(self.session, 'results') and self.session.results is not None:
+                for idx, row in self.session.results.iterrows():
+                    if row.get('DriverNumber') == driver_number:
+                        abbrev = row.get('Abbreviation')
+                        if abbrev and isinstance(abbrev, str) and len(abbrev) > 0:
+                            code = str(abbrev)
+                            self.driver_code_map[driver_number] = code  # Cache it
+                            return code
+            
+            # Fallback: Hardcoded mapping (2024 F1 grid)
+            DRIVER_CODES = {
+                1: 'VER',      # Max Verstappen
+                44: 'HAM',     # Lewis Hamilton
+                16: 'LEC',     # Charles Leclerc
+                63: 'RUS',     # George Russell
+                55: 'SAI',     # Carlos Sainz
+                4: 'NOR',      # Lando Norris
+                81: 'PIA',     # Oscar Piastri
+                14: 'ALO',     # Fernando Alonso
+                18: 'STR',     # Lance Stroll
+                10: 'GAS',     # Pierre Gasly
+                31: 'OCO',     # Esteban Ocon
+                20: 'MAG',     # Kevin Magnussen
+                27: 'HUL',     # Nico Hulkenberg
+                77: 'BOT',     # Valtteri Bottas
+                24: 'ZHO',     # Zhou Guanyu
+                22: 'TSU',     # Yuki Tsunoda
+                23: 'ALB',     # Alexander Albon
+                2: 'SAR',      # Logan Sargeant
+                11: 'PER',     # Sergio Perez
+                3: 'RIC',      # Daniel Ricciardo
+                30: 'BEA',     # Believe or unidentified
+                43: 'SKU',     # Or unidentified
+                50: 'DEV',     # Or unidentified
+            }
+            
+            code = DRIVER_CODES.get(driver_number, str(driver_number))
+            self.driver_code_map[driver_number] = code  # Cache it
+            return code
+            
+        except Exception as e:
+            print(f"[WARN] Could not get driver code for {driver_number}: {e}")
+            return str(driver_number)
+    
+    def extract_lap_features(self, lap_data: pd.Series, driver_number: int) -> Dict:
         """
         Extraheert features uit 1 lap data
         Dit zijn de features die iedere lap beschikbaar zijn
+        
+        Args:
+            lap_data: pd.Series with lap info from FastF1
+            driver_number: int driver number (e.g., 1 for Verstappen)
         """
         try:
+            # Convert driver number to 3-letter code
+            driver_code = self.get_driver_code_from_number(driver_number)
+            
             # Get lap number safely
             lap_number = lap_data.get('LapNumber', np.nan)
             if pd.isna(lap_number):
@@ -118,8 +205,16 @@ class FastF1DataFetcher:
             except:
                 drs_available = 0
             
+            # TELEMETRY X,Y COORDINATES
+            # Note: Telemetry access is SLOW (triggers FastF1 lazy-load)
+            # For replay visualization, use position-based interpolation fallback
+            # Telemetry extraction is DISABLED for performance - x,y will be None
+            x, y, speed, gear, throttle, brake = None, None, None, None, None, None
+            # Telemetry disabled - too slow for 1135 laps × 20 drivers
+            # The frontend fallback (position-based interpolation) provides acceptable visualization
+            
             features = {
-                'driver': str(driver),
+                'driver': driver_code,
                 'lap_number': lap_number,
                 'lap_time': lap_time_seconds,
                 'position': position,
@@ -129,6 +224,12 @@ class FastF1DataFetcher:
                 'track_status': str(lap_data.get('TrackStatus', 'UNKNOWN')),
                 'drs_available': drs_available,
                 'fresh_tires': int(bool(lap_data.get('FreshTyre', False))),
+                'x': x,  # Telemetry X coordinate (end of lap)
+                'y': y,  # Telemetry Y coordinate (end of lap)
+                'speed': speed,
+                'gear': gear,
+                'throttle': throttle,
+                'brake': brake,
             }
             
             return features
@@ -172,39 +273,43 @@ class FastF1DataFetcher:
                 print()
             
             # Group by driver
-            drivers = self.get_drivers_in_race()
-            print(f"  [DRIVERS] Drivers: {drivers}")
+            driver_numbers = self.get_drivers_in_race()
+            print(f"  [DRIVERS] Driver numbers: {driver_numbers}")
             
-            for driver in drivers:
+            for driver_number in driver_numbers:
                 try:
-                    # Pick laps for this driver - try both string and int
+                    # Convert to int if needed
+                    driver_num = int(driver_number)
+                    driver_code = self.get_driver_code_from_number(driver_num)
+                    
+                    # Pick laps for this driver by number
                     laps = None
                     try:
-                        laps = all_laps.pick_driver(driver)
+                        laps = all_laps.pick_driver(driver_num)
                     except:
                         try:
-                            laps = all_laps.pick_driver(int(driver))
+                            laps = all_laps[all_laps['DriverNumber'] == driver_num]
                         except:
-                            laps = all_laps[all_laps['DriverNumber'] == int(driver)] if driver.isdigit() else None
+                            continue
                     
                     if laps is None or len(laps) == 0:
                         continue
                     
-                    print(f"  [DRIVER] Driver {driver}: {len(laps)} laps")
+                    print(f"  [DRIVER] Driver {driver_code} (#{driver_num}): {len(laps)} laps")
                     
                     # Extract features
                     lap_count = 0
                     for idx, (_, lap) in enumerate(laps.iterrows()):
-                        lap_features = self.extract_lap_features(lap, driver)
+                        lap_features = self.extract_lap_features(lap, driver_num)
                         if lap_features is not None:
                             all_laps_data.append(lap_features)
                             lap_count += 1
                     
                     if lap_count == 0:
-                        print(f"      [WARN] No valid laps extracted for driver {driver}")
+                        print(f"      [WARN] No valid laps extracted for driver {driver_code}")
                     
                 except Exception as e:
-                    print(f"  [WARN] Error with driver {driver}: {e}")
+                    print(f"  [WARN] Error with driver {driver_number}: {e}")
                     import traceback
                     traceback.print_exc()
                     continue

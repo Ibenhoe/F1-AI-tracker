@@ -1,0 +1,306 @@
+.driver-info-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: rgba(10, 14, 39, 0.8);
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 24, 1, 0.3);
+  font-family: 'Courier New', monospace;
+}
+
+.driver-info-panel.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100px;
+  color: #666;
+  font-size: 12px;
+}
+
+/* Header */
+.info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 24, 1, 0.3);
+}
+
+.driver-name {
+  font-size: 16px;
+  font-weight: bold;
+  color: #ff1801;
+}
+
+.driver-position {
+  font-size: 14px;
+  color: #ffaa00;
+  font-weight: bold;
+}
+
+/* Telemetry Section */
+.telemetry-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.telemetry-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+
+.telemetry-row .label {
+  font-size: 9px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  min-width: 50px;
+  font-weight: bold;
+}
+
+.telemetry-row .value {
+  color: #ffaa00;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.telemetry-row .unit {
+  color: #666;
+  font-size: 9px;
+}
+
+/* Progress Bars */
+.progress-bar {
+  flex: 1;
+  height: 16px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 2px;
+  border: 1px solid rgba(255, 24, 1, 0.2);
+  overflow: hidden;
+  min-width: 60px;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.1s ease;
+}
+
+.progress-fill.throttle {
+  background: linear-gradient(90deg, transparent, #ffaa00);
+}
+
+.progress-fill.brake {
+  background: linear-gradient(90deg, transparent, #ff5544);
+}
+
+/* Gear Display */
+.telemetry-row .gear {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 170, 0, 0.2);
+  border: 1px solid #ffaa00;
+  border-radius: 3px;
+  font-size: 13px;
+}
+
+/* DRS Status */
+.drs-status {
+  font-weight: bold;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.drs-status.active {
+  background: rgba(76, 175, 80, 0.3);
+  color: #4cb050;
+  border: 1px solid #4cb050;
+}
+
+.drs-status.off {
+  background: rgba(100, 100, 100, 0.3);
+  color: #888;
+  border: 1px solid #666;
+}
+
+/* Tire Section */
+.tire-section {
+  background: rgba(255, 24, 1, 0.1);
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 24, 1, 0.2);
+}
+
+.tire-header {
+  font-size: 9px;
+  color: #ff1801;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.tire-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.tire-compound-display {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tire-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+  border: 1px solid;
+}
+
+.tire-badge.soft {
+  background: linear-gradient(135deg, #ff1801 0%, #ff5522 100%);
+  border-color: #ffaa00;
+}
+
+.tire-badge.medium {
+  background: linear-gradient(135deg, #ffeb3b 0%, #fff176 100%);
+  border-color: #fbc02d;
+  color: #000;
+}
+
+.tire-badge.hard {
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+  border-color: #bdbdbd;
+  color: #000;
+}
+
+.tire-badge.inter {
+  background: linear-gradient(135deg, #00ff00 0%, #66ff66 100%);
+  border-color: #00cc00;
+  color: #000;
+}
+
+.tire-badge.wet {
+  background: linear-gradient(135deg, #0088ff 0%, #66ccff 100%);
+  border-color: #0066cc;
+}
+
+.tire-badge.unknown {
+  background: linear-gradient(135deg, #666666 0%, #999999 100%);
+  border-color: #444444;
+}
+
+.tire-name {
+  font-size: 10px;
+  color: #cccccc;
+  flex: 1;
+}
+
+.tire-age {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+}
+
+.tire-age .label {
+  color: #888;
+}
+
+.tire-age .value {
+  color: #ffaa00;
+  font-weight: bold;
+}
+
+/* Pit Stop Section */
+.pit-stop-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px;
+  background: rgba(100, 100, 255, 0.1);
+  border: 1px solid rgba(100, 100, 255, 0.3);
+  border-radius: 3px;
+}
+
+.pit-stop-section .label {
+  font-size: 9px;
+  color: #6464ff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+}
+
+.pit-stop-section .value {
+  font-size: 14px;
+  color: #6464ff;
+  font-weight: bold;
+}
+
+/* Gap Section */
+.gap-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px;
+  background: rgba(255, 170, 0, 0.1);
+  border: 1px solid rgba(255, 170, 0, 0.3);
+  border-radius: 3px;
+}
+
+.gap-section .label {
+  font-size: 9px;
+  color: #ffaa00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: bold;
+}
+
+.gap-section .value {
+  font-size: 12px;
+  color: #ffaa00;
+  font-weight: bold;
+}
+
+/* Status Section */
+.status-section {
+  padding: 8px;
+  border-radius: 3px;
+  text-align: center;
+  font-weight: bold;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-section.status-out,
+.status-section.status-dnf {
+  background: rgba(255, 24, 1, 0.3);
+  color: #ff1801;
+  border: 1px solid #ff1801;
+}
+
+.status-section.status-pit {
+  background: rgba(100, 100, 255, 0.3);
+  color: #6464ff;
+  border: 1px solid #6464ff;
+}
