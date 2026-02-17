@@ -1,5 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { BarChart3, LineChart } from "lucide-react";
+import { BarChart3, LineChart, BookOpen, FileText } from "lucide-react";
 
 function NavItem({ to, icon: Icon, label }) {
   return (
@@ -51,6 +51,8 @@ export default function Sidebar() {
             </div>
             <div className="space-y-1">
               <NavItem to="/pre-race" icon={LineChart} label="Pre-race analysis" />
+              <NavItem to="/wiki" icon={BookOpen} label="Wiki" />
+              <NavItem to="/docs" icon={FileText} label="Docs" />
             </div>
           </div>
         </div>

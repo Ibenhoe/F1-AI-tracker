@@ -232,6 +232,30 @@ def get_races():
     return jsonify(races), 200
 
 
+@app.route('/api/docs', methods=['GET'])
+def get_docs_data():
+    """Get data for the Documentation page"""
+    return jsonify({
+        'title': 'System Documentation',
+        'sections': [
+            {
+                'id': 'models',
+                'title': '🤖 AI Models',
+                'content': 'This system uses a combination of XGBoost and Neural Networks to predict race outcomes.\n\n1. Pre-race Model: Analyzes historical data (2015-2024) including qualifying pace, driver form, and track history.\n2. Continuous Learner: Adapts to live lap times during the race to refine predictions.'
+            },
+            {
+                'id': 'strategy',
+                'title': '🛞 Tire Strategy',
+                'content': 'Tire degradation is modeled per circuit using historical wear rates and current weather conditions.\n\nThe system calculates optimal pit windows based on:\n- Tire compound life (Soft/Medium/Hard)\n- Pit stop loss time (avg 20-24s)\n- Track temperature impact'
+            },
+            {
+                'id': 'battle',
+                'title': '⚔️ Battle Detector',
+                'content': 'The Battle Detector monitors gaps between drivers in real-time.\n\n- Detection: When the gap is < 1.0s (DRS range).\n- Intensity: Calculated based on gap closure rate and position changes.\n- Events: Automatically generates alerts when overtakes are likely.'
+            }
+        ]
+    }), 200
+
 
 @app.route('/api/race/prerace-analysis', methods=['POST'])
 def get_prerace_analysis():
