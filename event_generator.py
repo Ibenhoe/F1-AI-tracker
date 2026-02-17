@@ -21,12 +21,14 @@ class RaceEventGenerator:
         event = {
             'id': int(time.time() * 1000),
             'timestamp': datetime.now().isoformat(),
-            'type': 'battle',
+            'type': battle_data.get('type', 'battle'),
             'subtype': battle_data.get('subtype', 'battle_start'),
             'drivers': battle_data.get('drivers', []),
             'lap': battle_data.get('lap', 0),
             'gap': battle_data.get('gap', 0),
             'message': battle_data.get('message', 'Battle event'),
+            'color_code': battle_data.get('color_code', 'info'),
+            'severity': battle_data.get('severity', 'normal'),
         }
         
         # Throttle to prevent spam

@@ -8,6 +8,40 @@
   color: #f0f0f0;
 }
 
+/* Compact Metrics Bar - Shows Updates and Maturity at a glance */
+.compact-metrics-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+  flex-wrap: wrap;
+}
+
+.compact-metric {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.compact-label {
+  color: #a78bfa;
+  font-weight: 600;
+  opacity: 0.8;
+}
+
+.compact-value {
+  font-size: 14px;
+  font-weight: 700;
+  min-width: 40px;
+}
+
+.metric-separator {
+  color: rgba(167, 139, 250, 0.3);
+  margin: 0 4px;
+}
+
 .model-header {
   display: flex;
   justify-content: space-between;

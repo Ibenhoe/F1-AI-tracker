@@ -233,10 +233,26 @@ class RaceSimulator:
         # Add MODEL METRICS for frontend display
         if self.model is not None:
             try:
-                # V3 model uses updates_count (not lap_updates_count)
+                # Calculate model maturity based on updates with realistic curve
+                # Early laps: Fast growth (0-50%)
+                # Middle laps: Moderate growth (50-75%)
+                # Late laps: Slow growth (75-100%)
+                # Formula: tanh-like curve that starts fast and slows down
+                updates = getattr(self.model, 'updates_count', 0)
+                
+                # Normalize updates to 0-100 scale
+                # Assumes ~20 updates gives 100% maturity (realistic for ~20 laps)
+                normalized = min(100, (updates / 20) * 100)
+                
+                # Apply sigmoid curve for realistic growth
+                # Fast at start, slows down at end (like learning)
+                import math
+                sigmoid_value = (normalized / 50) - 1  # -1 to +1
+                maturity = 50 + (50 * math.tanh(sigmoid_value))  # 0 to 100
+                
                 lap_state['model_metrics'] = {
-                    'total_updates': getattr(self.model, 'updates_count', 0),
-                    'model_maturity_percentage': min(100, getattr(self.model, 'updates_count', 0) * 5),
+                    'total_updates': updates,
+                    'model_maturity_percentage': min(100, max(0, maturity)),
                     'position_model_ready': self.model.features_fitted,
                     'features_fitted': getattr(self.model, 'features_fitted', False)
                 }

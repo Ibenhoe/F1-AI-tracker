@@ -12,10 +12,10 @@ const SPEEDS = [
   { value: 4.0, label: "4×", hint: "Turbo" },
 ];
 
-function statusFor({ connected, raceInitialized, raceRunning }) {
+function statusFor({ connected, raceReady, raceRunning }) {
   if (!connected) return { label: "Connecting", variant: "warning" };
-  if (connected && !raceInitialized) return { label: "Loading race", variant: "warning" };
-  if (connected && raceInitialized && !raceRunning) return { label: "Ready", variant: "success" };
+  if (connected && !raceReady) return { label: "Loading race", variant: "warning" };
+  if (connected && raceReady && !raceRunning) return { label: "Ready", variant: "success" };
   return { label: "Running", variant: "warning" };
 }
 
@@ -25,7 +25,7 @@ function clamp01(n) {
 }
 
 export default function RaceControls({
-  raceInitialized,
+  raceReady,
   raceRunning,
   connected,
   raceData,
@@ -36,13 +36,13 @@ export default function RaceControls({
   const [speed, setSpeed] = useState(1.0);
 
   const status = useMemo(
-    () => statusFor({ connected, raceInitialized, raceRunning }),
-    [connected, raceInitialized, raceRunning]
+    () => statusFor({ connected, raceReady, raceRunning }),
+    [connected, raceReady, raceRunning]
   );
 
-  const canStart = connected && raceInitialized && !raceRunning;
+  const canStart = connected && raceReady && !raceRunning;
   const canPause = connected && raceRunning;
-  const canResume = connected && raceInitialized && !raceRunning;
+  const canResume = connected && raceReady && !raceRunning;
 
   const handleStart = async () => {
     if (!canStart) return;

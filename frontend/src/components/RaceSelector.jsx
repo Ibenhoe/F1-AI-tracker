@@ -7,21 +7,22 @@ const RACES = {
   4: "Japan",
   5: "China",
   6: "Miami",
-  7: "Monaco",
-  8: "Canada",
-  9: "Spain",
-  10: "Austria",
-  11: "United Kingdom",
-  12: "Hungary",
-  13: "Belgium",
-  14: "Netherlands",
-  15: "Italy",
-  16: "Azerbaijan",
-  17: "Singapore",
-  18: "Austin",
-  19: "Mexico",
-  20: "Brazil",
-  21: "Abu Dhabi",
+  7: "Emilia Romagna",
+  8: "Monaco",
+  9: "Canada",
+  10: "Spain",
+  11: "Austria",
+  12: "United Kingdom",
+  13: "Hungary",
+  14: "Belgium",
+  15: "Netherlands",
+  16: "Italy",
+  17: "Azerbaijan",
+  18: "Singapore",
+  19: "Austin",
+  20: "Mexico",
+  21: "Brazil",
+  22: "Abu Dhabi",
 };
 
 const ITEM_H = 44;
@@ -49,10 +50,32 @@ export default function RaceSelector({
 
   const value = Number(selectedRace ?? 1);
 
+  // Debounce timer for race selection to avoid rapid API calls while scrolling
+  const debounceTimerRef = useRef(null);
+  const pendingRaceRef = useRef(null);
+
   const emit = (id) => {
     if (disabled) return;
-    if (onSelectRace) onSelectRace(id);
-    else if (onRaceChange) onRaceChange(id);
+    
+    // Cancel previous debounce timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Store the pending race
+    pendingRaceRef.current = id;
+    
+    // Debounce: wait 400ms after scroll stops before emitting the race change
+    // This prevents rapid API calls while user is scrolling through races
+    debounceTimerRef.current = setTimeout(() => {
+      const finalRace = pendingRaceRef.current;
+      if (finalRace !== null) {
+        if (onSelectRace) onSelectRace(finalRace);
+        else if (onRaceChange) onRaceChange(finalRace);
+      }
+      debounceTimerRef.current = null;
+      pendingRaceRef.current = null;
+    }, 400);  // Wait 400ms after last scroll event
   };
 
   // offset is in "rows", but measured in px
@@ -115,6 +138,15 @@ export default function RaceSelector({
     setOffsetPx(target);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, baseList]);
+
+  // Cleanup debounce timer on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, []);
 
   // --- drag state ---
   const isDraggingRef = useRef(false);

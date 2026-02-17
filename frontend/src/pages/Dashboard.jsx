@@ -6,6 +6,7 @@ import PredictionsPanel from "../components/PredictionsPanel";
 import NotificationsPanel from "../components/NotificationsPanel";
 import RaceControls from "../components/RaceControls";
 import RaceSelector from "../components/RaceSelector";
+import Toast from "../components/Toast";
 import apiClient from "../services/apiClient";
 
 import Card from "../components/ui/Card";
@@ -79,7 +80,9 @@ export default function Dashboard() {
   const [raceRunning, setRaceRunning] = useState(false);
   const [connected, setConnected] = useState(false);
   const [raceInitialized, setRaceInitialized] = useState(false);
+  const [raceReady, setRaceReady] = useState(false);  // True only when race/ready event received
   const [selectedRace, setSelectedRace] = useState(1);
+  const [toast, setToast] = useState(null);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -109,6 +112,39 @@ export default function Dashboard() {
         }
 
         setRaceInitialized(true);
+
+        // Initialize model metrics with default values
+        setModelMetrics({
+          total_updates: 0,
+          model_maturity_percentage: 0,
+          learning_status: 'Initializing',
+          model_type: 'SGD + MLP + XGBoost',
+          confidence_cap: '85%',
+          is_pretrained: true,
+          samples_processed: 0
+        });
+
+        // Listen for race ready event when a new race is initialized
+        apiClient.on("race/ready", (data) => {
+          console.log("[DASHBOARD] Race ready event received:", data);
+          
+          setRaceData({
+            race: data.race_name || `Race ${data.race_id}`,
+            totalLaps: data.total_laps || 58,
+            currentLap: 0,
+            drivers: data.drivers || [],
+          });
+          
+          // Mark race as truly ready (when backend confirms)
+          setRaceReady(true);
+          
+          // Show toast notification that race is ready
+          setToast({
+            message: 'Race is ready! Click START to begin simulation.',
+            type: 'success',
+            duration: 3000
+          });
+        });
 
         apiClient.on("lap/update", (data) => {
           console.log("[DASHBOARD] Lap update:", data.lap_number);
@@ -145,6 +181,7 @@ export default function Dashboard() {
                   .toString(36)
                   .substr(2, 9)}`,
                 type: e.type || "info",
+                color_code: e.color_code || undefined,  // Add color_code from backend
                 message: e.message,
                 time: new Date().toLocaleTimeString(),
                 lapNumber: data.lap_number,
@@ -211,6 +248,7 @@ export default function Dashboard() {
   const handleRaceChange = async (newRaceNumber) => {
     setSelectedRace(newRaceNumber);
     setRaceInitialized(false);
+    setRaceReady(false);  // Reset ready state when race changes
     setCurrentLap(0);
     setRaceRunning(false);
   };
@@ -249,7 +287,7 @@ export default function Dashboard() {
 
         <Card className="lg:col-span-8 p-4" clip>
           <RaceControls
-            raceInitialized={raceInitialized}
+            raceReady={raceReady}
             raceRunning={raceRunning}
             connected={connected}
             raceData={raceData}
@@ -284,6 +322,16 @@ export default function Dashboard() {
           notifications={notifications}
         />
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => setToast(null)}
+        />
+      )}
     </div>
   );
 }
