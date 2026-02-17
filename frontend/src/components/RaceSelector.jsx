@@ -41,7 +41,7 @@ export default function RaceSelector({
     []
   );
 
-  const N = baseList.length; // 21
+  const N = baseList.length;
   const loopList = useMemo(() => {
     const out = [];
     for (let i = 0; i < LOOPS; i++) out.push(...baseList);
@@ -57,16 +57,9 @@ export default function RaceSelector({
   const emit = (id) => {
     if (disabled) return;
 
-    // Cancel previous debounce timer
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    // Store the pending race
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     pendingRaceRef.current = id;
 
-    // Debounce: wait 400ms after scroll stops before emitting the race change
-    // This prevents rapid API calls while user is scrolling through races
     debounceTimerRef.current = setTimeout(() => {
       const finalRace = pendingRaceRef.current;
       if (finalRace !== null) {
@@ -75,10 +68,10 @@ export default function RaceSelector({
       }
       debounceTimerRef.current = null;
       pendingRaceRef.current = null;
-    }, 400);  // Wait 400ms after last scroll event
+    }, 400);
   };
 
-  // offset is in "rows", but measured in px
+  // offset in px
   const [offsetPx, _setOffsetPx] = useState(0);
   const offsetRef = useRef(0);
 
@@ -89,21 +82,30 @@ export default function RaceSelector({
 
   const padTop = MID * ITEM_H;
 
-  // --- infinite wrap helpers ---
-  const oneLoopPx = N * ITEM_H; // 21 rows
-  const centerLoopStartPx = oneLoopPx; // start of the middle copy (loop 2)
+  // --- infinite normalization (NO jumps) ---
+  const oneLoopPx = N * ITEM_H;
+  const centerLoopStartPx = oneLoopPx; // middle copy start
 
   const normalizeId = (id) => {
-    // ensure 1..N
     const raw = Number(id);
     if (!Number.isFinite(raw)) return 1;
-    const m = ((raw - 1) % N + N) % N; // 0..N-1
+    const m = ((raw - 1) % N + N) % N;
     return m + 1;
   };
 
+  const normalizeOffset = (offPx) => {
+    // Keep offset always inside the middle loop range:
+    // [centerLoopStartPx, centerLoopStartPx + oneLoopPx)
+    let x = offPx - centerLoopStartPx;
+    x = ((x % oneLoopPx) + oneLoopPx) % oneLoopPx;
+    return centerLoopStartPx + x;
+  };
+
+  const clampIndex = (idx) => Math.max(0, Math.min(loopList.length - 1, idx));
+
   const idxFromOffset = (offPx) => {
-    // offPx is the "scroll offset" in px (0 at very top of the whole loopList)
-    return Math.round(offPx / ITEM_H);
+    // Safe index in [0..loopList.length-1]
+    return clampIndex(Math.round(offPx / ITEM_H));
   };
 
   const snapToNearest = (offPx) => {
@@ -116,17 +118,6 @@ export default function RaceSelector({
 
     const id = normalizeId(row.id);
     if (id !== value) emit(id);
-  };
-
-  const wrapIfNeeded = (offPx) => {
-    // Keep the offset around the middle loop to avoid hitting edges.
-    // Threshold: if we drift into the first or third loop too far, jump by ±oneLoopPx.
-    const minSafe = oneLoopPx * 0.5; // halfway through loop 1
-    const maxSafe = oneLoopPx * 2.5; // halfway through loop 3
-
-    if (offPx < minSafe) return offPx + oneLoopPx;
-    if (offPx > maxSafe) return offPx - oneLoopPx;
-    return offPx;
   };
 
   // When parent value changes, center to that value in the middle loop
@@ -142,22 +133,24 @@ export default function RaceSelector({
   // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, []);
 
   // --- drag state ---
   const isDraggingRef = useRef(false);
+  const movedRef = useRef(false);
   const startYRef = useRef(0);
   const startOffsetRef = useRef(0);
   const pointerIdRef = useRef(null);
+  const surfaceRef = useRef(null);
+  const lastClientYRef = useRef(null);
 
   const onPointerDown = (e) => {
     if (disabled) return;
 
     isDraggingRef.current = true;
+    movedRef.current = false;
     pointerIdRef.current = e.pointerId;
 
     startYRef.current = e.clientY;
@@ -169,13 +162,13 @@ export default function RaceSelector({
   const onPointerMove = (e) => {
     if (!isDraggingRef.current) return;
 
+    lastClientYRef.current = e.clientY;
+
     const dy = e.clientY - startYRef.current;
-    // drag down => decrease offset (content moves down)
-    let next = startOffsetRef.current - dy;
+    if (Math.abs(dy) > 4) movedRef.current = true;
 
-    // wrap continuously during drag (no clamping)
-    next = wrapIfNeeded(next);
-
+    const raw = startOffsetRef.current - dy;
+    const next = normalizeOffset(raw);
     setOffsetPx(next);
   };
 
@@ -183,27 +176,53 @@ export default function RaceSelector({
     if (!isDraggingRef.current) return;
     isDraggingRef.current = false;
 
-    // wrap once more then snap
-    const wrapped = wrapIfNeeded(offsetRef.current);
+    const wrapped = normalizeOffset(offsetRef.current);
     setOffsetPx(wrapped);
     snapToNearest(wrapped);
   };
 
   const onPointerUp = (e) => {
+    // release capture
     if (pointerIdRef.current !== null) {
       try {
         e.currentTarget.releasePointerCapture?.(pointerIdRef.current);
-      } catch {
-        // ignore
-      }
+      } catch { }
     }
     pointerIdRef.current = null;
+
+    if (!disabled && isDraggingRef.current && movedRef.current === false) {
+      const surface = surfaceRef.current;
+      if (surface) {
+        const rect = surface.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+
+        const slot = Math.max(0, Math.min(VISIBLE - 1, Math.floor(y / ITEM_H)));
+
+        const deltaSlots = slot - MID;
+
+        const next = normalizeOffset(offsetRef.current + deltaSlots * ITEM_H);
+        setOffsetPx(next);
+        snapToNearest(next);
+      }
+    }
+
     endDrag();
   };
 
   const onLostPointerCapture = () => {
     pointerIdRef.current = null;
     endDrag();
+  };
+
+  const onRowClick = (loopIndex, id) => {
+    if (disabled) return;
+    if (movedRef.current) return; // ignore click after drag
+
+    const snapped = normalizeOffset(loopIndex * ITEM_H);
+    setOffsetPx(snapped);
+    snapToNearest(snapped);
+
+    if (id !== value) emit(id);
   };
 
   return (
@@ -245,6 +264,7 @@ export default function RaceSelector({
 
         {/* drag surface */}
         <div
+          ref={surfaceRef}
           className={[
             "relative overflow-hidden rounded-xl",
             disabled ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
@@ -271,12 +291,15 @@ export default function RaceSelector({
               const active = id === value;
 
               return (
-                <div
+                <button
                   key={`${i}-${id}`}
+                  type="button"
+                  onClick={() => onRowClick(i, id)}
                   className={[
-                    "flex items-center justify-between rounded-xl px-3",
+                    "flex h-[44px] w-full items-center justify-between rounded-xl px-3 text-left",
                     "border border-transparent",
                     "transition-colors",
+                    disabled ? "cursor-not-allowed" : "cursor-pointer",
 
                     !active
                       ? "text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100/70 dark:hover:bg-neutral-900/30"
@@ -290,7 +313,6 @@ export default function RaceSelector({
                       ].join(" ")
                       : "",
                   ].join(" ")}
-                  style={{ height: ITEM_H }}
                 >
                   <div className="flex min-w-0 items-center gap-3">
                     <span className="w-8 text-right tabular-nums">
@@ -298,12 +320,13 @@ export default function RaceSelector({
                     </span>
                     <span className="truncate">{name}</span>
                   </div>
+
                   {active ? (
                     <span className="text-xs font-medium text-[rgb(var(--accent))] opacity-80">
                       Selected
                     </span>
                   ) : null}
-                </div>
+                </button>
               );
             })}
           </div>
