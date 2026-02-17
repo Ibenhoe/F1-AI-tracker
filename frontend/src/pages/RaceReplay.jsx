@@ -4,6 +4,8 @@ import TrackRenderer from '../components/TrackRenderer';
 import ReplayControls from '../components/ReplayControls';
 import ReplayLeaderboard from '../components/ReplayLeaderboard';
 import DriverInfoPanel from '../components/DriverInfoPanel';
+import Card from '../components/ui/Card';
+import Badge from '../components/ui/Badge';
 import './RaceReplay.css';
 
 /**
@@ -22,14 +24,18 @@ const RaceReplay = () => {
   const [currentLap, setCurrentLap] = useState(0);
   const [frameIndex, setFrameIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [playbackSpeed, setPlaybackSpeed] = useState(0.1);  // Default to 1/10 speed (very slow) - race will take ~12 minutes
+  const [playbackSpeed, setPlaybackSpeed] = useState(1);  // Default to 1x speed
   const [selectedDriver, setSelectedDriver] = useState(null);
   const [showDRS, setShowDRS] = useState(true);
   const [showTelemetry, setShowTelemetry] = useState(true);
+  const [rightPanelTab, setRightPanelTab] = useState('standings');
+  const [raceEvents, setRaceEvents] = useState([]);
+  const [focusMode, setFocusMode] = useState(false);
 
   // Animation loop ref
   const animationRef = useRef(null);
   const lastFrameTimeRef = useRef(Date.now());
+  const lastPitStopStateRef = useRef({});  // Use ref to avoid infinite loops
 
   // Load race data from API
   useEffect(() => {
@@ -117,6 +123,53 @@ const RaceReplay = () => {
     }
   }, [currentFrame]);
 
+  // Track race events (pit stops, retirements, etc.)
+  useEffect(() => {
+    if (!currentFrame || !currentFrame.drivers) return;
+
+    const newEvents = [];
+
+    Object.entries(currentFrame.drivers).forEach(([code, driver]) => {
+      const lastState = lastPitStopStateRef.current[code] || { pit_stops: 0, status: 'Running' };
+
+      // Detect pit stop
+      if (driver.pit_stops > lastState.pit_stops) {
+        newEvents.push({
+          id: `${currentFrame.lap}-${code}-pit`,
+          type: 'pit_stop',
+          message: `${code} pitted (Stop ${driver.pit_stops})`,
+          lap: currentFrame.lap,
+          driverCode: code,
+          driverName: driver.driver_name || code,
+          timestamp: new Date().toLocaleTimeString(),
+        });
+      }
+
+      // Detect retirement
+      if (driver.status === 'OUT' && lastState.status !== 'OUT') {
+        newEvents.push({
+          id: `${currentFrame.lap}-${code}-ret`,
+          type: 'retirement',
+          message: `${code} retired`,
+          lap: currentFrame.lap,
+          driverCode: code,
+          driverName: driver.driver_name || code,
+          timestamp: new Date().toLocaleTimeString(),
+        });
+      }
+
+      // Update ref state (no setState, so no loop!)
+      lastPitStopStateRef.current[code] = {
+        pit_stops: driver.pit_stops,
+        status: driver.status,
+      };
+    });
+
+    if (newEvents.length > 0) {
+      setRaceEvents((prev) => [...newEvents, ...prev].slice(0, 10)); // Keep last 10 events
+    }
+  }, [currentFrame]);
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -151,6 +204,9 @@ const RaceReplay = () => {
           setFrameIndex(0);
           setIsPlaying(false);
           break;
+        case 'f':
+          setFocusMode(!focusMode);
+          break;
         default:
           break;
       }
@@ -158,7 +214,7 @@ const RaceReplay = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [isPlaying, raceData, showDRS, showTelemetry]);
+  }, [isPlaying, raceData, showDRS, showTelemetry, focusMode]);
 
   if (loading) {
     return (
@@ -195,106 +251,216 @@ const RaceReplay = () => {
   }
 
   return (
-    <div className="race-replay-container">
-      {/* Main Track Visualization */}
-      <div className="replay-main">
-        <div className="track-canvas-wrapper">
-          <TrackRenderer
-            ref={canvasRef}
-            frames={raceData.frames}
-            frameIndex={frameIndex}
-            currentFrame={currentFrame}
-            trackData={raceData.trackData}
-            drsZones={raceData.drsZones}
-            showDRS={showDRS}
-            selectedDriver={selectedDriver}
-            onDriverSelect={setSelectedDriver}
-          />
-          
-          {/* Race Info Overlay */}
-          <div className="race-info-overlay">
-            <div className="race-header">
-              <h1>{raceData.raceName}</h1>
-              <p className="race-year">{raceData.year}</p>
-            </div>
-
-            <div className="lap-time-display">
-              <div className="lap-info">
-                <span className="label">LAP</span>
-                <span className="value">{currentLap}</span>
-              </div>
-              {currentFrame && (
-                <div className="time-info">
-                  <span className="label">TIME</span>
-                  <span className="value">
-                    {formatTime(currentFrame.raceTime)}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Track Status */}
-            {currentFrame && currentFrame.trackStatus && (
-              <div className={`track-status status-${currentFrame.trackStatus.toLowerCase()}`}>
-                {currentFrame.trackStatus}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Right Side Panel */}
-        <div className="replay-right-panel">
-          {/* Leaderboard */}
-          <div className="leaderboard-section">
-            <h3>STANDINGS</h3>
-            <ReplayLeaderboard
-              drivers={currentFrame?.drivers || []}
+    <div className="space-y-6">
+      {/* FOCUS MODE - FULL SCREEN TRACK ONLY */}
+      {focusMode && (
+        <div className="race-replay-focus-container">
+          <div className="focus-track-fullscreen">
+            <TrackRenderer
+              ref={canvasRef}
+              frames={raceData.frames}
+              frameIndex={frameIndex}
+              currentFrame={currentFrame}
+              trackData={raceData.trackData}
+              drsZones={raceData.drsZones}
+              showDRS={showDRS}
               selectedDriver={selectedDriver}
               onDriverSelect={setSelectedDriver}
+              focusMode={true}
+              rotation={-90}
             />
           </div>
 
-          {/* Selected Driver Info */}
-          {selectedDriver && currentFrame && (
-            <div className="driver-info-section">
-              <h3>DRIVER INFO</h3>
-              <DriverInfoPanel
-                driver={selectedDriver}
-                driverData={currentFrame.drivers[selectedDriver]}
-                frame={currentFrame}
-                showTelemetry={showTelemetry}
-              />
-            </div>
+          {/* Floating controls bar at bottom */}
+          <div className="focus-controls-container">
+            <ReplayControls
+              isPlaying={isPlaying}
+              playbackSpeed={playbackSpeed}
+              currentFrame={frameIndex}
+              totalFrames={raceData?.frames?.length || 0}
+              showDRS={showDRS}
+              showTelemetry={showTelemetry}
+              focusMode={focusMode}
+              onPlayPause={() => setIsPlaying(!isPlaying)}
+              onSpeedChange={setPlaybackSpeed}
+              onFrameChange={setFrameIndex}
+              onDRSToggle={() => setShowDRS(!showDRS)}
+              onTelemetryToggle={() => setShowTelemetry(!showTelemetry)}
+              onFocusToggle={() => setFocusMode(!focusMode)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* NORMAL VIEW - Layout with track and standings */}
+      {!focusMode && (
+        <>
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold tracking-tight">{raceData?.raceName || 'Race Replay'}</h1>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            Interactive race replay with real-time positions and telemetry analysis.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <Badge variant="neutral">LAP {currentLap}</Badge>
+          {currentFrame && (
+            <Badge variant="neutral">
+              {formatTime(currentFrame.raceTime)}
+            </Badge>
           )}
+          <Badge variant={isPlaying ? "warning" : "neutral"}>
+            {isPlaying ? "Playing" : "Paused"}
+          </Badge>
+          <Badge variant="neutral">{playbackSpeed.toFixed(2)}x</Badge>
         </div>
       </div>
 
-      {/* Bottom Controls */}
-      <div className="replay-bottom">
+      {/* MAIN GRID */}
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+        {/* TRACK VISUALIZATION - Main */}
+        <Card className="xl:col-span-8 p-5 aspect-video" clip>
+          <div className="w-full h-full flex flex-col">
+            <TrackRenderer
+              ref={canvasRef}
+              frames={raceData.frames}
+              frameIndex={frameIndex}
+              currentFrame={currentFrame}
+              trackData={raceData.trackData}
+              drsZones={raceData.drsZones}
+              showDRS={showDRS}
+              selectedDriver={selectedDriver}
+              onDriverSelect={setSelectedDriver}
+              focusMode={focusMode}
+              rotation={-90}
+            />
+          </div>
+        </Card>
+
+        {/* RIGHT PANEL - Standings & Info */}
+        <Card className="xl:col-span-4 p-5" clip>
+          <div className="flex h-full min-w-0 flex-col gap-4">
+            {/* Tabs */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: 'standings', label: 'Standings' },
+                { id: 'driver', label: 'Driver Info' },
+                { id: 'events', label: 'Events' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setRightPanelTab(tab.id)}
+                  className={[
+                    "rounded-full border px-3 py-1 text-sm font-medium transition",
+                    rightPanelTab === tab.id
+                      ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900"
+                      : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-200 dark:hover:bg-neutral-900/40",
+                  ].join(" ")}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab Content */}
+            <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+              {rightPanelTab === 'standings' && (
+                <div>
+                  <ReplayLeaderboard
+                    drivers={currentFrame?.drivers || []}
+                    selectedDriver={selectedDriver}
+                    onDriverSelect={setSelectedDriver}
+                  />
+                </div>
+              )}
+
+              {rightPanelTab === 'driver' && selectedDriver && currentFrame && (
+                <div>
+                  <DriverInfoPanel
+                    driver={selectedDriver}
+                    driverData={currentFrame.drivers[selectedDriver]}
+                    frame={currentFrame}
+                    showTelemetry={showTelemetry}
+                  />
+                </div>
+              )}
+
+              {rightPanelTab === 'driver' && !selectedDriver && (
+                <div className="flex items-center justify-center h-full text-neutral-500">
+                  <p className="text-sm">Select a driver to view details</p>
+                </div>
+              )}
+
+              {rightPanelTab === 'events' && (
+                <div className="space-y-2">
+                  {raceEvents.length === 0 ? (
+                    <div className="flex items-center justify-center h-full text-neutral-500">
+                      <p className="text-sm">No events yet</p>
+                    </div>
+                  ) : (
+                    raceEvents.map((event) => (
+                      <div
+                        key={event.id}
+                        className="p-2 rounded bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
+                              {event.type === 'pit_stop' && '🛠 '}
+                              {event.type === 'retirement' && '❌ '}
+                              {event.message}
+                            </p>
+                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                              Lap {event.lap}
+                            </p>
+                          </div>
+                          <span className="flex-shrink-0 text-xs text-neutral-400">
+                            {event.timestamp}
+                          </span>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* CONTROLS */}
+      <Card className="p-5" clip>
         <ReplayControls
           isPlaying={isPlaying}
           playbackSpeed={playbackSpeed}
           currentFrame={frameIndex}
-          totalFrames={raceData.frames.length}
+          totalFrames={raceData?.frames?.length || 0}
           showDRS={showDRS}
           showTelemetry={showTelemetry}
+          focusMode={focusMode}
           onPlayPause={() => setIsPlaying(!isPlaying)}
           onSpeedChange={setPlaybackSpeed}
           onFrameChange={setFrameIndex}
           onDRSToggle={() => setShowDRS(!showDRS)}
           onTelemetryToggle={() => setShowTelemetry(!showTelemetry)}
+          onFocusToggle={() => setFocusMode(!focusMode)}
         />
-      </div>
+      </Card>
 
-      {/* Keyboard Shortcuts Legend */}
-      <div className="keyboard-legend">
-        <div className="legend-item">SPACE: Play/Pause</div>
-        <div className="legend-item">←/→: Rewind/Forward</div>
-        <div className="legend-item">+/-: Speed</div>
-        <div className="legend-item">D: DRS</div>
-        <div className="legend-item">T: Telemetry</div>
-        <div className="legend-item">R: Reset</div>
+      {/* KEYBOARD SHORTCUTS */}
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-6 text-xs text-neutral-500">
+        <div><kbd className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded">SPACE</kbd> Play/Pause</div>
+        <div><kbd className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded">←/→</kbd> Seek</div>
+        <div><kbd className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded">+/-</kbd> Speed</div>
+        <div><kbd className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded">D</kbd> DRS</div>
+        <div><kbd className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded">T</kbd> Telemetry</div>
+        <div><kbd className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded">F</kbd> Focus</div>
+        <div><kbd className="px-2 py-1 bg-neutral-200 dark:bg-neutral-800 rounded">R</kbd> Reset</div>
       </div>
+        </>
+      )}
     </div>
   );
 };

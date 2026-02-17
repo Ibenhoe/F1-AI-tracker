@@ -151,23 +151,32 @@ class FastF1DataFetcher:
             print(f"[WARN] Could not get driver code for {driver_number}: {e}")
             return str(driver_number)
     
-    def extract_lap_features(self, lap_data: pd.Series, driver_number: int) -> Dict:
+    def extract_lap_features(self, lap_data: pd.Series, driver_number: int, telemetry_data: dict = None) -> Dict:
         """
-        Extraheert features uit 1 lap data
+        Extraheert features uit 1 lap data INCLUDING telemetry (full path x,y coordinates)
         Dit zijn de features die iedere lap beschikbaar zijn
         
         Args:
             lap_data: pd.Series with lap info from FastF1
             driver_number: int driver number (e.g., 1 for Verstappen)
+            telemetry_data: dict with 'telemetry_points' (array of {x,y,speed,gear,...} points) or None
         """
         try:
             # Convert driver number to 3-letter code
             driver_code = self.get_driver_code_from_number(driver_number)
+            lap_number = lap_data.get('LapNumber', np.nan)
             
             # Get lap number safely
-            lap_number = lap_data.get('LapNumber', np.nan)
             if pd.isna(lap_number):
                 return None
+            
+            # DEBUG: Show what we actually got (once per driver)
+            if not hasattr(self, '_debug_types'):
+                self._debug_types = set()
+            debug_key = (driver_number, type(lap_data).__name__)
+            if debug_key not in self._debug_types:
+                print(f"      [DEBUG] Driver {driver_number}: lap_data type = {type(lap_data).__name__}, has get_telemetry = {hasattr(lap_data, 'get_telemetry')}")
+                self._debug_types.add(debug_key)
             
             # Get position safely
             position = lap_data.get('Position', np.nan)
@@ -205,13 +214,12 @@ class FastF1DataFetcher:
             except:
                 drs_available = 0
             
-            # TELEMETRY X,Y COORDINATES
-            # Note: Telemetry access is SLOW (triggers FastF1 lazy-load)
-            # For replay visualization, use position-based interpolation fallback
-            # Telemetry extraction is DISABLED for performance - x,y will be None
-            x, y, speed, gear, throttle, brake = None, None, None, None, None, None
-            # Telemetry disabled - too slow for 1135 laps × 20 drivers
-            # The frontend fallback (position-based interpolation) provides acceptable visualization
+            # ===== TELEMETRY EXTRACTION (NOW FULL PATH for animation) =====
+            # Extract FULL telemetry path array for frame-by-frame animation
+            # Instead of single midpoint, use entire {x,y,speed,gear,throttle,brake} array
+            telemetry_points = []
+            if telemetry_data is not None and 'telemetry_points' in telemetry_data:
+                telemetry_points = telemetry_data.get('telemetry_points', [])
             
             features = {
                 'driver': driver_code,
@@ -224,12 +232,7 @@ class FastF1DataFetcher:
                 'track_status': str(lap_data.get('TrackStatus', 'UNKNOWN')),
                 'drs_available': drs_available,
                 'fresh_tires': int(bool(lap_data.get('FreshTyre', False))),
-                'x': x,  # Telemetry X coordinate (end of lap)
-                'y': y,  # Telemetry Y coordinate (end of lap)
-                'speed': speed,
-                'gear': gear,
-                'throttle': throttle,
-                'brake': brake,
+                'telemetry_points': telemetry_points,  # Full telemetry path [{x,y,speed,gear,throttle,brake}, ...]
             }
             
             return features
@@ -243,12 +246,28 @@ class FastF1DataFetcher:
         Verwerkt alle laps van de race en retourneert ze als stream
         Dit simuleert real-time lap data
         
+        CACHING: Telemetry data wordt gecached naar file om segunda keer snel te laden
+        
         Returns:
-            List van dictionaries met per-lap features
+            List van dictionaries met per-lap features INCLUDING x,y telemetry
         """
         if self.session is None:
             print("[ERROR] Geen race geladen! Roep eerst fetch_race() aan")
             return []
+        
+        # ===== CACHE CHECK =====
+        cache_file = os.path.join(cache_dir, f'race_{self.race_year}_{self.race_round:02d}_laps.json')
+        
+        if os.path.exists(cache_file):
+            try:
+                print(f"[CACHE] Loading cached lap data from {cache_file}...")
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    cached_laps = json.load(f)
+                print(f"[CACHE] [OK] Loaded {len(cached_laps)} cached laps with telemetry")
+                return cached_laps
+            except Exception as cache_err:
+                print(f"[CACHE] WARNING: Could not load cache: {cache_err}")
+                print(f"[CACHE] Regenerating lap data...")
         
         all_laps_data = []
         
@@ -295,12 +314,54 @@ class FastF1DataFetcher:
                     if laps is None or len(laps) == 0:
                         continue
                     
-                    print(f"  [DRIVER] Driver {driver_code} (#{driver_num}): {len(laps)} laps")
+                    print(f"  [DRIVER] Driver {driver_code} (#{driver_num}): {len(laps)} laps (extracting telemetry...)")
                     
-                    # Extract features
+                    # Extract features - iterate and extract telemetry HERE where we have access to laps methods
+                    # This ensures we can call get_telemetry() on actual Lap objects
                     lap_count = 0
-                    for idx, (_, lap) in enumerate(laps.iterrows()):
-                        lap_features = self.extract_lap_features(lap, driver_num)
+                    for idx in range(len(laps)):
+                        lap_series = laps.iloc[idx]  # Get Series (row data)
+                        
+                        # CRITICAL: Extract FULL telemetry array (not just one midpoint!)
+                        # This allows drivers to animate along entire lap path
+                        telemetry_data = None
+                        try:
+                            # Get the index of this lap in the original DataFrame
+                            lap_index = laps.index[idx]
+                            # Now access via .loc[] which preserves FastF1 methods
+                            actual_lap = all_laps.loc[lap_index]
+                            if hasattr(actual_lap, 'get_telemetry'):
+                                telemetry = actual_lap.get_telemetry()
+                                if telemetry is not None and len(telemetry) > 0:
+                                    # Extract FULL telemetry path as array of {x, y, speed, ...} points
+                                    # This enables smooth animation along entire lap circuit
+                                    telemetry_points = []
+                                    for row_idx in range(len(telemetry)):
+                                        row = telemetry.iloc[row_idx]
+                                        try:
+                                            point = {
+                                                'x': float(row.get('X', np.nan)) if not pd.isna(row.get('X')) else None,
+                                                'y': float(row.get('Y', np.nan)) if not pd.isna(row.get('Y')) else None,
+                                                'speed': float(row.get('Speed', np.nan)) if not pd.isna(row.get('Speed')) else None,
+                                                'gear': int(row.get('Gear', np.nan)) if not pd.isna(row.get('Gear')) else None,
+                                                'throttle': float(row.get('Throttle', np.nan)) if not pd.isna(row.get('Throttle')) else None,
+                                                'brake': float(row.get('Brake', np.nan)) if not pd.isna(row.get('Brake')) else None,
+                                            }
+                                            # Only add if has valid x,y
+                                            if point['x'] is not None and point['y'] is not None:
+                                                telemetry_points.append(point)
+                                        except:
+                                            continue
+                                    
+                                    if len(telemetry_points) > 0:
+                                        telemetry_data = {
+                                            'telemetry_points': telemetry_points,  # Full path through lap
+                                        }
+                        except Exception as tel_err:
+                            # Telemetry likely not available for this session (not rare)
+                            pass
+                        
+                        lap_features = self.extract_lap_features(lap_series, driver_num, telemetry_data)
                         if lap_features is not None:
                             all_laps_data.append(lap_features)
                             lap_count += 1
@@ -318,6 +379,15 @@ class FastF1DataFetcher:
             all_laps_data.sort(key=lambda x: (x['lap_number'], x['driver']))
             
             print(f"\n[OK] {len(all_laps_data)} laps processed!")
+            
+            # ===== CACHE SAVE =====
+            try:
+                print(f"[CACHE] Caching {len(all_laps_data)} laps with telemetry to {cache_file}...")
+                with open(cache_file, 'w', encoding='utf-8') as f:
+                    json.dump(all_laps_data, f, default=str, ensure_ascii=False)
+                print(f"[CACHE] [OK] Lap data cached successfully")
+            except Exception as cache_save_err:
+                print(f"[CACHE] WARNING: Could not save cache: {cache_save_err}")
             
             return all_laps_data
             

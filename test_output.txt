@@ -1,0 +1,97 @@
+core           INFO 	Loading data for Sπo Paulo Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+core        WARNING 	No lap data for driver 23
+core        WARNING 	Failed to perform lap accuracy check - all laps marked as inaccurate (driver 23)
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core           INFO 	Finished loading data for 20 drivers: ['1', '31', '10', '63', '16', '4', '22', '81', '30', '44', '11', '50', '77', '14', '24', '55', '43', '23', '18', '27']
+
+[1/3] Initializing fetcher...
+[2/3] Loading race 21 (Brazil 2024)...
+[LOAD] Bezig met laden van 2024 Race 21...
+[OK] Built driver code map with 20 drivers
+[OK] Race geladen! Locatie: Sπo Paulo
+[3/3] Extracting lap data with telemetry...
+[CACHE] Loading cached lap data from C:\Users\ibenv\AppData\Local\Temp\fastf1_cache\race_2024_21_laps.json...
+[CACHE] WARNING: Could not load cache: 'charmap' codec can't encode character '\u2713' in position 8: character maps to <undefined>
+[CACHE] Regenerating lap data...
+  [LAP-DATA] Total laps in session: 1135
+
+  DEBUG - First lap sample:
+    LapNumber: 1.0 (type: <class 'numpy.float64'>)
+    Position: 11.0 (type: <class 'numpy.float64'>)
+    Driver: VER / DriverNumber: 1
+    LapTime: 0 days 00:01:39.161000 (type: <class 'pandas._libs.tslibs.timedeltas.Timedelta'>)
+
+  [DRIVERS] Driver numbers: ['1', '31', '10', '63', '16', '4', '22', '81', '30', '44', '11', '50', '77', '14', '24', '55', '43', '23', '18', '27']
+  [DRIVER] Driver VER (#1): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 1: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver OCO (#31): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 31: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver GAS (#10): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 10: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver RUS (#63): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 63: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver LEC (#16): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 16: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver NOR (#4): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 4: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver TSU (#22): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 22: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver PIA (#81): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 81: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver LAW (#30): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 30: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver HAM (#44): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 44: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver PER (#11): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 11: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver BEA (#50): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 50: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver BOT (#77): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 77: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver ALO (#14): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 14: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver ZHO (#24): 69 laps (extracting telemetry...)
+      [DEBUG] Driver 24: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver SAI (#55): 39 laps (extracting telemetry...)
+      [DEBUG] Driver 55: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver COL (#43): 30 laps (extracting telemetry...)
+      [DEBUG] Driver 43: lap_data type = Lap, has get_telemetry = True
+  [DRIVER] Driver STR (#18): 1 laps (extracting telemetry...)
+      [DEBUG] Driver 18: lap_data type = Lap, has get_telemetry = True
+      [WARN] No valid laps extracted for driver STR
+  [DRIVER] Driver HUL (#27): 30 laps (extracting telemetry...)
+      [DEBUG] Driver 27: lap_data type = Lap, has get_telemetry = True
+
+[OK] 1133 laps processed!
+[CACHE] Caching 1133 laps with telemetry to C:\Users\ibenv\AppData\Local\Temp\fastf1_cache\race_2024_21_laps.json...
+[CACHE] WARNING: Could not save cache: 'charmap' codec can't encode character '\u2713' in position 8: character maps to <undefined>
+Traceback (most recent call last):
+  File "C:\Users\ibenv\OneDrive\Bureaublad\Powershell_scripting_Iben_Vanthournout\F1-AI-tracker\test_direct.py", line 21, in <module>
+    print(f"\n\u2713 Total laps extracted: {len(laps)}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ibenv\anaconda\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 2: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\ibenv\OneDrive\Bureaublad\Powershell_scripting_Iben_Vanthournout\F1-AI-tracker\test_direct.py", line 45, in <module>
+    print(f"\n\u274c EXCEPTION: {e}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\ibenv\anaconda\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u274c' in position 2: character maps to <undefined>

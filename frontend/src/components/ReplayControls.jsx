@@ -13,11 +13,13 @@ const ReplayControls = ({
   totalFrames,
   showDRS,
   showTelemetry,
+  focusMode,
   onPlayPause,
   onSpeedChange,
   onFrameChange,
   onDRSToggle,
   onTelemetryToggle,
+  onFocusToggle,
 }) => {
   const progressPercent = totalFrames > 0 ? (currentFrame / totalFrames) * 100 : 0;
 
@@ -110,6 +112,14 @@ const ReplayControls = ({
           title="Toggle Telemetry (T)"
         >
           <span className="label">TEL</span>
+        </button>
+
+        <button
+          className={`control-btn toggle-btn ${focusMode ? 'active' : ''}`}
+          onClick={onFocusToggle}
+          title="Toggle Focus Mode (F)"
+        >
+          <span className="label">FOCUS</span>
         </button>
 
         {/* Fullscreen Button (placeholder) */}

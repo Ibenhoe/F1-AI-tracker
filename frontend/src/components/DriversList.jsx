@@ -110,7 +110,7 @@ export default function DriversList({ drivers, currentLap }) {
         {/* Header row */}
         <div
           className={[
-            "grid min-w-0 grid-cols-[44px_1fr_110px_92px_64px_72px] items-center gap-3 px-3 py-2",
+            "grid min-w-0 grid-cols-[44px_1fr_110px_92px_64px_72px_60px] items-center gap-3 px-3 py-2",
             "bg-neutral-50 text-xs font-medium text-neutral-600",
             "dark:bg-neutral-950/40 dark:text-neutral-400",
           ].join(" ")}
@@ -120,6 +120,9 @@ export default function DriversList({ drivers, currentLap }) {
           <div className="hidden text-right md:block">Last lap</div>
           <div className="text-right">Tires</div>
           <div className="text-right">Pits</div>
+          <div className="text-right" title="Gap to leader">
+            Gap
+          </div>
           <div className="text-right" title="Net position change (gained/lost places)">
             Δ Pos
           </div>
@@ -136,12 +139,16 @@ export default function DriversList({ drivers, currentLap }) {
                 `${driver.position ?? "na"}-${idx}`;
               const name = driver.driver_name || driver.driver_code || "Unknown";
               const team = driver.team || "—";
+              
+              // Calculate gap to leader (position 1)
+              const gapToLeader = idx === 0 ? 0 : (driver.gap ?? 0);
+              const gapDisplay = gapToLeader > 0 ? `+${gapToLeader.toFixed(1)}s` : gapToLeader < 0 ? `${gapToLeader.toFixed(1)}s` : "Leader";
 
               return (
                 <div
                   key={key}
                   className={[
-                    "relative grid min-w-0 grid-cols-[44px_1fr_110px_92px_64px_72px] items-center gap-3 px-3 py-3",
+                    "relative grid min-w-0 grid-cols-[44px_1fr_110px_92px_64px_72px_60px] items-center gap-3 px-3 py-3",
                     "bg-white hover:bg-neutral-50",
                     "dark:bg-neutral-950/30 dark:hover:bg-neutral-950/50",
                   ].join(" ")}
@@ -198,6 +205,13 @@ export default function DriversList({ drivers, currentLap }) {
                   {/* Pit stops */}
                   <div className="text-right text-sm font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">
                     {driver.pit_stops ?? 0}
+                  </div>
+
+                  {/* Gap to leader */}
+                  <div className="text-right text-sm font-medium text-neutral-900 dark:text-neutral-100 tabular-nums">
+                    <span className={gapToLeader === 0 ? "text-yellow-600 dark:text-yellow-400 font-bold" : "text-neutral-600 dark:text-neutral-400"}>
+                      {gapDisplay}
+                    </span>
                   </div>
 
                   {/* Position change (gained/lost places) */}

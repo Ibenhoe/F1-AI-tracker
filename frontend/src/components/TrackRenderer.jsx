@@ -17,6 +17,8 @@ const TrackRenderer = forwardRef(
       showDRS,
       selectedDriver,
       onDriverSelect,
+      focusMode,
+      rotation = 0,
     },
     ref
   ) => {
@@ -74,22 +76,56 @@ const TrackRenderer = forwardRef(
         const trackWidth = bounds.maxX - bounds.minX;
         const trackHeight = bounds.maxY - bounds.minY;
 
-        const scaleX = (width - 100) / trackWidth;
-        const scaleY = (height - 100) / trackHeight;
-        scaleRef.current = Math.min(scaleX, scaleY);
+        let baseScale;
+        
+        if (focusMode) {
+          // Focus mode: maximize track display (rotation=-90, no extra rotation)
+          // Use full available space with small margins
+          const scaleX = (width * 0.95) / trackWidth;
+          const scaleY = (height * 0.95) / trackHeight;
+          baseScale = Math.min(scaleX, scaleY);
+        } else {
+          // Normal mode: full track view with magnification
+          const scaleX = (width * 0.85) / trackWidth;
+          const scaleY = (height * 0.85) / trackHeight;
+          baseScale = Math.min(scaleX, scaleY) * 1.8;
+        }
+        
+        scaleRef.current = baseScale;
 
         offsetRef.current = {
-          x: 50 - bounds.minX * scaleRef.current,
-          y: 50 - bounds.minY * scaleRef.current,
+          x: width / 2,
+          y: height / 2,
         };
       }
 
+      // Apply rotation transformation
+      const rotationAngle = -(rotation * Math.PI / 180); // Convert degrees to radians
+      const bounds = trackData.bounds;
+      const trackCenterX = (bounds.minX + bounds.maxX) / 2;
+      const trackCenterY = (bounds.minY + bounds.maxY) / 2;
+      
+      // In focus mode, show the full track centered
+      let focusCenterX = trackCenterX;
+      let focusCenterY = trackCenterY;
+      
+      // In focus mode, always center on full track
+      if (focusMode) {
+        focusCenterX = trackCenterX;
+        focusCenterY = trackCenterY;
+      }
+
+      ctx.save();
+      ctx.translate(offsetRef.current.x, offsetRef.current.y);
+      ctx.rotate(rotationAngle);
+      ctx.translate(-focusCenterX * scaleRef.current, -focusCenterY * scaleRef.current);
+
       // Draw track
-      drawTrack(ctx, trackData, scaleRef.current, offsetRef.current);
+      drawTrack(ctx, trackData, scaleRef.current, { x: 0, y: 0 });
 
       // Draw DRS zones
       if (showDRS && drsZones) {
-        drawDRSZones(ctx, drsZones, scaleRef.current, offsetRef.current);
+        drawDRSZones(ctx, drsZones, scaleRef.current, { x: 0, y: 0 });
       }
 
       // Draw drivers
@@ -97,11 +133,13 @@ const TrackRenderer = forwardRef(
         ctx,
         currentFrame,
         scaleRef.current,
-        offsetRef.current,
+        { x: 0, y: 0 },
         selectedDriver,
         onDriverSelect,
         trackData
       );
+
+      ctx.restore();
 
       // Draw telemetry info for selected driver
       if (selectedDriver && currentFrame.drivers[selectedDriver]) {
@@ -113,15 +151,32 @@ const TrackRenderer = forwardRef(
           height
         );
       }
-    }, [currentFrame, trackData, drsZones, showDRS, selectedDriver]);
+    }, [currentFrame, trackData, drsZones, showDRS, selectedDriver, focusMode]);
 
     const handleCanvasClick = (e) => {
       const canvas = canvasRef.current;
-      if (!canvas || !currentFrame) return;
+      if (!canvas || !currentFrame || !trackData) return;
 
       const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / scaleRef.current - offsetRef.current.x / scaleRef.current;
-      const y = (e.clientY - rect.top) / scaleRef.current - offsetRef.current.y / scaleRef.current;
+      const canvasX = e.clientX - rect.left;
+      const canvasY = e.clientY - rect.top;
+
+      // Account for rotation when calculating click position
+      const rotationAngle = -Math.PI / 8; // Match the drawing rotation angle
+      const bounds = trackData.bounds;
+      const trackCenterX = (bounds.minX + bounds.maxX) / 2;
+      const trackCenterY = (bounds.minY + bounds.maxY) / 2;
+
+      // Reverse the transformations
+      const relX = canvasX - offsetRef.current.x;
+      const relY = canvasY - offsetRef.current.y;
+      const rotCos = Math.cos(-rotationAngle);
+      const rotSin = Math.sin(-rotationAngle);
+      const rotatedX = relX * rotCos - relY * rotSin;
+      const rotatedY = relX * rotSin + relY * rotCos;
+      
+      const x = rotatedX / scaleRef.current + trackCenterX;
+      const y = rotatedY / scaleRef.current + trackCenterY;
 
       // Check if click is on any driver
       for (const [code, driver] of Object.entries(currentFrame.drivers)) {
@@ -294,7 +349,8 @@ function drawDrivers(
 
   // DEBUG: Log driver count and track data on first render of this frame
   if (drivers.length > 0 && drivers.length <= 20) {
-    console.log(`[DRAW] Frame: Lap ${currentFrame.lap}, Drivers: ${drivers.length}, Centerline points: ${centerline.length}`);
+    const telemetryAvailable = drivers.filter(([_, d]) => d.x !== null && d.y !== null).length;
+    console.log(`[DRAW] Frame: Lap ${currentFrame.lap}, Drivers: ${drivers.length}, Telemetry: ${telemetryAvailable}/${drivers.length}, Centerline: ${centerline.length}`);
   }
 
   // Calculate grid spacing for drivers to avoid overlap
@@ -306,11 +362,14 @@ function drawDrivers(
   drivers.forEach(([code, driver], driverIndex) => {
     // Calculate position on track
     let x, y;
+    let usedTelemetry = false;
     
-    // PRIORITY 1: Use telemetry x,y coordinates from frame (drivers will animate!)
+    // PRIORITY 1: Use telemetry x,y coordinates from frame (REAL track position!)
+    // Telemetry coordinates from FastF1 are now enabled and cached
     if (driver.x !== undefined && driver.y !== undefined && driver.x !== null && driver.y !== null && (driver.x !== 0 || driver.y !== 0)) {
       x = driver.x * scale + offset.x;
       y = driver.y * scale + offset.y;
+      usedTelemetry = true;
     }
     // PRIORITY 2: Fall back to centerline positioning based on race position
     else if (centerline.length > 0 && driver.position !== undefined && driver.position !== null) {
@@ -321,18 +380,40 @@ function drawDrivers(
       // Base position from race standings (1.0 to 18.0)
       const racePosition = driver.position;
       
-      // Map to track location: position 1 -> start, position 18 -> 95% of track
-      // This ensures drivers are spread across the entire track perimeter
-      const trackPositionRatio = Math.max(0, Math.min(0.95, (racePosition - 1) / 18));
-      const trackIndex = Math.round(trackPositionRatio * (centerline.length - 1));
-      const trackPoint = centerline[Math.max(0, Math.min(centerline.length - 1, trackIndex))];
+      // ===== LAP 1 SPECIAL: Grid Formulation =====
+      // On lap 1, position drivers in starting grid formation (2 columns)
+      // Starting grid: P1 on left of grid, P2 on right, P3 below P1, P4 below P2, etc.
+      if (currentFrame.lap <= 1 && centerline.length > 0) {
+        // Use start/first part of track for grid
+        const startPoint = centerline[0];
+        if (startPoint) {
+          // Create 2-wide grid layout (F1 standard)
+          const gridRow = Math.floor((racePosition - 1) / 2);  // Which row (0,1,2,...)
+          const gridCol = (racePosition - 1) % 2;  // Left (0) or right (1)
+          
+          const rowSpacing = 80;  // Distance between grid rows (in canvas units)
+          const colSpacing = 60;  // Distance between left/right columns
+          
+          x = startPoint.x * scale + offset.x + (gridCol === 0 ? -colSpacing : colSpacing);
+          y = startPoint.y * scale + offset.y + gridRow * rowSpacing;
+        }
+      } else {
+        // Normal lap: distribute along track
+        // Map to track location: position 1 -> start, position 18 -> 95% of track
+        // This ensures drivers are spread across the entire track perimeter
+        const trackPositionRatio = Math.max(0, Math.min(0.95, (racePosition - 1) / 18));
+        const trackIndex = Math.round(trackPositionRatio * (centerline.length - 1));
+        const trackPoint = centerline[Math.max(0, Math.min(centerline.length - 1, trackIndex))];
+        
+        if (trackPoint && trackPoint.x !== undefined && trackPoint.y !== undefined) {
+          x = trackPoint.x * scale + offset.x;
+          y = trackPoint.y * scale + offset.y;
+        }
+      }
       
-      if (trackPoint && trackPoint.x !== undefined && trackPoint.y !== undefined) {
-        x = trackPoint.x * scale + offset.x;
-        y = trackPoint.y * scale + offset.y;
-        // DEBUG: Log first few drivers
-        if (driverIndex < 3) {
-          console.log(`  ${code}: Pos${racePosition.toFixed(1)} -> Track ${(trackPositionRatio * 100).toFixed(0)}% (index ${trackIndex}/${centerline.length})`);
+      if (typeof x === 'undefined' || typeof y === 'undefined') {
+        if (driverIndex < 2) {
+          console.log(`  ${code}: FALLBACK to position ${racePosition.toFixed(1)} (no telemetry x,y)`);
         }
       }
     }
@@ -344,8 +425,8 @@ function drawDrivers(
     
     const isSelected = code === selectedDriver;
 
-    // Driver circle
-    const radius = isSelected ? 12 : 8;
+    // Driver circle - LARGER size for better visibility
+    const radius = isSelected ? 15 : 11;
     const color = getTeamColor(code);
 
     // Shadow/glow effect
@@ -380,14 +461,7 @@ function drawDrivers(
     ctx.fillStyle = '#ffffff';
     ctx.font = '11px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(code, x, y + 20);
-
-    // Speed indicator
-    if (driver.speed) {
-      ctx.fillStyle = '#888888';
-      ctx.font = '9px Arial';
-      ctx.fillText(`${driver.speed.toFixed(0)} km/h`, x, y - 20);
-    }
+    ctx.fillText(code, x, y + 22);
   });
 }
 

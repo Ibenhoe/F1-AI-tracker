@@ -1,0 +1,16 @@
+core           INFO 	Loading data for Sπo Paulo Grand Prix - Race [v3.7.0]
+req            INFO 	Using cached data for session_info
+req            INFO 	Using cached data for driver_info
+req            INFO 	Using cached data for session_status_data
+req            INFO 	Using cached data for lap_count
+req            INFO 	Using cached data for track_status_data
+req            INFO 	Using cached data for _extended_timing_data
+req            INFO 	Using cached data for timing_app_data
+core           INFO 	Processing timing data...
+core        WARNING 	No lap data for driver 23
+core        WARNING 	Failed to perform lap accuracy check - all laps marked as inaccurate (driver 23)
+req            INFO 	Using cached data for car_data
+req            INFO 	Using cached data for position_data
+req            INFO 	Using cached data for weather_data
+req            INFO 	Using cached data for race_control_messages
+core           INFO 	Finished loading data for 20 drivers: ['1', '31', '10', '63', '16', '4', '22', '81', '30', '44', '11', '50', '77', '14', '24', '55', '43', '23', '18', '27']

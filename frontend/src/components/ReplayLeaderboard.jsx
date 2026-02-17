@@ -3,12 +3,13 @@ import './ReplayLeaderboard.css';
 
 /**
  * ReplayLeaderboard Component
- * Displays current race standings with driver info
+ * Displays current race standings with driver info and gap indicators
  */
 const ReplayLeaderboard = ({
   drivers,
   selectedDriver,
   onDriverSelect,
+  focusMode = false,
 }) => {
   // Sort drivers by position
   const sortedDrivers = Object.entries(drivers || {})
@@ -16,11 +17,11 @@ const ReplayLeaderboard = ({
     .sort((a, b) => a.position - b.position);
 
   return (
-    <div className="replay-leaderboard">
+    <div className={`replay-leaderboard ${focusMode ? 'focus-mode' : ''}`}>
       {sortedDrivers.length === 0 ? (
         <div className="empty-state">No driver data available</div>
       ) : (
-        <div className="leaderboard-list">
+        <div className={`leaderboard-list ${focusMode ? 'focus-list' : ''}`}>
           {sortedDrivers.map((driver) => (
             <div
               key={driver.code}
@@ -43,13 +44,14 @@ const ReplayLeaderboard = ({
 
               <div className="driver-stats">
                 {driver.gap && (
-                  <div className="gap">
+                  <div className={`gap ${driver.position === 1 ? 'leader' : ''}`}>
+                    <span className="gap-label">GAP</span>
                     <span className="gap-value">{driver.gap}</span>
                   </div>
                 )}
               </div>
 
-              <div className="tire-compound">
+              <div className="tire-info">
                 <span
                   className={`tire-badge ${getTireClass(
                     driver.tire_compound
@@ -57,7 +59,18 @@ const ReplayLeaderboard = ({
                 >
                   {getTireShort(driver.tire_compound)}
                 </span>
+                {driver.tire_age && driver.tire_age > 0 && (
+                  <span className="tire-age" title={`Lap ${driver.tire_age} on tire`}>
+                    L{driver.tire_age}
+                  </span>
+                )}
               </div>
+
+              {driver.pit_stops && driver.pit_stops > 0 && (
+                <div className="pit-stops-badge" title={`Pit stops: ${driver.pit_stops}`}>
+                  🛠 {driver.pit_stops}
+                </div>
+              )}
 
               {driver.status === 'OUT' && (
                 <div className="status-badge">DNF</div>

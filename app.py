@@ -622,9 +622,9 @@ def get_replay_data():
         if os.path.exists(cache_file):
             try:
                 print(f"[REPLAY API] Loading cached frames from {cache_file}...")
-                with open(cache_file, 'r') as f:
+                with open(cache_file, 'r', encoding='utf-8') as f:
                     cached_data = json.load(f)
-                print(f"[REPLAY API] ✓ Loaded {len(cached_data.get('frames', []))} cached frames")
+                print(f"[REPLAY API] [OK] Loaded {len(cached_data.get('frames', []))} cached frames")
                 return jsonify(cached_data), 200
             except Exception as cache_err:
                 print(f"[REPLAY API] WARNING: Could not load cache: {cache_err}")
@@ -770,41 +770,48 @@ def _extract_track_from_telemetry(session):
             print("[TRACK] No laps available")
             return None
         
-        laps = session.laps
+        all_laps = session.laps
         
         # Collect unique coordinates from first few laps (avoid redundant data)
         coords_set = set()
         coords_list = []
         
         # Get telemetry from first 10 laps (enough to map the circuit)
-        sample_laps = min(10, len(laps))
+        sample_laps = min(10, len(all_laps))
         for lap_idx in range(sample_laps):
-            lap = laps.iloc[lap_idx]
-            
-            # Check if lap has telemetry
-            if not hasattr(lap, 'telemetry') or lap.telemetry is None:
-                continue
-            
-            telemetry = lap.telemetry
-            
-            # Extract X, Y coordinates
-            if 'X' in telemetry.columns and 'Y' in telemetry.columns:
-                # Sample every nth point to reduce data (avoid too many duplicates)
-                step = max(1, len(telemetry) // 100)  # ~100 points per lap
+            # CRITICAL FIX: Use .loc[] to preserve Lap object (not .iloc[] which returns Series)
+            try:
+                lap_index = all_laps.index[lap_idx]
+                actual_lap = all_laps.loc[lap_index]
                 
-                for idx in range(0, len(telemetry), step):
-                    row = telemetry.iloc[idx]
-                    try:
-                        x = float(row['X'])
-                        y = float(row['Y'])
-                        
-                        # Only add if not seen before (avoid duplicates)
-                        coord_tuple = (round(x, 1), round(y, 1))
-                        if coord_tuple not in coords_set:
-                            coords_set.add(coord_tuple)
-                            coords_list.append({'x': x, 'y': y})
-                    except (ValueError, TypeError):
-                        continue
+                # Check if lap has telemetry method (Lap object)
+                if not hasattr(actual_lap, 'get_telemetry'):
+                    continue
+                
+                telemetry = actual_lap.get_telemetry()
+                if telemetry is None or len(telemetry) == 0:
+                    continue
+                
+                # Extract X, Y coordinates
+                if 'X' in telemetry.columns and 'Y' in telemetry.columns:
+                    # Sample every nth point to reduce data (avoid too many duplicates)
+                    step = max(1, len(telemetry) // 100)  # ~100 points per lap
+                    
+                    for idx in range(0, len(telemetry), step):
+                        row = telemetry.iloc[idx]
+                        try:
+                            x = float(row['X'])
+                            y = float(row['Y'])
+                            
+                            # Only add if not seen before (avoid duplicates)
+                            coord_tuple = (round(x, 1), round(y, 1))
+                            if coord_tuple not in coords_set:
+                                coords_set.add(coord_tuple)
+                                coords_list.append({'x': x, 'y': y})
+                        except (ValueError, TypeError):
+                            continue
+            except Exception as lap_err:
+                continue
         
         if len(coords_list) > 50:  # Need minimum points for valid track
             print(f"[TRACK] ✓ Extracted {len(coords_list)} unique telemetry coordinates")
@@ -1052,12 +1059,13 @@ def _build_replay_frames(laps_data, race_info):
         drivers_by_code = {}
         for record in lap_records:
             code = record.get('driver', 'UNK')
-            if code not in drivers_by_code:
-                drivers_by_code[code] = record
-            else:
-                # Use the record with best position (finished lap)
-                if int(record.get('position', 999)) < int(drivers_by_code[code].get('position', 999)):
-                    drivers_by_code[code] = record
+            # CRITICAL: Always use the LATEST record for this driver
+            # (If multiple records exist, lap records are ordered, so last one is most current)
+            drivers_by_code[code] = record
+        
+        # Verify we have meaningful data
+        if not drivers_by_code:
+            continue  # Skip lap with no driver data
         
         # Get previous lap drivers for interpolation
         prev_drivers = {}
@@ -1081,24 +1089,10 @@ def _build_replay_frames(laps_data, race_info):
                     'speed': 0,
                 }
         
-        # OPTIMIZATION: Detect if this lap has meaningful position changes
-        # Skip laps where no positions change (pit stops, safety cars, etc.)
-        has_position_changes = False
-        if prev_drivers:
-            for code in drivers_by_code:
-                current_pos = int(drivers_by_code[code].get('position', 999))
-                prev_record = prev_drivers.get(code)
-                if prev_record:
-                    prev_pos = int(prev_record.get('position', 999))
-                    if current_pos != prev_pos:
-                        has_position_changes = True
-                        break
-        else:
-            # First lap - always generate frames
-            has_position_changes = True
-        
-        # If no position changes and not first lap, use fewer frames (skip some)
-        frames_to_generate = frames_per_lap if has_position_changes or lap_idx == 0 else max(1, frames_per_lap // 10)
+        # ALWAYS generate full frames per lap for smooth continuous animation
+        # Even when positions don't change, drivers are still moving on track with telemetry data!
+        # Frame generation happens for EVERY lap regardless of position changes
+        frames_to_generate = frames_per_lap
         
         # Create interpolated frames between previous and current lap
         for frame_step in range(frames_to_generate):
@@ -1135,8 +1129,29 @@ def _build_replay_frames(laps_data, race_info):
                 current_brake = float(current_record.get('brake') or 0)
                 current_speed = float(current_record.get('speed') or 0)
                 
-                # Get previous position for interpolation
-                # CRITICAL: Always use a valid previous position to avoid wrong direction jumps
+                # ===== TELEMETRY POINTS: Full lap path for smooth animation =====
+                # Get full telemetry path (array of {x,y,speed,gear,...} points)
+                # Select one point per frame based on frame_step progress through lap
+                telemetry_points = current_record.get('telemetry_points', [])
+                current_x = None
+                current_y = None
+                current_tel_speed = None
+                
+                if len(telemetry_points) > 0:
+                    # Map frame_step (0-119) to telemetry array index
+                    # frame_step=0 -> first point, frame_step=119 -> last point
+                    tel_idx = int((frame_step / frames_to_generate) * (len(telemetry_points) - 1))
+                    tel_idx = max(0, min(len(telemetry_points) - 1, tel_idx))
+                    
+                    point = telemetry_points[tel_idx]
+                    current_x = point.get('x')
+                    current_y = point.get('y')
+                    current_tel_speed = point.get('speed')
+                    if current_tel_speed is None:
+                        current_tel_speed = current_speed
+                
+                # Get previous values for position interpolation ONLY
+                # (x,y already come from telemetry points, no interpolation needed!)
                 prev_pos = None
                 if prev_record:
                     prev_pos = int(prev_record.get('position', None) or None)
@@ -1147,41 +1162,53 @@ def _build_replay_frames(laps_data, race_info):
                         prev_pos = int(last_driver_state[code].get('position', current_pos))
                     else:
                         # No previous data - driver just appeared or first lap
-                        # Start from current position (no interpolation needed)
                         prev_pos = current_pos
                 
-                # ===== CRITICAL FIX: PROPER POSITION INTERPOLATION =====
-                # OLD BUG: Simple linear interpolation caused backwards movement and glitching
-                # NEW: Use easing + velocity-based smoothing to handle overtakes properly
-                
-                # Calculate position delta (how many spots gained/lost this lap)
-                position_delta = current_pos - prev_pos  # Negative = gaining positions (going UP in leaderboard)
-                
-                # EASING FUNCTION: Smooth ease-out for natural animation
-                # Acceleration phase first 30%, deceleration phase last 70%
+                # ===== SMOOTH EASING FUNCTION for position interpolation =====
                 if t < 0.3:
-                    # Ease in (slower at start)
                     eased_t = (t / 0.3) ** 2 * 0.3
                 else:
-                    # Ease out (slower at end) - more natural overtake feel
                     remaining_t = (t - 0.3) / 0.7
                     eased_t = 0.3 + (1 - (1 - remaining_t) ** 2) * 0.7
                 
-                # POSITION ANIMATION: Smooth interpolation with bounds checking
+                # ===== POSITION INTERPOLATION (for leaderboard, not track x,y!) =====
+                position_delta = current_pos - prev_pos
                 position = prev_pos + position_delta * eased_t
-                # Clamp position to stay within realistic bounds (P1 to P20)
                 position = max(1.0, min(20.0, position))
+                
+                # ===== TELEMETRY X,Y (ALREADY CORRECT from telemetry_points!) =====
+                # No interpolation needed - x,y come directly from lap's telemetry path
+                x = current_x if current_x is not None else 0
+                y = current_y if current_y is not None else 0
+                
+                # ===== TELEMETRY DATA (from telemetry point) =====
+                # Use speed/gear/throttle/brake from the selected telemetry point
+                if len(telemetry_points) > 0:
+                    tel_idx = int((frame_step / frames_to_generate) * (len(telemetry_points) - 1))
+                    tel_idx = max(0, min(len(telemetry_points) - 1, tel_idx))
+                    point = telemetry_points[tel_idx]
+                    
+                    tel_speed = point.get('speed', current_tel_speed)
+                    tel_gear = point.get('gear', current_gear)
+                    tel_throttle = point.get('throttle', current_throttle)
+                    tel_brake = point.get('brake', current_brake)
+                else:
+                    # Fallback if no telemetry
+                    tel_speed = current_tel_speed
+                    tel_gear = current_gear
+                    tel_throttle = current_throttle
+                    tel_brake = current_brake
                 
                 drivers[code] = {
                     'code': code,
-                    'driver_name': DRIVER_NAMES.get(code, code),  # Consistent name from mapping
+                    'driver_name': DRIVER_NAMES.get(code, code),
                     'position': position,
-                    'x': None,  # No telemetry available
-                    'y': None,  # No telemetry available
-                    'speed': current_speed,
-                    'gear': current_gear,
-                    'throttle': current_throttle,
-                    'brake': current_brake,
+                    'x': x,
+                    'y': y,
+                    'speed': tel_speed if tel_speed is not None else current_speed,
+                    'gear': tel_gear if tel_gear is not None else current_gear,
+                    'throttle': tel_throttle if tel_throttle is not None else current_throttle,
+                    'brake': tel_brake if tel_brake is not None else current_brake,
                     'drs': bool(current_record.get('drs_available', False)),
                     'tire_compound': str(current_record.get('tire_compound', 'MEDIUM')),
                     'tire_age': int(current_record.get('tire_age', 0) or 0),
