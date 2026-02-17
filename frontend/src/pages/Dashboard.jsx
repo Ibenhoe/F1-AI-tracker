@@ -271,7 +271,7 @@ export default function Dashboard() {
           <Badge variant={raceRunning ? "warning" : "neutral"}>
             {raceRunning ? "Race running" : "Paused"}
           </Badge>
-          <Badge variant="neutral">Lap {currentLap}</Badge>
+          <Badge variant="accent">Lap {currentLap}</Badge>
         </div>
       </div>
 
