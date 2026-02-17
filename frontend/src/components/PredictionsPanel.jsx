@@ -62,7 +62,11 @@ export default function PredictionsPanel({
         <div>
           <div className="flex items-center gap-2">
             <h2 className="text-sm font-semibold tracking-tight">Predictions</h2>
-            <Brain size={16} className="text-neutral-500" />
+            <Brain
+              size={16}
+              className="text-neutral-500"
+              style={{ color: "rgb(var(--accent) / 0.75)" }}
+            />
           </div>
           <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
             Top 5 expected finishing order (AI)
@@ -154,9 +158,11 @@ export default function PredictionsPanel({
                     <div className="mt-3 flex items-center gap-3">
                       <div className="h-2 flex-1 rounded-full bg-neutral-200 dark:bg-neutral-900">
                         <div
-                          className="h-2 rounded-full bg-neutral-900 dark:bg-neutral-100"
+                          className="h-2 rounded-full"
                           style={{
                             width: `${Math.min(100, Math.max(0, confidence))}%`,
+                            backgroundColor: "rgb(var(--accent) / 0.9)",
+                            boxShadow: "0 0 0 1px rgb(var(--accent) / 0.25) inset",
                           }}
                         />
                       </div>

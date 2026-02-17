@@ -63,3 +63,25 @@ a {
 :focus-visible {
   outline: none;
 }
+
+.accent-ring {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(var(--accent) / 0.22);
+}
+
+.accent-border {
+  border-color: rgb(var(--accent) / 0.35) !important;
+}
+
+.accent-bg {
+  background-color: rgb(var(--accent) / 0.10) !important;
+}
+
+.accent-text {
+  color: rgb(var(--accent)) !important;
+}
+
+.accent-indicator {
+  background-color: rgb(var(--accent));
+}
+
