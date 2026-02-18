@@ -16,9 +16,86 @@ export default function Wiki() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1950 + 1 }, (_, i) => currentYear - i);
 
+  // Mapping for driver references to full names
+  const driverMapping = {
+    "hamilton": "Lewis Hamilton",
+    "heidfeld": "Nick Heidfeld",
+    "rosberg": "Nico Rosberg",
+    "alonso": "Fernando Alonso",
+    "kovalainen": "Heikki Kovalainen",
+    "nakajima": "Kazuki Nakajima",
+    "bourdais": "Sébastien Bourdais",
+    "raikkonen": "Kimi Räikkönen",
+    "kubica": "Robert Kubica",
+    "glock": "Timo Glock",
+    "sato": "Takuma Sato",
+    "piquet_jr": "Nelson Piquet Jr.",
+    "massa": "Felipe Massa",
+    "coulthard": "David Coulthard",
+    "trulli": "Jarno Trulli",
+    "sutil": "Adrian Sutil",
+    "webber": "Mark Webber",
+    "button": "Jenson Button",
+    "davidson": "Anthony Davidson",
+    "vettel": "Sebastian Vettel",
+    "fisichella": "Giancarlo Fisichella",
+    "barrichello": "Rubens Barrichello",
+    "ralf_schumacher": "Ralf Schumacher",
+    "michael_schumacher": "Michael Schumacher",
+    "wurz": "Alexander Wurz",
+    "speed": "Scott Speed",
+    "albers": "Christijan Albers",
+    "liuzzi": "Vitantonio Liuzzi",
+    "montoya": "Juan Pablo Montoya",
+    "klien": "Christian Klien",
+    "villeneuve": "Jacques Villeneuve",
+    "panis": "Olivier Panis",
+    "matta": "Cristiano da Matta",
+    "frentzen": "Heinz-Harald Frentzen",
+    "yoong": "Alex Yoong",
+    "irvine": "Eddie Irvine",
+    "rosa": "Pedro de la Rosa",
+    "bernoldi": "Enrique Bernoldi",
+    "verstappen": "Jos Verstappen",
+    "gene": "Marc Gené",
+    "mazzacane": "Gastón Mazzacane",
+    "burti": "Luciano Burti",
+    "marques": "Tarso Marques",
+    "badoer": "Luca Badoer",
+    "zanardi": "Alessandro Zanardi",
+    "takagi": "Toranosuke Takagi",
+    "brundle": "Martin Brundle",
+    "montermini": "Andrea Montermini",
+    "lavaggi": "Giovanni Lavaggi",
+    "sospiri": "Vincenzo Sospiri",
+    "morbidelli": "Gianni Morbidelli",
+    "fontana": "Norberto Fontana",
+    "lamy": "Pedro Lamy",
+    "katayama": "Ukyo Katayama",
+    "damon_hill": "Damon Hill",
+    "magnussen": "Jan Magnussen",
+    "karthikeyan": "Narain Karthikeyan",
+    "monteiro": "Tiago Monteiro",
+    "friesacher": "Patrick Friesacher",
+    "doornbos": "Robert Doornbos",
+    "ide": "Yuji Ide",
+    "montagny": "Franck Montagny",
+    "yamamoto": "Sakon Yamamoto",
+    "max_verstappen": "Max Verstappen",
+    "perez": "Sergio Pérez",
+    "leclerc": "Charles Leclerc",
+    "sainz": "Carlos Sainz",
+    "russell": "George Russell",
+    "norris": "Lando Norris"
+  };
+
   // Helper to format names (e.g. "max_verstappen" -> "Max Verstappen")
   const formatName = (name) => {
     if (!name) return "";
+    const lowerName = name.toString().toLowerCase();
+    if (driverMapping[lowerName]) {
+        return driverMapping[lowerName];
+    }
     return name
       .toString()
       .replace(/_/g, " ")
