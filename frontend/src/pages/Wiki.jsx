@@ -16,6 +16,17 @@ export default function Wiki() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: currentYear - 1950 + 1 }, (_, i) => currentYear - i);
 
+  // Helper to format names (e.g. "max_verstappen" -> "Max Verstappen")
+  const formatName = (name) => {
+    if (!name) return "";
+    return name
+      .toString()
+      .replace(/_/g, " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+
   // 1. Fetch Races when Year changes
   useEffect(() => {
     async function fetchRaces() {
@@ -187,7 +198,7 @@ export default function Wiki() {
                   tableData.map((row, index) => (
                     <tr key={index} className="hover:bg-gray-750 transition-colors">
                       <td className="px-6 py-4 font-medium">{row.position}</td>
-                      <td className="px-6 py-4 font-bold text-white">{row.driver}</td>
+                      <td className="px-6 py-4 font-bold text-white">{formatName(row.driver)}</td>
                       <td className="px-6 py-4 text-gray-300">{row.team}</td>
                       
                       {viewType === 'race' && (
