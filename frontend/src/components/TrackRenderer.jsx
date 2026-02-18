@@ -209,10 +209,40 @@ TrackRenderer.displayName = 'TrackRenderer';
 function drawTrack(ctx, trackData, scale, offset) {
   if (!trackData) return;
 
-  // Draw track boundaries - with safety checks
+  // Draw track SURFACE (fill between inner and outer boundaries)
+  if (trackData.innerBoundary && trackData.outerBoundary && 
+      trackData.innerBoundary.length > 0 && trackData.outerBoundary.length > 0) {
+    
+    // Create path for track fill
+    ctx.fillStyle = 'rgba(80, 80, 100, 0.4)';
+    ctx.beginPath();
+    
+    // Outer boundary clockwise
+    const outerFirst = trackData.outerBoundary[0];
+    ctx.moveTo(outerFirst.x * scale + offset.x, outerFirst.y * scale + offset.y);
+    for (let i = 1; i < trackData.outerBoundary.length; i++) {
+      const point = trackData.outerBoundary[i];
+      if (point && typeof point.x !== 'undefined' && typeof point.y !== 'undefined') {
+        ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
+      }
+    }
+    
+    // Inner boundary counter-clockwise (reverse)
+    for (let i = trackData.innerBoundary.length - 1; i >= 0; i--) {
+      const point = trackData.innerBoundary[i];
+      if (point && typeof point.x !== 'undefined' && typeof point.y !== 'undefined') {
+        ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
+      }
+    }
+    
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Draw track boundaries - THICKER for better visibility
   if (trackData.innerBoundary && trackData.innerBoundary.length > 0) {
-    ctx.strokeStyle = '#444444';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#666666';
+    ctx.lineWidth = 3;
     ctx.beginPath();
 
     const first = trackData.innerBoundary[0];
@@ -230,8 +260,8 @@ function drawTrack(ctx, trackData, scale, offset) {
   }
 
   if (trackData.outerBoundary && trackData.outerBoundary.length > 0) {
-    ctx.strokeStyle = '#444444';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#666666';
+    ctx.lineWidth = 3;
     ctx.beginPath();
 
     const first = trackData.outerBoundary[0];
@@ -251,8 +281,8 @@ function drawTrack(ctx, trackData, scale, offset) {
 
   // Draw centerline
   if (trackData.centerline) {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+    ctx.lineWidth = 1.5;
     ctx.setLineDash([5, 5]);
     ctx.beginPath();
 
@@ -353,85 +383,165 @@ function drawDrivers(
     console.log(`[DRAW] Frame: Lap ${currentFrame.lap}, Drivers: ${drivers.length}, Telemetry: ${telemetryAvailable}/${drivers.length}, Centerline: ${centerline.length}`);
   }
 
+  // Sort drivers by position ASCENDING (P1 last, P18 first)
+  // This ensures P1 is drawn last and appears on top of other drivers
+  const sortedDrivers = drivers.sort((a, b) => {
+    const posA = a[1].position || 999;
+    const posB = b[1].position || 999;
+    return posB - posA;  // Reverse: P18 first, P1 last (drawn on top)
+  });
+  
+  // DEBUG: Log driver order to catch ranking bugs
+  if (sortedDrivers.length > 0) {
+    const topThree = sortedDrivers.slice(-3).reverse().map(([code, d]) => {
+      const pos = Math.round(d.position);
+      return `${code}(P${pos})`;
+    }).join(' ← ');
+    if (JSON.stringify(topThree) !== window._lastDriverOrder) {
+      console.log(`[DRIVER ORDER] Lap ${currentFrame.lap}: ${topThree}`);
+      window._lastDriverOrder = JSON.stringify(topThree);
+    }
+  }
+
   // Calculate grid spacing for drivers to avoid overlap
   // Distribute all 18 drivers evenly across the track
-  const driverCount = drivers.length;
+  const driverCount = sortedDrivers.length;
   const spacingRatio = 0.95 / driverCount;  // Each driver gets ~5.3% of track (95% / 18 drivers)
 
-  // Draw each driver
-  drivers.forEach(([code, driver], driverIndex) => {
-    // Calculate position on track
+  // Draw each driver (sorted by position, so P1 is drawn LAST and appears ON TOP)
+  // First pass: collect all drivers with valid positions
+  const driverPositions = new Map();
+  
+  // Calculate positions
+  sortedDrivers.forEach(([code, driver], driverIndex) => {
     let x, y;
-    let usedTelemetry = false;
     
-    // PRIORITY 1: Use telemetry x,y coordinates from frame (REAL track position!)
-    // Telemetry coordinates from FastF1 are now enabled and cached
+    // PRIORITY 1: Use telemetry x,y coordinates from frame (REAL track position)
     if (driver.x !== undefined && driver.y !== undefined && driver.x !== null && driver.y !== null && (driver.x !== 0 || driver.y !== 0)) {
       x = driver.x * scale + offset.x;
       y = driver.y * scale + offset.y;
-      usedTelemetry = true;
     }
-    // PRIORITY 2: Fall back to centerline positioning based on race position
+    // PRIORITY 2: Fall back to centerline positioning (for missing telemetry)
     else if (centerline.length > 0 && driver.position !== undefined && driver.position !== null) {
-      // NEW: Use actual race position plus spacing to avoid driver overlap
-      // Position 1-18 maps to a location along the entire track
-      // Each position gets an even slice of the track to prevent clustering
+      // Use position-based centerline positioning
+      const trackPositionRatio = Math.max(0.05, Math.min(0.95, (driver.position - 1) / 18));
+      const trackIndex = Math.round(trackPositionRatio * (centerline.length - 1));
+      const trackPoint = centerline[Math.max(0, Math.min(centerline.length - 1, trackIndex))];
       
-      // Base position from race standings (1.0 to 18.0)
-      const racePosition = driver.position;
-      
-      // ===== LAP 1 SPECIAL: Grid Formulation =====
-      // On lap 1, position drivers in starting grid formation (2 columns)
-      // Starting grid: P1 on left of grid, P2 on right, P3 below P1, P4 below P2, etc.
-      if (currentFrame.lap <= 1 && centerline.length > 0) {
-        // Use start/first part of track for grid
-        const startPoint = centerline[0];
-        if (startPoint) {
-          // Create 2-wide grid layout (F1 standard)
-          const gridRow = Math.floor((racePosition - 1) / 2);  // Which row (0,1,2,...)
-          const gridCol = (racePosition - 1) % 2;  // Left (0) or right (1)
-          
-          const rowSpacing = 80;  // Distance between grid rows (in canvas units)
-          const colSpacing = 60;  // Distance between left/right columns
-          
-          x = startPoint.x * scale + offset.x + (gridCol === 0 ? -colSpacing : colSpacing);
-          y = startPoint.y * scale + offset.y + gridRow * rowSpacing;
-        }
-      } else {
-        // Normal lap: distribute along track
-        // Map to track location: position 1 -> start, position 18 -> 95% of track
-        // This ensures drivers are spread across the entire track perimeter
-        const trackPositionRatio = Math.max(0, Math.min(0.95, (racePosition - 1) / 18));
-        const trackIndex = Math.round(trackPositionRatio * (centerline.length - 1));
-        const trackPoint = centerline[Math.max(0, Math.min(centerline.length - 1, trackIndex))];
-        
-        if (trackPoint && trackPoint.x !== undefined && trackPoint.y !== undefined) {
-          x = trackPoint.x * scale + offset.x;
-          y = trackPoint.y * scale + offset.y;
-        }
-      }
-      
-      if (typeof x === 'undefined' || typeof y === 'undefined') {
-        if (driverIndex < 2) {
-          console.log(`  ${code}: FALLBACK to position ${racePosition.toFixed(1)} (no telemetry x,y)`);
-        }
+      if (trackPoint && trackPoint.x !== undefined && trackPoint.y !== undefined) {
+        x = trackPoint.x * scale + offset.x;
+        y = trackPoint.y * scale + offset.y;
       }
     }
     
-    // Skip driver if no valid coordinates
-    if (typeof x === 'undefined' || typeof y === 'undefined') {
-      return;
+    // Store position for rendering
+    if (typeof x !== 'undefined' && typeof y !== 'undefined') {
+      driverPositions.set(code, { x, y });
     }
+  });
+
+  // Create a map to track actual driver positions on the track
+  // Calculate cumulative gap distances for proper spacing
+  let cumulativeDistance = 0;
+  const driverTrackPositions = new Map();
+  const leaderCode = sortedDrivers.length > 0 ? sortedDrivers[0][0] : null;
+  const leaderPos = leaderCode ? driverPositions.get(leaderCode) : null;
+  
+  sortedDrivers.forEach(([code, driver], index) => {
+    if (index === 0) {
+      // P1 gets the normal position from telemetry
+      driverTrackPositions.set(code, { cumDistance: 0, isLeader: true });
+    } else {
+      // Other drivers are positioned behind with gap-based distance
+      const gapStr = driver.gap || '+0.000';
+      const gapSeconds = parseFloat(gapStr.replace('+', '')) || 0;
+      cumulativeDistance += gapSeconds;
+      driverTrackPositions.set(code, { cumDistance: cumulativeDistance, isLeader: false });
+    }
+  });
+
+  // Render each driver (in sorted order so P1 appears on top)
+  sortedDrivers.forEach(([code, driver]) => {
+    const pos = driverPositions.get(code);
+    if (!pos) return;  // Skip if no valid position calculated
+    
+    let x = pos.x;
+    let y = pos.y;
     
     const isSelected = code === selectedDriver;
+    const trackPos = driverTrackPositions.get(code);
+    
+    // Apply gap-based positioning along the centerline
+    if (trackPos && !trackPos.isLeader && leaderPos && centerline.length > 0) {
+      // Convert cumulative gap distance to pixels (1 second = 35 pixels)
+      const gapPixels = trackPos.cumDistance * 35;
+      
+      // Find the centerline point closest to P1
+      let closestIndex = 0;
+      let minDist = Infinity;
+      for (let i = 0; i < centerline.length; i++) {
+        const point = centerline[i];
+        const dist = Math.hypot(
+          point.x * scale + offset.x - leaderPos.x,
+          point.y * scale + offset.y - leaderPos.y
+        );
+        if (dist < minDist) {
+          minDist = dist;
+          closestIndex = i;
+        }
+      }
+      
+      // Move this driver forwards along centerline by the gap distance
+      let currentDistance = 0;
+      let targetIndex = closestIndex;
+      
+      for (let i = closestIndex; i < centerline.length && currentDistance < gapPixels; i++) {
+        const p1 = centerline[i];
+        const p2 = centerline[Math.min(centerline.length - 1, i + 1)];
+        
+        if (p1 && p2) {
+          const segmentDist = Math.hypot(
+            (p2.x - p1.x) * scale,
+            (p2.y - p1.y) * scale
+          );
+          
+          if (currentDistance + segmentDist >= gapPixels) {
+            // Interpolate within this segment
+            const ratio = (gapPixels - currentDistance) / segmentDist;
+            const interpX = p1.x * scale + offset.x + (p2.x - p1.x) * scale * ratio;
+            const interpY = p1.y * scale + offset.y + (p2.y - p1.y) * scale * ratio;
+            x = interpX;
+            y = interpY;
+            break;
+          }
+          
+          currentDistance += segmentDist;
+          targetIndex = Math.min(centerline.length - 1, i + 1);
+        }
+      }
+      
+      // Fallback to segment endpoint if we didn't interpolate
+      if (targetIndex >= 0 && targetIndex < centerline.length) {
+        const point = centerline[targetIndex];
+        if (point) {
+          x = point.x * scale + offset.x;
+          y = point.y * scale + offset.y;
+        }
+      }
+    }
 
-    // Driver circle - LARGER size for better visibility
-    const radius = isSelected ? 15 : 11;
+    // Driver circle - consistent size
+    const radius = isSelected ? 20 : 16;
     const color = getTeamColor(code);
 
-    // Shadow/glow effect
-    ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-    ctx.shadowBlur = isSelected ? 20 : 10;
+    // Shadow/glow effect - Selected drivers get blue glow
+    if (isSelected) {
+      ctx.shadowColor = 'rgba(0, 150, 255, 0.9)';
+      ctx.shadowBlur = 25;
+    } else {
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.shadowBlur = 12;
+    }
     ctx.shadowOffsetX = 0;
     ctx.shadowOffsetY = 0;
 
@@ -441,27 +551,51 @@ function drawDrivers(
     ctx.arc(x, y, radius, 0, Math.PI * 2);
     ctx.fill();
 
-    // Draw border for selected
+    // Draw border
     if (isSelected) {
-      ctx.strokeStyle = '#ffff00';
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = '#00d4ff';
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    } else {
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
     }
 
-    // Draw position number (rounded to nearest integer)
+    // Draw position number
     ctx.shadowColor = 'transparent';
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 10px Arial';
+    const fontSize = isSelected ? 14 : 12;
+    ctx.font = `bold ${fontSize}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const displayPosition = Math.round(driver.position);
     ctx.fillText(String(displayPosition), x, y);
 
-    // Driver code label
+    // Driver code label with background
+    const labelY = y + 26;
+    ctx.font = 'bold 11px Arial';
+    const codeTextWidth = ctx.measureText(code).width;
+    const labelPadding = 5;
+    
+    // Background for label
+    if (isSelected) {
+      ctx.fillStyle = 'rgba(0, 100, 200, 0.8)';
+    } else {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    }
+    ctx.fillRect(
+      x - codeTextWidth / 2 - labelPadding,
+      labelY - 8,
+      codeTextWidth + labelPadding * 2,
+      16
+    );
+
+    // Driver code text
     ctx.fillStyle = '#ffffff';
-    ctx.font = '11px Arial';
     ctx.textAlign = 'center';
-    ctx.fillText(code, x, y + 22);
+    ctx.textBaseline = 'middle';
+    ctx.fillText(code, x, labelY);
   });
 }
 

@@ -1063,6 +1063,13 @@ def _build_replay_frames(laps_data, race_info):
             # (If multiple records exist, lap records are ordered, so last one is most current)
             drivers_by_code[code] = record
         
+        # DEBUG: Write file to confirm we're processing laps
+        if lap_num == 1:
+            with open('lap_processing_debug.txt', 'w') as f:
+                f.write(f"LAP {lap_num}: drivers_by_code has {len(drivers_by_code)} drivers\n")
+                for code, record in list(drivers_by_code.items())[:3]:
+                    f.write(f"  {code}: position={record.get('position')}, lap_time={record.get('lap_time')}, gap={record.get('gap')}\n")
+            
         # Verify we have meaningful data
         if not drivers_by_code:
             continue  # Skip lap with no driver data
@@ -1079,6 +1086,15 @@ def _build_replay_frames(laps_data, race_info):
         else:
             # LAP 1: Use qualifying grid as "previous positions" for smooth interpolation from grid to race positions
             # This ensures drivers animate from grid position P1, P2, P3 to their actual lap 1 race positions
+            for code, grid_pos in qualifying_grid.items():
+                prev_drivers[code] = {
+                    'driver': code,
+                    'position': grid_pos,  # Use grid position as the previous position for interpolation
+                    'gear': 0,
+                    'throttle': 0,
+                    'brake': 0,
+                    'speed': 0,
+                }
             for code, grid_pos in qualifying_grid.items():
                 prev_drivers[code] = {
                     'driver': code,
@@ -1221,6 +1237,53 @@ def _build_replay_frames(laps_data, race_info):
                 # CRITICAL: Cache this driver's state for retired drivers
                 # This ensures retired drivers stay visible at their last position
                 last_driver_state[code] = current_record
+            
+            # ===== CALCULATE GAPS FROM ACTUAL LAP TIME DATA =====
+            position_to_laptime = {}  # {position: lap_time_in_seconds}
+            
+            for code, record in drivers_by_code.items():
+                pos = int(record.get('position', 999))
+                lap_time_raw = record.get('lap_time')
+                
+                # Validate lap time
+                if isinstance(lap_time_raw, (int, float)) and lap_time_raw > 0 and lap_time_raw < 300:
+                    position_to_laptime[pos] = float(lap_time_raw)
+            
+            # Save debug info to file for first frame of lap 1
+            if lap_num == 1 and frame_step == 0:
+                with open('gap_debug.txt', 'w') as f:
+                    f.write(f"LAP 1 FRAME 0 GAP CALCULATION DEBUG\n")
+                    f.write(f"position_to_laptime entries: {position_to_laptime}\n")
+                    if position_to_laptime:
+                        leader_info = min(position_to_laptime.items(), key=lambda x: x[1])
+                        f.write(f"Leader: P{leader_info[0]} with lap time {leader_info[1]:.3f}s\n")
+                        f.write(f"\nDriver gaps:\n")
+                        for code, driver_data in drivers.items():
+                            if code in drivers_by_code:
+                                actual_pos = int(drivers_by_code[code].get('position', 999))
+                                f.write(f"  {code}: lap_record_pos={actual_pos}, interpolated_pos={driver_data.get('position'):.1f}, gap={driver_data.get('gap')}\n")
+            
+            # Calculate gaps: each driver's gap = their lap time - leader's lap time
+            if position_to_laptime:
+                # Find leader (position with FASTEST/MINIMUM lap time)
+                leader_pos = min(position_to_laptime.items(), key=lambda x: x[1])[0]
+                leader_lap_time = position_to_laptime[leader_pos]
+                
+                # Now assign gaps to each driver based on their actual position in this lap
+                for code, driver_data in drivers.items():
+                    # Get the current lap record's position
+                    if code in drivers_by_code:
+                        current_record = drivers_by_code[code]
+                        actual_pos = int(current_record.get('position', 999))
+                        
+                        if actual_pos == leader_pos:
+                            driver_data['gap'] = '+0.000'
+                        elif actual_pos in position_to_laptime:
+                            driver_lap_time = position_to_laptime[actual_pos]
+                            gap_seconds = driver_lap_time - leader_lap_time
+                            if gap_seconds < 0:
+                                gap_seconds = 0.0
+                            driver_data['gap'] = f"+{gap_seconds:.3f}"
             
             frames.append({
                 'frameIndex': frame_counter,

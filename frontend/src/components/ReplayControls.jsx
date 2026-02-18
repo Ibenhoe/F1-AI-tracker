@@ -69,7 +69,7 @@ const ReplayControls = ({
 
         {/* Speed Controls */}
         <div className="speed-controls">
-          {[0.1, 0.25, 0.5, 1, 2, 4].map((speed) => (
+          {[0.05, 0.1, 0.25, 0.5, 1, 2, 4].map((speed) => (
             <button
               key={speed}
               className={`speed-btn ${playbackSpeed === speed ? 'active' : ''}`}
