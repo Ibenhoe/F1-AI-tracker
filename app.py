@@ -199,6 +199,116 @@ def get_race_grid(race_num):
     
     return grid
 
+# ========== WIKI API ENDPOINTS (ADDED) ==========
+
+def load_csv_data(filename):
+    """Probeert CSV te laden uit de huidige map OF de F1_data_mangement map"""
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    
+    # 1. Check in F1-AI-tracker map (waar app.py staat)
+    path1 = os.path.join(current_dir, filename)
+    if os.path.exists(path1):
+        try:
+            return pd.read_csv(path1).replace(r'\\N', None, regex=True)
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            return pd.DataFrame()
+
+    # 2. Check in F1_data_mangement map (één map omhoog en dan in F1_data_mangement)
+    path2 = os.path.join(os.path.dirname(current_dir), 'F1_data_mangement', filename)
+    if os.path.exists(path2):
+        try:
+            return pd.read_csv(path2).replace(r'\\N', None, regex=True)
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            return pd.DataFrame()
+            
+    return pd.DataFrame()
+
+@app.route('/api/races/<int:year>', methods=['GET'])
+def get_races_by_year(year):
+    # Probeer eerst de grote dataset
+    df = load_csv_data('unprocessed_f1_training_data.csv')
+    
+    if not df.empty:
+        # Filter op jaar
+        season_df = df[df['year'] == year]
+        if not season_df.empty:
+            # Unieke races halen
+            races = season_df[['raceId', 'date', 'country']].drop_duplicates().sort_values('date')
+            races['round'] = range(1, len(races) + 1)
+            races['name'] = races['country'] # Gebruik land als naam
+            return jsonify(races[['raceId', 'round', 'name', 'date']].to_dict(orient='records'))
+
+    # Fallback naar races.csv als de grote dataset er niet is
+    races_df = load_csv_data('races.csv')
+    if not races_df.empty:
+        season_races = races_df[races_df['year'] == year].copy()
+        if not season_races.empty:
+            season_races = season_races.sort_values('round')
+            return jsonify(season_races[['raceId', 'round', 'name', 'date']].to_dict(orient='records'))
+
+    return jsonify([])
+
+@app.route('/api/wiki/<int:race_id>/<string:view_type>', methods=['GET'])
+def get_wiki_data(race_id, view_type):
+    df = load_csv_data('unprocessed_f1_training_data.csv')
+    
+    # Als unprocessed niet bestaat, probeer losse files (fallback)
+    if df.empty:
+        return jsonify([])
+
+    # Filter op race
+    race_df = df[df['raceId'] == race_id].copy()
+    if race_df.empty: return jsonify([])
+
+    data = []
+    
+    # Sorteren
+    if view_type == 'race':
+        race_df = race_df.sort_values('positionOrder')
+    elif view_type == 'grid':
+        race_df = race_df.sort_values('grid')
+    elif view_type == 'qualifying':
+        # Sorteer op quali positie als beschikbaar, anders grid
+        if 'quali_position' in race_df.columns:
+             race_df = race_df.sort_values('quali_position')
+        else:
+             race_df = race_df.sort_values('grid')
+
+    for _, row in race_df.iterrows():
+        # Driver naam netjes maken (bv. "hamilton" -> "Hamilton")
+        driver_ref = str(row.get('driverRef', 'Unknown'))
+        driver_name = driver_ref.capitalize()
+        
+        # Team naam
+        team_name = row.get('name', 'Unknown') # In training data is 'name' vaak de constructor naam
+
+        entry = {
+            'driver': driver_name,
+            'team': team_name,
+        }
+
+        if view_type == 'race':
+            entry['position'] = row['positionOrder']
+            entry['time'] = str(row['time']) if pd.notna(row['time']) else row.get('status', 'DNF')
+            entry['points'] = row['points']
+        
+        elif view_type == 'grid':
+            entry['position'] = row['grid']
+            # Pak de beste tijd die beschikbaar is
+            entry['time'] = str(row.get('q3', row.get('q2', row.get('q1', '-'))))
+
+        elif view_type == 'qualifying':
+            entry['position'] = row.get('quali_position', row.get('grid'))
+            entry['q1'] = str(row.get('q1', '-'))
+            entry['q2'] = str(row.get('q2', '-'))
+            entry['q3'] = str(row.get('q3', '-'))
+
+        data.append(entry)
+        
+    return jsonify(data)
+
 
 # ========== API ENDPOINTS ==========
 
