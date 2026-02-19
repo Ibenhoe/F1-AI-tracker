@@ -163,7 +163,7 @@ const TrackRenderer = forwardRef(
 
           drawDrivers(
             ctx, frame, scaleRef.current, { x: 0, y: 0 },
-            selectedDriver, onDriverSelect, trackData
+            selectedDriver, onDriverSelect, trackData, rotationAngle
           );
 
           ctx.restore();
@@ -403,7 +403,8 @@ function drawDrivers(
   offset,
   selectedDriver,
   onDriverSelect,
-  trackData
+  trackData,
+  rotationAngle = 0
 ) {
   const drivers = Object.entries(currentFrame.drivers || {});
   
@@ -488,40 +489,41 @@ function drawDrivers(
       ctx.stroke();
     }
 
-    // Draw position number
+    // Draw position number (counter-rotated so it stays horizontal)
     ctx.shadowColor = 'transparent';
-    ctx.fillStyle = '#ffffff';
     const fontSize = isSelected ? 14 : 12;
+    const displayPosition = Math.round(driver.position);
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-rotationAngle);
+    ctx.fillStyle = '#ffffff';
     ctx.font = `bold ${fontSize}px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const displayPosition = Math.round(driver.position);
-    ctx.fillText(String(displayPosition), x, y);
+    ctx.fillText(String(displayPosition), 0, 0);
+    ctx.restore();
 
-    // Driver code label with background
-    const labelY = y + 26;
+    // Driver code label with background (counter-rotated)
+    const labelOffset = radius + 10;
     ctx.font = 'bold 11px Arial';
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(-rotationAngle);
     const codeTextWidth = ctx.measureText(code).width;
-    const labelPadding = 5;
-    
-    // Background for label
+    const labelPadding = 4;
+    const bgX = -codeTextWidth / 2 - labelPadding;
+    const bgY = labelOffset - 8;
     if (isSelected) {
-      ctx.fillStyle = 'rgba(0, 100, 200, 0.8)';
+      ctx.fillStyle = 'rgba(0, 100, 200, 0.85)';
     } else {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
     }
-    ctx.fillRect(
-      x - codeTextWidth / 2 - labelPadding,
-      labelY - 8,
-      codeTextWidth + labelPadding * 2,
-      16
-    );
-
-    // Driver code text
+    ctx.fillRect(bgX, bgY, codeTextWidth + labelPadding * 2, 16);
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(code, x, labelY);
+    ctx.fillText(code, 0, labelOffset);
+    ctx.restore();
   });
 }
 

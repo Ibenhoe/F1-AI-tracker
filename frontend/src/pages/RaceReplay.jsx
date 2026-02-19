@@ -233,7 +233,7 @@ const RaceReplay = () => {
 
   return (
     <div className="space-y-6">
-      {/* FOCUS MODE - FULL SCREEN TRACK ONLY */}
+      {/* FOCUS MODE - FULL SCREEN TRACK + FLOATING LEADERBOARD LEFT */}
       {focusMode && (
         <div className="race-replay-focus-container">
           <div className="focus-track-fullscreen">
@@ -254,6 +254,21 @@ const RaceReplay = () => {
               rotation={-90}
               smoothedGaps={smoothedGapsRef.current}
             />
+          </div>
+
+          {/* Floating leaderboard – left side */}
+          <div
+            className="absolute top-4 left-4 z-20 w-52 rounded-xl border border-neutral-700/60 bg-neutral-950/80 backdrop-blur-md shadow-xl overflow-hidden"
+            style={{ maxHeight: 'calc(100% - 96px)' }}
+          >
+            <div className="overflow-y-auto" style={{ maxHeight: 'inherit' }}>
+              <ReplayLeaderboard
+                drivers={currentFrame?.drivers || []}
+                selectedDriver={selectedDriver}
+                onDriverSelect={setSelectedDriver}
+                currentLap={currentLap}
+              />
+            </div>
           </div>
 
           {/* Floating controls bar at bottom */}
@@ -304,6 +319,7 @@ const RaceReplay = () => {
 
       {/* MAIN GRID */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+
         {/* TRACK VISUALIZATION - Main */}
         <Card className="xl:col-span-8 p-5 aspect-video" clip>
           <div className="w-full h-full flex flex-col">
@@ -327,7 +343,7 @@ const RaceReplay = () => {
           </div>
         </Card>
 
-        {/* RIGHT PANEL - Standings & Info */}
+        {/* RIGHT PANEL – Standings, Driver Info & Events */}
         <Card className="xl:col-span-4 p-5" clip>
           <div className="flex h-full min-w-0 flex-col gap-4">
             {/* Tabs */}
@@ -356,13 +372,12 @@ const RaceReplay = () => {
             {/* Tab Content */}
             <div className="min-h-0 min-w-0 flex-1 overflow-auto">
               {rightPanelTab === 'standings' && (
-                <div>
-                  <ReplayLeaderboard
-                    drivers={currentFrame?.drivers || []}
-                    selectedDriver={selectedDriver}
-                    onDriverSelect={setSelectedDriver}
-                  />
-                </div>
+                <ReplayLeaderboard
+                  drivers={currentFrame?.drivers || []}
+                  selectedDriver={selectedDriver}
+                  onDriverSelect={setSelectedDriver}
+                  currentLap={currentLap}
+                />
               )}
 
               {rightPanelTab === 'driver' && selectedDriver && currentFrame && (

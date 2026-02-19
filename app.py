@@ -1299,52 +1299,25 @@ def _build_replay_frames(laps_data, race_info):
                 # This ensures retired drivers stay visible at their last position
                 last_driver_state[code] = current_record
             
-            # ===== CALCULATE GAPS FROM ACTUAL LAP TIME DATA =====
-            # Key insight: the driver in P1 is ALWAYS the gap leader (gap = +0.000)
-            # Other drivers' gaps are based on time differences from the leader
-            position_to_laptime = {}  # {position: lap_time_in_seconds}
-            
-            # Get P1 driver (always the first position driver)
-            leader_code = None
-            for code, record in drivers_by_code.items():
-                pos = int(record.get('position', 999))
-                if pos == 1:
-                    leader_code = code
-                    break
-            
-            # Collect ALL lap times (including pit laps) to calculate gaps
-            for code, record in drivers_by_code.items():
-                pos = int(record.get('position', 999))
-                lap_time_raw = record.get('lap_time')
-                
-                # Use valid lap times
-                if isinstance(lap_time_raw, (int, float)) and 60 < lap_time_raw < 500:
-                    position_to_laptime[pos] = float(lap_time_raw)
-            
-            # Assign gaps: P1 is always +0.000, others relative to P1's lap time
-            if position_to_laptime and 1 in position_to_laptime:
-                leader_lap_time = position_to_laptime[1]
-                
-                for code, driver_data in drivers.items():
-                    if code in drivers_by_code:
-                        current_record = drivers_by_code[code]
-                        actual_pos = int(current_record.get('position', 999))
-                        
-                        if actual_pos == 1:
-                            # P1 always has zero gap
-                            driver_data['gap'] = '+0.000'
-                        elif actual_pos in position_to_laptime:
-                            driver_lap_time = position_to_laptime[actual_pos]
-                            gap_seconds = driver_lap_time - leader_lap_time
-                            
-                            # No capping - allow realistic gaps including pit stops
-                            # The visual smoothing happens in the frontend
-                            if gap_seconds < 0:
-                                gap_seconds = 0.0
-                            driver_data['gap'] = f"+{gap_seconds:.3f}"
-                        else:
-                            # No lap time data - estimate gap
-                            driver_data['gap'] = '+0.000'
+            # ===== CALCULATE GAPS USING CUMULATIVE RACE TIMES =====
+            # Use the same cumulative_race_times we pre-computed before the lap
+            # loop.  This gives the TRUE gap from race start, not just the
+            # single-lap time delta.  Precision kept at 3 decimal places.
+            leader_cum_display = cumulative_race_times.get(
+                leader_code_this_lap, {}).get(lap_num, None)
+
+            for code, driver_data in drivers.items():
+                if leader_code_this_lap and code == leader_code_this_lap:
+                    driver_data['gap'] = '+0.000'
+                elif leader_cum_display is not None:
+                    driver_cum = cumulative_race_times.get(code, {}).get(lap_num, None)
+                    if driver_cum is not None:
+                        gap_s = max(0.0, driver_cum - leader_cum_display)
+                        driver_data['gap'] = f"+{gap_s:.3f}"
+                    else:
+                        driver_data['gap'] = None
+                else:
+                    driver_data['gap'] = None
             
             frames.append({
                 'frameIndex': frame_counter,
