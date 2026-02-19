@@ -929,11 +929,19 @@ class PreRaceModel:
                     'final_conf': confidence
                 })
             
+            _driver_num = int(driver_info.get('number', 0))
+            _driver_code = driver_info.get('driver', f'Driver {i+1}')
+            _driver_name = (
+                driver_id_to_name.get(_driver_num) or
+                driver_code_to_name.get(_driver_code) or
+                _driver_code
+            )
+
             results.append({
                 'position': i + 1,
-                'driver': driver_info.get('driver', f'Driver {i+1}'),
-                'driver_name': driver_info.get('driver_name', driver_code),  # Use driver_name field directly from grid_data
-                'number': int(driver_info.get('number', 0)),
+                'driver': _driver_code,
+                'driver_name': _driver_name,
+                'number': _driver_num,
                 'team': driver_info.get('team', 'Unknown'),
                 'grid_position': int(driver_info.get('grid_pos', i + 1)),
                 'ai_score': float(score),
@@ -942,7 +950,7 @@ class PreRaceModel:
             
             # Debug: print first 3 drivers with mapping lookup
             if i < 3:
-                print(f"[PRERACE] Driver {i}: {driver_info.get('driver')} ({driver_info.get('driver_name')})")
+                print(f"[PRERACE] Driver {i}: {_driver_code} -> {_driver_name}")
         
         # Print debug info
         if debug_info:
