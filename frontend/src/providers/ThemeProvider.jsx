@@ -5,18 +5,12 @@ const STORAGE_KEY = "f1ai.theme";
 const ACCENT_KEY = "f1ai.accent";
 
 export const ACCENTS = [
-  { id: "redbull", label: "Red Bull", hex: "#3671C6", rgb: "54 113 198" },
-  { id: "ferrari", label: "Ferrari", hex: "#F91536", rgb: "249 21 54" },
-  { id: "mercedes", label: "Mercedes", hex: "#6CD3BF", rgb: "108 211 191" },
-  { id: "mclaren", label: "McLaren", hex: "#F58020", rgb: "245 128 32" },
-  { id: "aston", label: "Aston Martin", hex: "#358C75", rgb: "53 140 117" },
-  { id: "alpine", label: "Alpine", hex: "#2293D1", rgb: "34 147 209" },
-  { id: "williams", label: "Williams", hex: "#37BEDD", rgb: "55 190 221" },
-  { id: "haas", label: "Haas F1 Team", hex: "#B6BABD", rgb: "182 186 189" },
-  { id: "sauber", label: "Kick Sauber", hex: "#52E252", rgb: "82 226 82" },
-  { id: "rb", label: "RB", hex: "#6692FF", rgb: "102 146 255" },
-  { id: "renault", label: "Renault", hex: "#FFF500", rgb: "255 245 0" },
-  { id: "alphatauri", label: "AlphaTauri", hex: "#5E8FAA", rgb: "94 143 170" },
+  { id: "white", label: "White", hex: "#FFFFFF" },
+  { id: "blue", label: "Blue", hex: "#3B82F6" },
+  { id: "green", label: "Green", hex: "#22C55E" },
+  { id: "orange", label: "Orange", hex: "#F97316" },
+  { id: "purple", label: "Purple", hex: "#8B5CF6" },
+  { id: "pink", label: "Pink", hex: "#EC4899" },
 ];
 
 function getSystemPrefersDark() {
