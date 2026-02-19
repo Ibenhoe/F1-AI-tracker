@@ -95,6 +95,26 @@ class RaceSimulator:
         self.battle_detector = BattleDetector()
         self.event_generator = RaceEventGenerator()
         
+        # DEBUG: Show which laps are available in the data
+        if self.laps_data is not None and len(self.laps_data) > 0:
+            try:
+                unique_laps = sorted(self.laps_data['LapNumber'].unique())
+                print(f"[SIMULATOR] Available laps in data: {unique_laps[:10]}{'...' if len(unique_laps) > 10 else ''}")
+                print(f"[SIMULATOR] Total rows in laps_data: {len(self.laps_data)}")
+                
+                # Show which drivers are in lap 1 and lap 2
+                if len(unique_laps) > 0:
+                    lap1_data = self.laps_data[self.laps_data['LapNumber'] == unique_laps[0]]
+                    print(f"[SIMULATOR] Lap {unique_laps[0]}: {len(lap1_data)} driver records")
+                    
+                    if len(unique_laps) > 1:
+                        lap2_data = self.laps_data[self.laps_data['LapNumber'] == unique_laps[1]]
+                        print(f"[SIMULATOR] Lap {unique_laps[1]}: {len(lap2_data)} driver records")
+            except Exception as e:
+                print(f"[SIMULATOR] Could not analyze lap data: {e}")
+        else:
+            print(f"[SIMULATOR] WARNING: No lap data provided!")
+        
         print(f"[SIMULATOR] Initialized for {self.race_name} ({self.total_laps} laps)")
         print(f"[SIMULATOR] Event system enabled - battles & pit stops will be tracked")
         
@@ -115,6 +135,7 @@ class RaceSimulator:
                 'dnf': False,
                 'gap_to_leader': 0.0,  # Gap to leader for battle detection
                 'gap_to_next': 0.0,    # Gap to next driver
+                'cumulative_gap': 0.0, # Accumulated gap to LEADER (grows each lap!)
                 'position_change': 0,
                 'laps_completed': 0
             }
@@ -174,6 +195,8 @@ class RaceSimulator:
         
         if lap_data is not None and len(lap_data) > 0:
             # Use REAL data from FastF1
+            print(f"[LAP {lap_number}] ✓ Real FastF1 data available ({len(lap_data)} drivers)")
+            
             # IMPORTANT: Update drivers first (which trains the model), THEN get predictions
             # This ensures predictions use the updated model with current lap's data
             lap_state['drivers'] = self._update_from_real_data(lap_number, lap_data)
@@ -223,6 +246,7 @@ class RaceSimulator:
             lap_state['events'].extend(self._detect_events(lap_number, lap_data))
         else:
             # Only simulate if no real data available
+            print(f"[LAP {lap_number}] ⚠ NO FastF1 data available - using simulated fallback (this may cause unrealistic gaps!)")
             lap_state['drivers'] = self._simulate_lap_changes()
             lap_state['predictions'] = self._get_predictions(lap_number, None)
         
@@ -266,11 +290,19 @@ class RaceSimulator:
         """Get real lap data from FastF1"""
         try:
             if self.laps_data is None or len(self.laps_data) == 0:
+                if lap_number <= 3:
+                    print(f"[GETLAPDATA] Lap {lap_number}: laps_data is empty/None!")
                 return None
             
             lap_filter = self.laps_data[self.laps_data['LapNumber'] == lap_number]
+            if len(lap_filter) == 0:
+                if lap_number <= 5:
+                    unique_laps = sorted(self.laps_data['LapNumber'].unique())
+                    print(f"[GETLAPDATA] Lap {lap_number}: NO ROWS FOUND! Available laps: {unique_laps[:5]}")
             return lap_filter
-        except:
+        except Exception as e:
+            if lap_number <= 3:
+                print(f"[GETLAPDATA] Lap {lap_number}: Exception - {e}")
             return None
     
     def _update_from_real_data(self, lap_number, lap_data):
@@ -351,93 +383,54 @@ class RaceSimulator:
         
         active_drivers.sort(key=lambda x: x['position'])
         
-        # Optimize: Pre-process FastF1 gap data into a dictionary to avoid repeated DataFrame lookups
-        gap_data_cache = {}
-        if self.laps_data is not None and len(self.laps_data) > 0:
-            try:
-                current_lap_data = self.laps_data[self.laps_data['LapNumber'] == lap_number]
-                if len(current_lap_data) > 0 and 'Gap' in current_lap_data.columns:
-                    # Create {driver: gap_value} dict for O(1) lookups instead of repeated filtering
-                    for _, row in current_lap_data.iterrows():
-                        driver = row.get('Driver')
-                        gap = row.get('Gap', 0.0)
-                        if driver and gap is not None:
-                            gap_data_cache[driver] = gap
-                    
-                    # DEBUG: Show what we loaded in cache
-                    if lap_number == 1:
-                        print(f"[GAP-CACHE-DEBUG] Lap 1: Loaded {len(gap_data_cache)} drivers in gap cache")
-                        cache_keys = list(gap_data_cache.keys())[:5]
-                        print(f"[GAP-CACHE-DEBUG] First 5 keys: {cache_keys}")
-                        print(f"[GAP-CACHE-DEBUG] Sample values: {[(k, gap_data_cache[k]) for k in cache_keys[:3]]}")
-                        
-            except (KeyError, AttributeError, TypeError, ValueError) as e:
-                # Specific exceptions: missing columns, invalid data types, etc.
-                # Silently fall back to estimation - gap data may not be available in this session
-                pass
-            except Exception as e:
-                # Log unexpected exceptions for debugging
-                print(f"[WARNING] Unexpected error building gap cache for lap {lap_number}: {str(e)}")
-                pass
+        # ===== CUMULATIVE GAP CALCULATION (realistic!) =====
+        # Gap grows EACH LAP by the difference in lap times.
+        # Example: If VER does 88.0s and NOR does 88.4s every lap:
+        #   Lap 1: gap = +0.4s
+        #   Lap 2: gap = +0.8s
+        #   Lap 3: gap = +1.2s  ... etc.
+        # This is how real F1 timing works.
         
-        # Calculate gaps between consecutive drivers using REAL FastF1 data
-        for i in range(len(active_drivers)):
+        # Step 1: Find the leader's lap time for this lap
+        leader_lap_time = None
+        for driver in active_drivers:
+            code = driver.get('driver')
+            if code in self.driver_states and self.driver_states[code]['lap_times']:
+                leader_lap_time = self.driver_states[code]['lap_times'][-1]
+                break  # active_drivers is sorted by position, so first = leader
+        
+        # Step 2: For each driver, update cumulative gap based on this lap's time delta
+        for i, driver in enumerate(active_drivers):
+            code = driver.get('driver')
+            if code not in self.driver_states:
+                continue
+            
+            state = self.driver_states[code]
+            
             if i == 0:
+                # Leader: gap is always 0
+                state['cumulative_gap'] = 0.0
                 active_drivers[i]['gap_to_leader'] = 0.0
-                active_drivers[i]['gap'] = 0.0
+                active_drivers[i]['gap'] = '0.000'
             else:
-                try:
-                    if gap_data_cache:  # Use pre-processed cache if available
-                        curr_driver = active_drivers[i]['driver']
-                        prev_driver = active_drivers[i-1]['driver']
-                        
-                        # DEBUG on lap 1: Show driver codes we're looking for
-                        if lap_number == 1 and i <= 2:
-                            print(f"[DRIVER-MATCH-DEBUG] Lap 1, P{i+1}: Looking for curr_driver='{curr_driver}' in cache keys: {list(gap_data_cache.keys())[:5]}")
-                        
-                        if curr_driver in gap_data_cache and prev_driver in gap_data_cache:
-                            gap_val = gap_data_cache[curr_driver]
-                            prev_gap_val = gap_data_cache[prev_driver]
-                            
-                            # Convert gap strings to seconds
-                            try:
-                                if isinstance(gap_val, str):
-                                    gap_val = float(gap_val.replace('+', ''))
-                                if isinstance(prev_gap_val, str):
-                                    prev_gap_val = float(prev_gap_val.replace('+', ''))
-                                
-                                real_gap = abs(float(gap_val) - float(prev_gap_val))
-                                active_drivers[i]['gap_to_leader'] = float(gap_val) if isinstance(gap_val, (int, float)) else 0.0
-                                active_drivers[i]['gap_to_next'] = max(0.0, real_gap)
-                            except (ValueError, TypeError, AttributeError):
-                                # Fallback to estimation
-                                active_drivers[i]['gap_to_leader'] = float(i * 0.100)
-                                active_drivers[i]['gap_to_next'] = 0.100
-                        else:
-                            # DEBUG: Driver not found in cache
-                            if lap_number == 1 and i <= 2:
-                                print(f"[DRIVER-MATCH-DEBUG] Lap 1, P{i+1}: curr_driver '{curr_driver}' NOT in cache, using estimation")
-                            # Fallback: Estimate with realistic variability (not constant!)
-                            # Add random variation so gaps change between laps and create battle events
-                            import random
-                            base_gap = 0.08 + (i * 0.12)  # More realistic base spacing
-                            variation = random.uniform(-0.05, 0.08)  # ±5-8% variation
-                            active_drivers[i]['gap_to_leader'] = max(0.0, base_gap + variation)
-                            active_drivers[i]['gap_to_next'] = random.uniform(0.05, 0.25)  # Realistic next gap
-                    else:
-                        # No FastF1 data: fallback to estimation with variability
-                        import random
-                        base_gap = 0.08 + (i * 0.12)
-                        variation = random.uniform(-0.05, 0.08)
-                        active_drivers[i]['gap_to_leader'] = max(0.0, base_gap + variation)
-                        active_drivers[i]['gap_to_next'] = random.uniform(0.05, 0.25)
-                except Exception as e:
-                    # Fallback on any error - still add variability
-                    import random
-                    base_gap = 0.08 + (i * 0.12)
-                    variation = random.uniform(-0.05, 0.08)
-                    active_drivers[i]['gap_to_leader'] = max(0.0, base_gap + variation)
-                    active_drivers[i]['gap_to_next'] = random.uniform(0.05, 0.25)
+                if leader_lap_time is not None and state['lap_times']:
+                    this_lap_time = state['lap_times'][-1]
+                    # Gap delta this lap = how much slower this driver was vs leader
+                    lap_delta = this_lap_time - leader_lap_time
+                    # Accumulate the gap (can grow OR shrink if driver is faster)
+                    state['cumulative_gap'] = max(0.0, state['cumulative_gap'] + lap_delta)
+                else:
+                    # No lap time data: keep previous gap (don't reset to 0!)
+                    pass
+                
+                active_drivers[i]['gap_to_leader'] = round(state['cumulative_gap'], 3)
+                active_drivers[i]['gap'] = f"+{state['cumulative_gap']:.3f}"
+        
+        # Step 3: Compute gap_to_next (gap between driver[i] and driver[i-1])
+        for i in range(1, len(active_drivers)):
+            gap_i = active_drivers[i]['gap_to_leader']
+            gap_prev = active_drivers[i - 1]['gap_to_leader']
+            active_drivers[i]['gap_to_next'] = round(max(0.0, gap_i - gap_prev), 3)
         
         # Train AI model with this lap's data
         if self.model is not None:

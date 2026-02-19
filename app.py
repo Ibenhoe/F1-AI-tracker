@@ -1021,7 +1021,28 @@ def _build_replay_frames(laps_data, race_info):
     
     print(f"[DRIVERS] Total unique drivers in race: {len(all_drivers_in_race)}")
     print(f"[DRIVERS] From qualifying: {len(qualifying_grid)}, From race data: {len(all_drivers_in_race) - len(qualifying_grid)}")
-    
+
+    # ===== PRE-COMPUTE CUMULATIVE RACE TIMES =====
+    # Sum each driver's lap times across ALL laps so we know their total elapsed
+    # race time at every lap.  The gap from the leader at lap N is simply:
+    #   cum_race_time[driver][N] - cum_race_time[leader][N]
+    # This gives accurate, continuously-growing gaps (not just per-lap deltas).
+    cumulative_race_times = {}   # code -> {lap_num: total_seconds_elapsed}
+    for code in all_drivers_in_race:
+        cumulative_race_times[code] = {}
+        running = 0.0
+        for ln in sorted_laps:
+            lap_recs = laps_by_number.get(ln, [])
+            found = next((r for r in lap_recs if r.get('driver') == code), None)
+            if found:
+                lt = found.get('lap_time')
+                if isinstance(lt, (int, float)) and 50 < lt < 600:
+                    running += float(lt)
+            # Always store current running total so every lap has a value
+            cumulative_race_times[code][ln] = running
+
+    print(f"[FRAMES] Pre-computed cumulative race times for {len(cumulative_race_times)} drivers")
+
     # Generate frames with HIGH RESOLUTION interpolation for smooth 120fps playback
     # 120 frames per lap = 8280 total frames = true 120fps animation (cinema-smooth)
     frames_per_lap = 120  # 120 frames per lap = 120fps (ultra-smooth, 2x better than 60fps)
@@ -1030,6 +1051,8 @@ def _build_replay_frames(laps_data, race_info):
     
     # Track last known state for each driver (for retired drivers)
     last_driver_state = {}
+    # Track last known X/Y for each driver so missing telemetry doesn't snap to (0,0)
+    last_known_xy = {}
     
     # INITIALIZATION: Set initial positions from qualifying grid
     # This ensures all drivers start at their correct grid position in lap 1
@@ -1106,114 +1129,152 @@ def _build_replay_frames(laps_data, race_info):
                 }
         
         # ALWAYS generate full frames per lap for smooth continuous animation
-        # Even when positions don't change, drivers are still moving on track with telemetry data!
-        # Frame generation happens for EVERY lap regardless of position changes
         frames_to_generate = frames_per_lap
-        
-        # Create interpolated frames between previous and current lap
+
+        # --- Pre-compute leader lap time and per-driver gap fractions --------
+        # Use pre-computed CUMULATIVE race times so every driver's gap grows
+        # correctly over the whole race (not just this lap's time delta, and
+        # never stale '+0.000' values from FastF1 which has no Gap column).
+        leader_lap_time_s = None
+        leader_cum_time = 0.0
+        leader_code_this_lap = None
+        driver_gap_fraction = {}   # code -> float (0..1), how far behind leader
+
+        # Find the leader (P1) and their lap time + cumulative race time
+        for code, record in drivers_by_code.items():
+            pos = int(record.get('position', 999) or 999)
+            if pos == 1:
+                leader_code_this_lap = code
+                lt = record.get('lap_time')
+                if isinstance(lt, (int, float)) and 50 < lt < 600:
+                    leader_lap_time_s = float(lt)
+                leader_cum_time = cumulative_race_times.get(code, {}).get(lap_num, 0.0)
+                break
+
+        if leader_lap_time_s is None:
+            leader_lap_time_s = 90.0   # safe fallback (1:30 lap)
+
+        # Compute gap fraction for every driver using cumulative race times.
+        # Use lap_num - 1 (PREVIOUS lap) so that at the START of lap N, drivers
+        # are spread out by the gap they built up through lap N-1.
+        # For lap 1, prev_lap = 0 → no data → gap = 0 → everyone at start line.
+        prev_lap_for_gap = lap_num - 1
+        leader_cum_prev = cumulative_race_times.get(leader_code_this_lap, {}).get(prev_lap_for_gap, 0.0)
+        for code in all_drivers_in_race:
+            driver_cum = cumulative_race_times.get(code, {}).get(prev_lap_for_gap, None)
+            if driver_cum is not None and leader_cum_prev >= 0:
+                gap_s = max(0.0, driver_cum - leader_cum_prev)
+            else:
+                gap_s = 0.0
+            # Fraction of one lap that this driver is behind the leader.
+            # Modulo handles lapped cars: they wrap back around on the track.
+            frac = (gap_s % leader_lap_time_s) / leader_lap_time_s
+            driver_gap_fraction[code] = frac
+
+        # Create frames
         for frame_step in range(frames_to_generate):
-            # Smooth easing: t goes from 0 to 1
-            t = frame_step / frames_to_generate if frames_to_generate > 0 else 0
-            
+            # Leader's progress through the lap: 0.0 → 1.0
+            t_leader = frame_step / frames_to_generate if frames_to_generate > 0 else 0
+
             drivers = {}
-            
+
             # IMPORTANT: Iterate through ALL drivers in race, not just current lap drivers
-            # This ensures retired drivers stay visible at their last known position
             for code in all_drivers_in_race:
                 current_record = drivers_by_code.get(code)
                 prev_record = prev_drivers.get(code)
-                
-                # Skip only if driver has NO DATA AT ALL (never raced)
-                # Don't skip if we have last_driver_state (retired driver)
+
                 if not current_record and not prev_record and code not in last_driver_state:
                     continue
-                
-                # If current lap has no data for this driver, use last known state
+
                 if not current_record:
-                    # Driver retired or not racing this lap
-                    # Use last known state to keep them visible
                     if code in last_driver_state:
                         current_record = last_driver_state[code]
                     elif prev_record:
                         current_record = prev_record
                     else:
                         continue
-                
+
                 current_pos = int(current_record.get('position', 20) or 20)
                 current_gear = int(current_record.get('gear') or 0)
                 current_throttle = float(current_record.get('throttle') or 0)
                 current_brake = float(current_record.get('brake') or 0)
                 current_speed = float(current_record.get('speed') or 0)
-                
-                # ===== TELEMETRY POINTS: Full lap path for smooth animation =====
-                # Get full telemetry path (array of {x,y,speed,gear,...} points)
-                # Select one point per frame based on frame_step progress through lap
+
+                # ===== TELEMETRY POINT SELECTION =====
+                # Adjust t by this driver's gap fraction so they appear behind
+                # the leader by the correct track distance.
+                gap_frac = driver_gap_fraction.get(code, 0.0)
+                t_driver = t_leader - gap_frac
+                # Wrap negative values: driver is still on the track,
+                # just earlier in the same lap cycle.
+                if t_driver < 0:
+                    t_driver += 1.0
+                t_driver = max(0.0, min(1.0, t_driver))
+
                 telemetry_points = current_record.get('telemetry_points', [])
                 current_x = None
                 current_y = None
                 current_tel_speed = None
-                
+
                 if len(telemetry_points) > 0:
-                    # Map frame_step (0-119) to telemetry array index
-                    # frame_step=0 -> first point, frame_step=119 -> last point
-                    tel_idx = int((frame_step / frames_to_generate) * (len(telemetry_points) - 1))
+                    tel_idx = int(t_driver * (len(telemetry_points) - 1))
                     tel_idx = max(0, min(len(telemetry_points) - 1, tel_idx))
-                    
+
                     point = telemetry_points[tel_idx]
                     current_x = point.get('x')
                     current_y = point.get('y')
                     current_tel_speed = point.get('speed')
                     if current_tel_speed is None:
                         current_tel_speed = current_speed
-                
-                # Get previous values for position interpolation ONLY
-                # (x,y already come from telemetry points, no interpolation needed!)
+
+                # Position interpolation (leaderboard only, not track x,y)
                 prev_pos = None
                 if prev_record:
-                    prev_pos = int(prev_record.get('position', None) or None)
-                
-                if prev_pos is None:
-                    # If no previous record, use last driver state if available
-                    if code in last_driver_state:
-                        prev_pos = int(last_driver_state[code].get('position', current_pos))
-                    else:
-                        # No previous data - driver just appeared or first lap
+                    try:
+                        prev_pos = int(prev_record.get('position') or current_pos)
+                    except (TypeError, ValueError):
                         prev_pos = current_pos
-                
-                # ===== SMOOTH EASING FUNCTION for position interpolation =====
-                if t < 0.3:
-                    eased_t = (t / 0.3) ** 2 * 0.3
+                if prev_pos is None:
+                    prev_pos = int(last_driver_state[code].get('position', current_pos)) \
+                               if code in last_driver_state else current_pos
+
+                if t_leader < 0.3:
+                    eased_t = (t_leader / 0.3) ** 2 * 0.3
                 else:
-                    remaining_t = (t - 0.3) / 0.7
+                    remaining_t = (t_leader - 0.3) / 0.7
                     eased_t = 0.3 + (1 - (1 - remaining_t) ** 2) * 0.7
-                
-                # ===== POSITION INTERPOLATION (for leaderboard, not track x,y!) =====
-                position_delta = current_pos - prev_pos
-                position = prev_pos + position_delta * eased_t
+
+                position = prev_pos + (current_pos - prev_pos) * eased_t
                 position = max(1.0, min(20.0, position))
-                
-                # ===== TELEMETRY X,Y (ALREADY CORRECT from telemetry_points!) =====
-                # No interpolation needed - x,y come directly from lap's telemetry path
-                x = current_x if current_x is not None else 0
-                y = current_y if current_y is not None else 0
-                
-                # ===== TELEMETRY DATA (from telemetry point) =====
-                # Use speed/gear/throttle/brake from the selected telemetry point
-                if len(telemetry_points) > 0:
-                    tel_idx = int((frame_step / frames_to_generate) * (len(telemetry_points) - 1))
-                    tel_idx = max(0, min(len(telemetry_points) - 1, tel_idx))
-                    point = telemetry_points[tel_idx]
-                    
-                    tel_speed = point.get('speed', current_tel_speed)
-                    tel_gear = point.get('gear', current_gear)
-                    tel_throttle = point.get('throttle', current_throttle)
-                    tel_brake = point.get('brake', current_brake)
+
+                # ===== TELEMETRY X,Y =====
+                xy_valid = (current_x is not None and current_y is not None
+                            and not (current_x == 0 and current_y == 0))
+                if xy_valid:
+                    x = current_x
+                    y = current_y
+                    last_known_xy[code] = (x, y)
+                elif code in last_known_xy and last_known_xy[code] != (0, 0):
+                    x, y = last_known_xy[code]
                 else:
-                    # Fallback if no telemetry
-                    tel_speed = current_tel_speed
-                    tel_gear = current_gear
+                    x, y = None, None
+
+                # ===== TELEMETRY DATA =====
+                if len(telemetry_points) > 0:
+                    point = telemetry_points[tel_idx]
+                    tel_speed    = point.get('speed',    current_tel_speed)
+                    tel_gear     = point.get('gear',     current_gear)
+                    tel_throttle = point.get('throttle', current_throttle)
+                    tel_brake    = point.get('brake',    current_brake)
+                else:
+                    tel_speed    = current_tel_speed
+                    tel_gear     = current_gear
                     tel_throttle = current_throttle
-                    tel_brake = current_brake
+                    tel_brake    = current_brake
+                
+                # Skip drivers with no position data at all
+                if x is None or y is None:
+                    continue
                 
                 drivers[code] = {
                     'code': code,
@@ -1239,51 +1300,51 @@ def _build_replay_frames(laps_data, race_info):
                 last_driver_state[code] = current_record
             
             # ===== CALCULATE GAPS FROM ACTUAL LAP TIME DATA =====
+            # Key insight: the driver in P1 is ALWAYS the gap leader (gap = +0.000)
+            # Other drivers' gaps are based on time differences from the leader
             position_to_laptime = {}  # {position: lap_time_in_seconds}
             
+            # Get P1 driver (always the first position driver)
+            leader_code = None
+            for code, record in drivers_by_code.items():
+                pos = int(record.get('position', 999))
+                if pos == 1:
+                    leader_code = code
+                    break
+            
+            # Collect ALL lap times (including pit laps) to calculate gaps
             for code, record in drivers_by_code.items():
                 pos = int(record.get('position', 999))
                 lap_time_raw = record.get('lap_time')
                 
-                # Validate lap time
-                if isinstance(lap_time_raw, (int, float)) and lap_time_raw > 0 and lap_time_raw < 300:
+                # Use valid lap times
+                if isinstance(lap_time_raw, (int, float)) and 60 < lap_time_raw < 500:
                     position_to_laptime[pos] = float(lap_time_raw)
             
-            # Save debug info to file for first frame of lap 1
-            if lap_num == 1 and frame_step == 0:
-                with open('gap_debug.txt', 'w') as f:
-                    f.write(f"LAP 1 FRAME 0 GAP CALCULATION DEBUG\n")
-                    f.write(f"position_to_laptime entries: {position_to_laptime}\n")
-                    if position_to_laptime:
-                        leader_info = min(position_to_laptime.items(), key=lambda x: x[1])
-                        f.write(f"Leader: P{leader_info[0]} with lap time {leader_info[1]:.3f}s\n")
-                        f.write(f"\nDriver gaps:\n")
-                        for code, driver_data in drivers.items():
-                            if code in drivers_by_code:
-                                actual_pos = int(drivers_by_code[code].get('position', 999))
-                                f.write(f"  {code}: lap_record_pos={actual_pos}, interpolated_pos={driver_data.get('position'):.1f}, gap={driver_data.get('gap')}\n")
-            
-            # Calculate gaps: each driver's gap = their lap time - leader's lap time
-            if position_to_laptime:
-                # Find leader (position with FASTEST/MINIMUM lap time)
-                leader_pos = min(position_to_laptime.items(), key=lambda x: x[1])[0]
-                leader_lap_time = position_to_laptime[leader_pos]
+            # Assign gaps: P1 is always +0.000, others relative to P1's lap time
+            if position_to_laptime and 1 in position_to_laptime:
+                leader_lap_time = position_to_laptime[1]
                 
-                # Now assign gaps to each driver based on their actual position in this lap
                 for code, driver_data in drivers.items():
-                    # Get the current lap record's position
                     if code in drivers_by_code:
                         current_record = drivers_by_code[code]
                         actual_pos = int(current_record.get('position', 999))
                         
-                        if actual_pos == leader_pos:
+                        if actual_pos == 1:
+                            # P1 always has zero gap
                             driver_data['gap'] = '+0.000'
                         elif actual_pos in position_to_laptime:
                             driver_lap_time = position_to_laptime[actual_pos]
                             gap_seconds = driver_lap_time - leader_lap_time
+                            
+                            # No capping - allow realistic gaps including pit stops
+                            # The visual smoothing happens in the frontend
                             if gap_seconds < 0:
                                 gap_seconds = 0.0
                             driver_data['gap'] = f"+{gap_seconds:.3f}"
+                        else:
+                            # No lap time data - estimate gap
+                            driver_data['gap'] = '+0.000'
             
             frames.append({
                 'frameIndex': frame_counter,

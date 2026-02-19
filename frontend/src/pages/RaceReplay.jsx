@@ -32,10 +32,11 @@ const RaceReplay = () => {
   const [raceEvents, setRaceEvents] = useState([]);
   const [focusMode, setFocusMode] = useState(false);
 
-  // Animation loop ref
+  // Animation refs kept for compatibility but loop is now owned by TrackRenderer
   const animationRef = useRef(null);
-  const lastFrameTimeRef = useRef(Date.now());
+  const lastFrameTimeRef = useRef(performance.now());
   const lastPitStopStateRef = useRef({});  // Use ref to avoid infinite loops
+  const smoothedGapsRef = useRef({});  // Track smoothed gaps per driver
 
   // Load race data from API
   useEffect(() => {
@@ -65,56 +66,20 @@ const RaceReplay = () => {
     loadRaceData();
   }, [searchParams]);
 
-  // Animation loop for playback
-  useEffect(() => {
-    if (!isPlaying || !raceData || raceData.frames.length === 0) {
-      return;
+  // Animation loop is now fully owned by TrackRenderer (single RAF, no React state updates per frame)
+  // frameIndex state is only updated by TrackRenderer's onFrameChange callback (for slider/lap display)
+
+  // Frame index for slider / lap display (updated by TrackRenderer callback, not per-frame setState)
+  const frameIdx = raceData ? Math.min(Math.floor(frameIndex), raceData.frames.length - 1) : 0;
+  const currentFrame = raceData?.frames[frameIdx] ?? null;
+
+  // Called by TrackRenderer to sync slider + lap counter (~every 10 frames)
+  const handleFrameChange = (idx) => {
+    setFrameIndex(idx);
+    if (idx >= (raceData?.frames.length ?? 1) - 1) {
+      setIsPlaying(false);
     }
-
-    const animate = () => {
-      const now = Date.now();
-      const deltaTime = (now - lastFrameTimeRef.current) / 1000; // Convert to seconds
-      lastFrameTimeRef.current = now;
-
-      // Calculate frame advance based on playback speed
-      // Frames are at 120fps (ultra-smooth cinema-quality animation)
-      // Multiply by playbackSpeed to control overall race speed (0.5 = half speed = slower)
-      const framesPerSecond = 120;
-      const frameAdvance = deltaTime * framesPerSecond * playbackSpeed;
-      
-      setFrameIndex((prevIndex) => {
-        const newIndex = prevIndex + frameAdvance;
-        
-        if (newIndex >= raceData.frames.length) {
-          // End of replay
-          setIsPlaying(false);
-          return raceData.frames.length - 1;
-        }
-        
-        return newIndex;
-      });
-
-      animationRef.current = requestAnimationFrame(animate);
-    };
-
-    lastFrameTimeRef.current = Date.now();
-    animationRef.current = requestAnimationFrame(animate);
-
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
-      }
-    };
-  }, [isPlaying, playbackSpeed, raceData]);
-
-  // Get current frame data
-  const getCurrentFrame = () => {
-    if (!raceData || raceData.frames.length === 0) return null;
-    const index = Math.floor(frameIndex);
-    return raceData.frames[Math.min(index, raceData.frames.length - 1)];
   };
-
-  const currentFrame = getCurrentFrame();
 
   // Update current lap from frame
   useEffect(() => {
@@ -158,7 +123,23 @@ const RaceReplay = () => {
         });
       }
 
-      // Update ref state (no setState, so no loop!)
+      // Calculate smoothed gap (for visual smoothing on pitstops)
+      const currentGapStr = driver.gap || '+0.000';
+      const currentGap = parseFloat(currentGapStr.replace('+', '')) || 0;
+      const previousSmoothedGap = smoothedGapsRef.current[code] || currentGap;
+      
+      // If gap jump > 2 seconds, smooth it gradually
+      let smoothedGap = currentGap;
+      if (Math.abs(currentGap - previousSmoothedGap) > 2.0) {
+        // Interpolate 10% toward new target
+        smoothedGap = previousSmoothedGap + (currentGap - previousSmoothedGap) * 0.1;
+      } else {
+        smoothedGap = currentGap;
+      }
+      
+      smoothedGapsRef.current[code] = smoothedGap;
+
+      // Update ref state
       lastPitStopStateRef.current[code] = {
         pit_stops: driver.pit_stops,
         status: driver.status,
@@ -260,6 +241,9 @@ const RaceReplay = () => {
               ref={canvasRef}
               frames={raceData.frames}
               frameIndex={frameIndex}
+              isPlaying={isPlaying}
+              playbackSpeed={playbackSpeed}
+              onFrameChange={handleFrameChange}
               currentFrame={currentFrame}
               trackData={raceData.trackData}
               drsZones={raceData.drsZones}
@@ -268,6 +252,7 @@ const RaceReplay = () => {
               onDriverSelect={setSelectedDriver}
               focusMode={true}
               rotation={-90}
+              smoothedGaps={smoothedGapsRef.current}
             />
           </div>
 
@@ -326,6 +311,9 @@ const RaceReplay = () => {
               ref={canvasRef}
               frames={raceData.frames}
               frameIndex={frameIndex}
+              isPlaying={isPlaying}
+              playbackSpeed={playbackSpeed}
+              onFrameChange={handleFrameChange}
               currentFrame={currentFrame}
               trackData={raceData.trackData}
               drsZones={raceData.drsZones}
@@ -334,6 +322,7 @@ const RaceReplay = () => {
               onDriverSelect={setSelectedDriver}
               focusMode={focusMode}
               rotation={-90}
+              smoothedGaps={smoothedGapsRef.current}
             />
           </div>
         </Card>

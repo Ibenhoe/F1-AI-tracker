@@ -10,152 +10,184 @@ const TrackRenderer = forwardRef(
   (
     {
       frames,
-      frameIndex,
-      currentFrame,
+      frameIndex,          // controlled externally (slider)
+      isPlaying = false,
+      playbackSpeed = 1,
+      currentFrame,        // still accepted so nothing breaks if passed
       trackData,
       drsZones,
       showDRS,
       selectedDriver,
       onDriverSelect,
+      onFrameChange,       // callback(index) so slider / lap counter stays in sync
       focusMode,
       rotation = 0,
+      smoothedGaps = {},
     },
     ref
   ) => {
-    const canvasRef = useRef(ref);
+    const canvasRef = useRef(null);
     const containerRef = useRef(null);
     const scaleRef = useRef(1);
     const offsetRef = useRef({ x: 0, y: 0 });
 
-    // Initialize canvas and setup
+    // Internal float frame index so animation is smooth without React setState
+    const frameIdxRef         = useRef(frameIndex || 0);
+    const lastRafTimeRef      = useRef(null);
+    const lastNotifiedFrameRef = useRef(-1);  // throttle onFrameChange to ~10fps
+
+    // Sync internal index when slider / external source changes frameIndex
+    useEffect(() => {
+      frameIdxRef.current = frameIndex || 0;
+      lastNotifiedFrameRef.current = Math.floor(frameIndex || 0);
+    }, [frameIndex]);
+
+    // Mirror all NON-frame drawing props into a ref so the RAF loop can read them
+    const drawPropsRef = useRef({});
+    drawPropsRef.current = {
+      frames, trackData, drsZones, showDRS,
+      selectedDriver, onDriverSelect, focusMode,
+      rotation, smoothedGaps,
+      isPlaying, playbackSpeed, onFrameChange,
+    };
+
+    // Resize canvas on mount / window resize
     useEffect(() => {
       const canvas = canvasRef.current;
       if (!canvas || !containerRef.current) return;
 
-      const ctx = canvas.getContext('2d');
       const container = containerRef.current;
 
-      // Set canvas size to match container with padding to avoid cutoff by sidebar
       const resizeCanvas = () => {
+        const ctx = canvas.getContext('2d');
         const rect = container.getBoundingClientRect();
-        // Use 95% of container to ensure track doesn't get cut off
         const width = Math.max(600, rect.width * 0.95);
         const height = Math.max(400, rect.height * 0.95);
-        
+
         canvas.width = width * window.devicePixelRatio;
         canvas.height = height * window.devicePixelRatio;
         ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-        
-        // Reset scale/offset refs on resize
+
         scaleRef.current = 1;
         offsetRef.current = { x: 0, y: 0 };
       };
 
       resizeCanvas();
       window.addEventListener('resize', resizeCanvas);
-
       return () => window.removeEventListener('resize', resizeCanvas);
     }, []);
 
-    // Main draw loop
+    // Single persistent RAF loop — owns animation timing, never re-registered
     useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas || !currentFrame || !trackData) return;
+      let rafId;
 
-      const ctx = canvas.getContext('2d');
-      const width = canvas.width / window.devicePixelRatio;
-      const height = canvas.height / window.devicePixelRatio;
+      const loop = (rafTimestamp) => {
+        const canvas = canvasRef.current;
+        const {
+          frames, trackData, drsZones, showDRS,
+          selectedDriver, onDriverSelect, focusMode,
+          rotation, smoothedGaps,
+          isPlaying, playbackSpeed, onFrameChange,
+        } = drawPropsRef.current;
 
-      // Clear canvas
-      ctx.fillStyle = '#0a0e27';
-      ctx.fillRect(0, 0, width, height);
-
-      // Calculate initial scaling if needed
-      if (scaleRef.current === 1 && trackData.bounds) {
-        const bounds = trackData.bounds;
-        const trackWidth = bounds.maxX - bounds.minX;
-        const trackHeight = bounds.maxY - bounds.minY;
-
-        let baseScale;
-        
-        if (focusMode) {
-          // Focus mode: maximize track display (rotation=-90, no extra rotation)
-          // Use full available space with small margins
-          const scaleX = (width * 0.95) / trackWidth;
-          const scaleY = (height * 0.95) / trackHeight;
-          baseScale = Math.min(scaleX, scaleY);
+        // ── Advance frame index when playing ──────────────────────────────────
+        if (isPlaying && frames && frames.length > 0) {
+          if (lastRafTimeRef.current !== null) {
+            const rawDelta = (rafTimestamp - lastRafTimeRef.current) / 1000;
+            const delta = Math.min(rawDelta, 0.05); // clamp: ignore tab-hidden jumps
+            const advance = delta * 120 * playbackSpeed;  // 120 fps source
+            frameIdxRef.current = frameIdxRef.current + advance;
+            const lastIdx = frames.length - 1;
+            if (frameIdxRef.current >= frames.length) {
+              frameIdxRef.current = lastIdx;
+              // Signal end-of-race once (prevent rapid repeated calls)
+              if (onFrameChange && lastNotifiedFrameRef.current !== lastIdx) {
+                lastNotifiedFrameRef.current = lastIdx;
+                onFrameChange(lastIdx);
+              }
+            } else {
+              // Notify parent ~10× per second so slider + lap counter stay in sync
+              const intIdx = Math.floor(frameIdxRef.current);
+              if (onFrameChange && intIdx - lastNotifiedFrameRef.current >= 12) {
+                lastNotifiedFrameRef.current = intIdx;
+                onFrameChange(intIdx);
+              }
+            }
+          }
+          lastRafTimeRef.current = rafTimestamp;
         } else {
-          // Normal mode: full track view with magnification
-          const scaleX = (width * 0.85) / trackWidth;
-          const scaleY = (height * 0.85) / trackHeight;
-          baseScale = Math.min(scaleX, scaleY) * 1.8;
+          lastRafTimeRef.current = null; // reset so no jump on resume
         }
-        
-        scaleRef.current = baseScale;
 
-        offsetRef.current = {
-          x: width / 2,
-          y: height / 2,
-        };
-      }
+        // ── Draw ──────────────────────────────────────────────────────────────
+        const idx = Math.min(Math.floor(frameIdxRef.current), (frames?.length ?? 1) - 1);
+        const frame = frames?.[idx] ?? null;
 
-      // Apply rotation transformation
-      const rotationAngle = -(rotation * Math.PI / 180); // Convert degrees to radians
-      const bounds = trackData.bounds;
-      const trackCenterX = (bounds.minX + bounds.maxX) / 2;
-      const trackCenterY = (bounds.minY + bounds.maxY) / 2;
-      
-      // In focus mode, show the full track centered
-      let focusCenterX = trackCenterX;
-      let focusCenterY = trackCenterY;
-      
-      // In focus mode, always center on full track
-      if (focusMode) {
-        focusCenterX = trackCenterX;
-        focusCenterY = trackCenterY;
-      }
+        if (canvas && frame && trackData) {
+          const ctx = canvas.getContext('2d');
+          const width  = canvas.width  / window.devicePixelRatio;
+          const height = canvas.height / window.devicePixelRatio;
 
-      ctx.save();
-      ctx.translate(offsetRef.current.x, offsetRef.current.y);
-      ctx.rotate(rotationAngle);
-      ctx.translate(-focusCenterX * scaleRef.current, -focusCenterY * scaleRef.current);
+          ctx.fillStyle = '#0a0e27';
+          ctx.fillRect(0, 0, width, height);
 
-      // Draw track
-      drawTrack(ctx, trackData, scaleRef.current, { x: 0, y: 0 });
+          if (scaleRef.current === 1 && trackData.bounds) {
+            const bounds = trackData.bounds;
+            const trackWidth  = bounds.maxX - bounds.minX;
+            const trackHeight = bounds.maxY - bounds.minY;
+            let baseScale;
+            if (focusMode) {
+              baseScale = Math.min((width * 0.95) / trackWidth, (height * 0.95) / trackHeight);
+            } else {
+              baseScale = Math.min((width * 0.85) / trackWidth, (height * 0.85) / trackHeight) * 1.8;
+            }
+            scaleRef.current = baseScale;
+            offsetRef.current = { x: width / 2, y: height / 2 };
+          }
 
-      // Draw DRS zones
-      if (showDRS && drsZones) {
-        drawDRSZones(ctx, drsZones, scaleRef.current, { x: 0, y: 0 });
-      }
+          const rotationAngle = -(rotation * Math.PI / 180);
+          const bounds = trackData.bounds;
+          const trackCenterX = (bounds.minX + bounds.maxX) / 2;
+          const trackCenterY = (bounds.minY + bounds.maxY) / 2;
 
-      // Draw drivers
-      drawDrivers(
-        ctx,
-        currentFrame,
-        scaleRef.current,
-        { x: 0, y: 0 },
-        selectedDriver,
-        onDriverSelect,
-        trackData
-      );
+          ctx.save();
+          ctx.translate(offsetRef.current.x, offsetRef.current.y);
+          ctx.rotate(rotationAngle);
+          ctx.translate(-trackCenterX * scaleRef.current, -trackCenterY * scaleRef.current);
 
-      ctx.restore();
+          drawTrack(ctx, trackData, scaleRef.current, { x: 0, y: 0 });
 
-      // Draw telemetry info for selected driver
-      if (selectedDriver && currentFrame.drivers[selectedDriver]) {
-        drawDriverTelemetry(
-          ctx,
-          selectedDriver,
-          currentFrame.drivers[selectedDriver],
-          width,
-          height
-        );
-      }
-    }, [currentFrame, trackData, drsZones, showDRS, selectedDriver, focusMode]);
+          if (showDRS && drsZones) {
+            drawDRSZones(ctx, drsZones, scaleRef.current, { x: 0, y: 0 });
+          }
+
+          drawDrivers(
+            ctx, frame, scaleRef.current, { x: 0, y: 0 },
+            selectedDriver, onDriverSelect, trackData
+          );
+
+          ctx.restore();
+
+          if (selectedDriver && frame.drivers[selectedDriver]) {
+            drawDriverTelemetry(
+              ctx, selectedDriver, frame.drivers[selectedDriver],
+              width, height
+            );
+          }
+        }
+
+        rafId = requestAnimationFrame(loop);
+      };
+
+      rafId = requestAnimationFrame(loop);
+      return () => cancelAnimationFrame(rafId);
+    }, []); // ← runs once
 
     const handleCanvasClick = (e) => {
       const canvas = canvasRef.current;
-      if (!canvas || !currentFrame || !trackData) return;
+      const { frames, trackData } = drawPropsRef.current;
+      const frame = frames?.[Math.floor(frameIdxRef.current)] ?? null;
+      if (!canvas || !frame || !trackData) return;
 
       const rect = canvas.getBoundingClientRect();
       const canvasX = e.clientX - rect.left;
@@ -179,7 +211,8 @@ const TrackRenderer = forwardRef(
       const y = rotatedY / scaleRef.current + trackCenterY;
 
       // Check if click is on any driver
-      for (const [code, driver] of Object.entries(currentFrame.drivers)) {
+      const { onDriverSelect, selectedDriver } = drawPropsRef.current;
+      for (const [code, driver] of Object.entries(frame.drivers)) {
         const dist = Math.hypot(driver.x - x, driver.y - y);
         if (dist < 15) {
           onDriverSelect(selectedDriver === code ? null : code);
@@ -377,12 +410,6 @@ function drawDrivers(
   // Get track centerline for fallback positioning
   const centerline = trackData?.centerline || [];
 
-  // DEBUG: Log driver count and track data on first render of this frame
-  if (drivers.length > 0 && drivers.length <= 20) {
-    const telemetryAvailable = drivers.filter(([_, d]) => d.x !== null && d.y !== null).length;
-    console.log(`[DRAW] Frame: Lap ${currentFrame.lap}, Drivers: ${drivers.length}, Telemetry: ${telemetryAvailable}/${drivers.length}, Centerline: ${centerline.length}`);
-  }
-
   // Sort drivers by position ASCENDING (P1 last, P18 first)
   // This ensures P1 is drawn last and appears on top of other drivers
   const sortedDrivers = drivers.sort((a, b) => {
@@ -390,147 +417,46 @@ function drawDrivers(
     const posB = b[1].position || 999;
     return posB - posA;  // Reverse: P18 first, P1 last (drawn on top)
   });
-  
-  // DEBUG: Log driver order to catch ranking bugs
-  if (sortedDrivers.length > 0) {
-    const topThree = sortedDrivers.slice(-3).reverse().map(([code, d]) => {
-      const pos = Math.round(d.position);
-      return `${code}(P${pos})`;
-    }).join(' ← ');
-    if (JSON.stringify(topThree) !== window._lastDriverOrder) {
-      console.log(`[DRIVER ORDER] Lap ${currentFrame.lap}: ${topThree}`);
-      window._lastDriverOrder = JSON.stringify(topThree);
-    }
-  }
 
-  // Calculate grid spacing for drivers to avoid overlap
-  // Distribute all 18 drivers evenly across the track
-  const driverCount = sortedDrivers.length;
-  const spacingRatio = 0.95 / driverCount;  // Each driver gets ~5.3% of track (95% / 18 drivers)
-
-  // Draw each driver (sorted by position, so P1 is drawn LAST and appears ON TOP)
-  // First pass: collect all drivers with valid positions
+  // Build position map: real telemetry x,y first, centerline fallback if missing
   const driverPositions = new Map();
-  
-  // Calculate positions
-  sortedDrivers.forEach(([code, driver], driverIndex) => {
+
+  sortedDrivers.forEach(([code, driver]) => {
     let x, y;
-    
-    // PRIORITY 1: Use telemetry x,y coordinates from frame (REAL track position)
-    if (driver.x !== undefined && driver.y !== undefined && driver.x !== null && driver.y !== null && (driver.x !== 0 || driver.y !== 0)) {
+
+    if (driver.x !== undefined && driver.y !== undefined &&
+        driver.x !== null && driver.y !== null &&
+        (driver.x !== 0 || driver.y !== 0)) {
+      // Real telemetry position
       x = driver.x * scale + offset.x;
       y = driver.y * scale + offset.y;
-    }
-    // PRIORITY 2: Fall back to centerline positioning (for missing telemetry)
-    else if (centerline.length > 0 && driver.position !== undefined && driver.position !== null) {
-      // Use position-based centerline positioning
-      const trackPositionRatio = Math.max(0.05, Math.min(0.95, (driver.position - 1) / 18));
-      const trackIndex = Math.round(trackPositionRatio * (centerline.length - 1));
-      const trackPoint = centerline[Math.max(0, Math.min(centerline.length - 1, trackIndex))];
-      
-      if (trackPoint && trackPoint.x !== undefined && trackPoint.y !== undefined) {
-        x = trackPoint.x * scale + offset.x;
-        y = trackPoint.y * scale + offset.y;
+    } else if (centerline.length > 0 && driver.position != null) {
+      // Fallback: spread evenly along centerline by race position
+      const ratio = Math.max(0.05, Math.min(0.95, (driver.position - 1) / 18));
+      const idx = Math.round(ratio * (centerline.length - 1));
+      const pt  = centerline[Math.max(0, Math.min(centerline.length - 1, idx))];
+      if (pt) {
+        x = pt.x * scale + offset.x;
+        y = pt.y * scale + offset.y;
       }
     }
-    
-    // Store position for rendering
-    if (typeof x !== 'undefined' && typeof y !== 'undefined') {
+
+    if (x !== undefined && y !== undefined) {
       driverPositions.set(code, { x, y });
     }
   });
 
-  // Create a map to track actual driver positions on the track
-  // Calculate cumulative gap distances for proper spacing
-  let cumulativeDistance = 0;
-  const driverTrackPositions = new Map();
-  const leaderCode = sortedDrivers.length > 0 ? sortedDrivers[0][0] : null;
-  const leaderPos = leaderCode ? driverPositions.get(leaderCode) : null;
-  
-  sortedDrivers.forEach(([code, driver], index) => {
-    if (index === 0) {
-      // P1 gets the normal position from telemetry
-      driverTrackPositions.set(code, { cumDistance: 0, isLeader: true });
-    } else {
-      // Other drivers are positioned behind with gap-based distance
-      const gapStr = driver.gap || '+0.000';
-      const gapSeconds = parseFloat(gapStr.replace('+', '')) || 0;
-      cumulativeDistance += gapSeconds;
-      driverTrackPositions.set(code, { cumDistance: cumulativeDistance, isLeader: false });
-    }
-  });
-
-  // Render each driver (in sorted order so P1 appears on top)
+  // Draw each driver using their REAL telemetry x,y (no gap-based override)
   sortedDrivers.forEach(([code, driver]) => {
     const pos = driverPositions.get(code);
-    if (!pos) return;  // Skip if no valid position calculated
-    
-    let x = pos.x;
-    let y = pos.y;
-    
-    const isSelected = code === selectedDriver;
-    const trackPos = driverTrackPositions.get(code);
-    
-    // Apply gap-based positioning along the centerline
-    if (trackPos && !trackPos.isLeader && leaderPos && centerline.length > 0) {
-      // Convert cumulative gap distance to pixels (1 second = 35 pixels)
-      const gapPixels = trackPos.cumDistance * 35;
-      
-      // Find the centerline point closest to P1
-      let closestIndex = 0;
-      let minDist = Infinity;
-      for (let i = 0; i < centerline.length; i++) {
-        const point = centerline[i];
-        const dist = Math.hypot(
-          point.x * scale + offset.x - leaderPos.x,
-          point.y * scale + offset.y - leaderPos.y
-        );
-        if (dist < minDist) {
-          minDist = dist;
-          closestIndex = i;
-        }
-      }
-      
-      // Move this driver forwards along centerline by the gap distance
-      let currentDistance = 0;
-      let targetIndex = closestIndex;
-      
-      for (let i = closestIndex; i < centerline.length && currentDistance < gapPixels; i++) {
-        const p1 = centerline[i];
-        const p2 = centerline[Math.min(centerline.length - 1, i + 1)];
-        
-        if (p1 && p2) {
-          const segmentDist = Math.hypot(
-            (p2.x - p1.x) * scale,
-            (p2.y - p1.y) * scale
-          );
-          
-          if (currentDistance + segmentDist >= gapPixels) {
-            // Interpolate within this segment
-            const ratio = (gapPixels - currentDistance) / segmentDist;
-            const interpX = p1.x * scale + offset.x + (p2.x - p1.x) * scale * ratio;
-            const interpY = p1.y * scale + offset.y + (p2.y - p1.y) * scale * ratio;
-            x = interpX;
-            y = interpY;
-            break;
-          }
-          
-          currentDistance += segmentDist;
-          targetIndex = Math.min(centerline.length - 1, i + 1);
-        }
-      }
-      
-      // Fallback to segment endpoint if we didn't interpolate
-      if (targetIndex >= 0 && targetIndex < centerline.length) {
-        const point = centerline[targetIndex];
-        if (point) {
-          x = point.x * scale + offset.x;
-          y = point.y * scale + offset.y;
-        }
-      }
-    }
+    if (!pos) return;  // Skip if no valid position
 
-    // Driver circle - consistent size
+    const x = pos.x;
+    const y = pos.y;
+
+    const isSelected = code === selectedDriver;
+
+    // Driver circle
     const radius = isSelected ? 20 : 16;
     const color = getTeamColor(code);
 
@@ -638,7 +564,7 @@ function drawDriverTelemetry(
   const lineHeight = 20;
 
   const telemetryData = [
-    ['Position:', `P${driver.position}`],
+    ['Position:', `P${Math.round(driver.position)}`],
     ['Speed:', `${(driver.speed || 0).toFixed(1)} km/h`],
     ['Gear:', String(driver.gear || '-')],
     ['Throttle:', `${(driver.throttle || 0).toFixed(0)}%`],
