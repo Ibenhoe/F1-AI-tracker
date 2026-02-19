@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Loader2, Check } from "lucide-react";
 
 const RACES = {
   1: "Bahrain",
@@ -35,6 +36,9 @@ export default function RaceSelector({
   onRaceChange,
   onSelectRace,
   disabled,
+
+  raceLoading = false,
+  raceReady = false,
 }) {
   const baseList = useMemo(
     () => Object.entries(RACES).map(([id, name]) => ({ id: Number(id), name })),
@@ -51,6 +55,7 @@ export default function RaceSelector({
 
   const value = Number(selectedRace ?? 1);
 
+  // Debounce timer om geen rapid API calls te doen tijdens scrollen
   const debounceTimerRef = useRef(null);
   const pendingRaceRef = useRef(null);
 
@@ -71,17 +76,11 @@ export default function RaceSelector({
     }, 400);
   };
 
+  // offset in px
   const [offsetPx, _setOffsetPx] = useState(0);
   const offsetRef = useRef(0);
 
-  const transitionMsRef = useRef(160);
-
-  const setTransitionMsForJump = (fromPx, toPx) => {
-    const rows = Math.abs(toPx - fromPx) / ITEM_H;
-    const ms = Math.round(Math.max(120, Math.min(260, 130 + rows * 20)));
-    transitionMsRef.current = ms;
-  };
-
+  const [showReadyCheck, setShowReadyCheck] = useState(false);
 
   const setOffsetPx = (next) => {
     offsetRef.current = next;
@@ -90,8 +89,9 @@ export default function RaceSelector({
 
   const padTop = MID * ITEM_H;
 
+  // --- infinite normalization (NO jumps) ---
   const oneLoopPx = N * ITEM_H;
-  const centerLoopStartPx = oneLoopPx;
+  const centerLoopStartPx = oneLoopPx; // middle copy start
 
   const normalizeId = (id) => {
     const raw = Number(id);
@@ -101,6 +101,8 @@ export default function RaceSelector({
   };
 
   const normalizeOffset = (offPx) => {
+    // Keep offset always inside the middle loop range:
+    // [centerLoopStartPx, centerLoopStartPx + oneLoopPx)
     let x = offPx - centerLoopStartPx;
     x = ((x % oneLoopPx) + oneLoopPx) % oneLoopPx;
     return centerLoopStartPx + x;
@@ -108,8 +110,7 @@ export default function RaceSelector({
 
   const clampIndex = (idx) => Math.max(0, Math.min(loopList.length - 1, idx));
 
-  const idxFromOffset = (offPx) =>
-    clampIndex(Math.round(offPx / ITEM_H));
+  const idxFromOffset = (offPx) => clampIndex(Math.round(offPx / ITEM_H));
 
   const snapToNearest = (offPx) => {
     const idx = idxFromOffset(offPx);
@@ -123,20 +124,36 @@ export default function RaceSelector({
     if (id !== value) emit(id);
   };
 
+  // When parent value changes, center to that value in the middle loop
   useEffect(() => {
     const baseIdx = baseList.findIndex((r) => r.id === value);
     if (baseIdx < 0) return;
 
     const target = centerLoopStartPx + baseIdx * ITEM_H;
     setOffsetPx(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, baseList]);
 
+  // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, []);
 
+  useEffect(() => {
+    if (!raceReady) return;
+
+    setShowReadyCheck(true);
+
+    const t = setTimeout(() => {
+      setShowReadyCheck(false);
+    }, 2000); // 2 seconds
+
+    return () => clearTimeout(t);
+  }, [raceReady]);
+
+  // --- drag state ---
   const isDraggingRef = useRef(false);
   const movedRef = useRef(false);
   const startYRef = useRef(0);
@@ -178,6 +195,7 @@ export default function RaceSelector({
   };
 
   const onPointerUp = (e) => {
+    // release capture
     if (pointerIdRef.current !== null) {
       try {
         e.currentTarget.releasePointerCapture?.(pointerIdRef.current);
@@ -190,11 +208,11 @@ export default function RaceSelector({
       if (surface) {
         const rect = surface.getBoundingClientRect();
         const y = e.clientY - rect.top;
+
         const slot = Math.max(0, Math.min(VISIBLE - 1, Math.floor(y / ITEM_H)));
         const deltaSlots = slot - MID;
 
         const next = normalizeOffset(offsetRef.current + deltaSlots * ITEM_H);
-        setTransitionMsForJump(offsetRef.current, next);
         setOffsetPx(next);
         snapToNearest(next);
       }
@@ -210,7 +228,7 @@ export default function RaceSelector({
 
   const onRowClick = (loopIndex, id) => {
     if (disabled) return;
-    if (movedRef.current) return;
+    if (movedRef.current) return; // ignore click after drag
 
     const snapped = normalizeOffset(loopIndex * ITEM_H);
     setOffsetPx(snapped);
@@ -219,13 +237,14 @@ export default function RaceSelector({
     if (id !== value) emit(id);
   };
 
+  const showLoading = raceLoading;
+  const showReady = showReadyCheck;
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
         <div>
-          <div className="text-sm font-semibold tracking-tight">
-            Selected race
-          </div>
+          <div className="text-sm font-semibold tracking-tight">Selected race</div>
           <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Drag to choose a round
           </div>
@@ -263,9 +282,7 @@ export default function RaceSelector({
           ref={surfaceRef}
           className={[
             "relative overflow-hidden rounded-xl",
-            disabled
-              ? "cursor-not-allowed"
-              : "cursor-grab active:cursor-grabbing",
+            disabled ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
           ].join(" ")}
           style={{ height: VISIBLE * ITEM_H }}
           onPointerDown={onPointerDown}
@@ -280,7 +297,7 @@ export default function RaceSelector({
               transform: `translateY(${padTop - offsetPx}px)`,
               transition: isDraggingRef.current
                 ? "none"
-                : `transform ${transitionMsRef.current}ms cubic-bezier(.2,.8,.2,1)`,
+                : "transform 160ms cubic-bezier(.2,.8,.2,1)",
             }}
           >
             {loopList.map((r, i) => {
@@ -296,9 +313,7 @@ export default function RaceSelector({
                   className={[
                     "flex h-[44px] w-full items-center justify-between rounded-xl px-3 text-left",
                     "border border-transparent transition-colors",
-                    disabled
-                      ? "cursor-not-allowed"
-                      : "cursor-pointer",
+                    disabled ? "cursor-not-allowed" : "cursor-pointer",
                     active
                       ? [
                         "bg-[rgb(var(--accent))]",
@@ -314,6 +329,27 @@ export default function RaceSelector({
                     </span>
                     <span className="truncate">{name}</span>
                   </div>
+
+                  {/* Status indicator IN de geselecteerde race */}
+                  {active ? (
+                    <span className="ml-3 inline-flex items-center">
+                      {showLoading ? (
+                        <Loader2
+                          size={16}
+                          className="animate-spin opacity-90"
+                          style={{ color: "rgb(var(--accent-fg))" }}
+                          aria-label="Loading race"
+                        />
+                      ) : showReady ? (
+                        <Check
+                          size={16}
+                          className="opacity-90"
+                          style={{ color: "rgb(var(--accent-fg))" }}
+                          aria-label="Race ready"
+                        />
+                      ) : null}
+                    </span>
+                  ) : null}
                 </button>
               );
             })}
