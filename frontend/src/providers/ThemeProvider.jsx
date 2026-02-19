@@ -5,12 +5,66 @@ const STORAGE_KEY = "f1ai.theme";
 const ACCENT_KEY = "f1ai.accent";
 
 export const ACCENTS = [
-  { id: "white", label: "White", hex: "#FFFFFF" },
-  { id: "blue", label: "Blue", hex: "#3B82F6" },
-  { id: "green", label: "Green", hex: "#22C55E" },
-  { id: "orange", label: "Orange", hex: "#F97316" },
-  { id: "purple", label: "Purple", hex: "#8B5CF6" },
-  { id: "pink", label: "Pink", hex: "#EC4899" },
+  {
+    id: "mercedes",
+    label: "Mercedes",
+    primary: "#00D7B6",
+    secondary: "#C0C0C0",
+  },
+  {
+    id: "redbull",
+    label: "Red Bull Racing",
+    primary: "#4781D7",
+    secondary: "#DC1E35",
+  },
+  {
+    id: "ferrari",
+    label: "Ferrari",
+    primary: "#ED1131",
+    secondary: "#FFD200",
+  },
+  {
+    id: "mclaren",
+    label: "McLaren",
+    primary: "#F47600",
+    secondary: "#00A3E0",
+  },
+  {
+    id: "alpine",
+    label: "Alpine",
+    primary: "#00A1E8",
+    secondary: "#FF4DA6",
+  },
+  {
+    id: "racingbulls",
+    label: "Racing Bulls",
+    primary: "#6C98FF",
+    secondary: "#1E2A78",
+  },
+  {
+    id: "astonmartin",
+    label: "Aston Martin",
+    primary: "#229971",
+    secondary: "#CEDC00",
+  },
+  {
+    id: "williams",
+    label: "Williams",
+    primary: "#1868DB",
+    secondary: "#00C3FF",
+  },
+  {
+    id: "kicksauber",
+    label: "Kick Sauber",
+    primary: "#01C00E",
+    secondary: "#000000",
+  },
+  {
+    id: "haas",
+    label: "Haas",
+    primary: "#9C9FA2",
+    secondary: "#E10600",
+  },
 ];
 
 function getSystemPrefersDark() {
@@ -33,31 +87,27 @@ function hexToRgb(hex) {
   return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
-/**
- * Sets:
- * --accent: "r g b"
- * --accent-weak: same rgb, used with low alpha
- * --accent-strong: same rgb, used with higher alpha
- * --accent-fg: readable text on top of accent bg
- */
-function applyAccentVars(accentId, hex, isDark) {
+function applyAccentVars(accentId, primaryHex, secondaryHex, isDark) {
   const root = document.documentElement;
-  const { r, g, b } = hexToRgb(hex);
 
-  root.style.setProperty("--accent", `${r} ${g} ${b}`);
+  const p = hexToRgb(primaryHex);
+  const s = hexToRgb(secondaryHex ?? primaryHex);
 
-  // Use the same accent rgb, but provide semantic helpers for consistent UI usage
-  root.style.setProperty("--accent-weak", `${r} ${g} ${b}`);
-  root.style.setProperty("--accent-strong", `${r} ${g} ${b}`);
+  root.style.setProperty("--accent", `${p.r} ${p.g} ${p.b}`);
+  root.style.setProperty("--accent-weak", `${p.r} ${p.g} ${p.b}`);
+  root.style.setProperty("--accent-strong", `${p.r} ${p.g} ${p.b}`);
 
-  // Foreground color when something uses accent as background.
-  // If accent is white -> use dark text, else:
-  // - in dark mode: use near-black text (better on bright accents)
-  // - in light mode: use white text
-  if (accentId === "white") {
-    root.style.setProperty("--accent-fg", "17 24 39"); // neutral-900
-  } else {
-    root.style.setProperty("--accent-fg", isDark ? "10 10 10" : "255 255 255");
+  root.style.setProperty("--accent-secondary", `${s.r} ${s.g} ${s.b}`);
+
+  root.style.setProperty("--accent-fg", isDark ? "10 10 10" : "255 255 255");
+
+  root.style.setProperty("--accent-secondary-fg", isDark ? "10 10 10" : "255 255 255");
+
+  if (primaryHex.toUpperCase() === "#FFFFFF") {
+    root.style.setProperty("--accent-fg", "17 24 39");
+  }
+  if ((secondaryHex ?? primaryHex).toUpperCase() === "#FFFFFF") {
+    root.style.setProperty("--accent-secondary-fg", "17 24 39");
   }
 }
 
@@ -71,15 +121,15 @@ export function ThemeProvider({ children }) {
   const [accent, setAccent] = useState(() => {
     const stored = localStorage.getItem(ACCENT_KEY);
     const exists = ACCENTS.find((a) => a.id === stored);
-    return exists?.id ?? "white";
+    return exists?.id ?? "mercedes";
   });
 
   useEffect(() => {
     const isDark = applyThemeClass(theme);
     localStorage.setItem(STORAGE_KEY, theme);
 
-    const hex = ACCENTS.find((a) => a.id === accent)?.hex ?? "#FFFFFF"; // default WHITE
-    applyAccentVars(accent, hex, isDark);
+    const a = ACCENTS.find((x) => x.id === accent) ?? ACCENTS[0];
+    applyAccentVars(a.id, a.primary, a.secondary, isDark);
     localStorage.setItem(ACCENT_KEY, accent);
   }, [theme, accent]);
 
@@ -90,8 +140,8 @@ export function ThemeProvider({ children }) {
     const handler = () => {
       // re-apply theme + accent when system theme flips
       const isDark = applyThemeClass(theme);
-      const hex = ACCENTS.find((a) => a.id === accent)?.hex ?? "#FFFFFF";
-      applyAccentVars(accent, hex, isDark);
+      const a = ACCENTS.find((x) => x.id === accent) ?? ACCENTS[0];
+      applyAccentVars(a.id, a.primary, a.secondary, isDark);
     };
 
     if (media.addEventListener) media.addEventListener("change", handler);
