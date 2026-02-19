@@ -4,60 +4,28 @@
 
 :root {
   color-scheme: light;
+
   --accent: 255 255 255;
+  --accent-fg: 17 24 39;
+
+  --accent-secondary: 255 255 255;
+  --accent-secondary-fg: 17 24 39;
+
+  --accent-surface: 0.08;
+  --accent-surface-strong: 0.14;
+  --accent-border: 0.22;
+  --accent-ring: 0.28;
+  --accent-text: 1;
 }
+
 .dark {
   color-scheme: dark;
-}
 
-html,
-body {
-  height: 100%;
-}
-
-body {
-  @apply bg-white text-neutral-900 antialiased;
-}
-.dark body {
-  @apply bg-neutral-950 text-neutral-100;
-}
-
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-::selection {
-  background: rgba(0, 0, 0, 0.12);
-}
-.dark ::selection {
-  background: rgba(255, 255, 255, 0.12);
-}
-
-a {
-  @apply text-neutral-900 hover:text-neutral-700;
-}
-.dark a {
-  @apply text-neutral-100 hover:text-neutral-200;
-}
-
-*::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-*::-webkit-scrollbar-track {
-  background: transparent;
-}
-*::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.10);
-  border: 3px solid transparent;
-  background-clip: content-box;
-  border-radius: 999px;
-}
-*::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.16);
-  border: 3px solid transparent;
-  background-clip: content-box;
+  --accent-surface: 0.10;
+  --accent-surface-strong: 0.16;
+  --accent-border: 0.28;
+  --accent-ring: 0.34;
+  --accent-text: 1;
 }
 
 :focus-visible {
@@ -66,22 +34,52 @@ a {
 
 .accent-ring {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(var(--accent) / 0.22);
+  box-shadow: 0 0 0 2px rgb(var(--accent) / var(--accent-ring));
 }
 
 .accent-border {
-  border-color: rgb(var(--accent) / 0.35) !important;
+  border-color: rgb(var(--accent) / var(--accent-border)) !important;
 }
 
 .accent-bg {
-  background-color: rgb(var(--accent) / 0.10) !important;
+  background-color: rgb(var(--accent) / var(--accent-surface)) !important;
+}
+
+.accent-bg-strong {
+  background-color: rgb(var(--accent) / var(--accent-surface-strong)) !important;
 }
 
 .accent-text {
-  color: rgb(var(--accent)) !important;
+  color: rgb(var(--accent) / var(--accent-text)) !important;
 }
 
 .accent-indicator {
   background-color: rgb(var(--accent));
 }
 
+.accent2-ring {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(var(--accent-secondary) / var(--accent-ring));
+}
+
+.accent2-border {
+  border-color: rgb(var(--accent-secondary) / var(--accent-border)) !important;
+}
+
+.accent2-bg {
+  background-color: rgb(var(--accent-secondary) / var(--accent-surface)) !important;
+}
+
+.accent2-text {
+  color: rgb(var(--accent-secondary) / var(--accent-text)) !important;
+}
+
+.accent2-indicator {
+  background-color: rgb(var(--accent-secondary));
+}
+
+.accent-glow {
+  box-shadow:
+    0 0 0 1px rgb(var(--accent) / 0.14),
+    0 12px 32px -20px rgb(var(--accent) / 0.35);
+}
