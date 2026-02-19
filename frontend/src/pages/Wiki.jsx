@@ -161,7 +161,7 @@ export default function Wiki() {
         
         {/* Header */}
         <div className="mb-8 border-b border-neutral-800 pb-4">
-          <h1 className="text-3xl font-bold text-red-500">F1 Historical Wiki</h1>
+          <h1 className="text-3xl font-bold text-[rgb(var(--accent))]">F1 Historical Wiki</h1>
           <p className="text-neutral-400 mt-2">Explore race results, qualifying sessions, and starting grids.</p>
         </div>
 
