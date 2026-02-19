@@ -156,31 +156,31 @@ export default function Wiki() {
   }, [selectedRaceId, viewType]);
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-white p-6">
+    <div className="min-h-screen bg-white dark:bg-neutral-950 text-neutral-900 dark:text-white p-6">
       <div className="max-w-7xl mx-auto">
         
         {/* Header */}
-        <div className="mb-8 border-b border-neutral-800 pb-4">
+        <div className="mb-8 border-b border-neutral-200 dark:border-neutral-800 pb-4">
           <h1 className="text-3xl font-bold text-[rgb(var(--accent))]">F1 Historical Wiki</h1>
-          <p className="text-neutral-400 mt-2">Explore race results, qualifying sessions, and starting grids.</p>
+          <p className="text-neutral-600 dark:text-neutral-400 mt-2">Explore race results, qualifying sessions, and starting grids.</p>
         </div>
 
         {error && (
-          <div className="mb-6 bg-red-900/20 border border-red-800 text-red-300 px-4 py-3 rounded-lg">
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-300 px-4 py-3 rounded-lg">
             {error}
           </div>
         )}
 
         {/* Controls Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-neutral-900 border border-neutral-800 p-6 rounded-lg shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-6 rounded-lg shadow-sm">
           
           {/* Year Selector */}
           <div>
-            <label className="block text-sm font-medium text-neutral-400 mb-2">Season</label>
+            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Season</label>
             <select 
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               {years.map(y => (
                 <option key={y} value={y}>{y}</option>
@@ -190,12 +190,12 @@ export default function Wiki() {
 
           {/* Race Selector */}
           <div>
-            <label className="block text-sm font-medium text-neutral-400 mb-2">Grand Prix</label>
+            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Grand Prix</label>
             <select 
               value={selectedRaceId}
               onChange={(e) => setSelectedRaceId(e.target.value)}
               disabled={races.length === 0}
-              className="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
+              className="w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
             >
               {races.map(race => (
                 <option key={race.raceId} value={race.raceId}>
@@ -207,11 +207,11 @@ export default function Wiki() {
 
           {/* Session Type Dropdown (The requested feature) */}
           <div>
-            <label className="block text-sm font-medium text-neutral-400 mb-2">Session View</label>
+            <label className="block text-sm font-medium text-neutral-600 dark:text-neutral-400 mb-2">Session View</label>
             <select 
               value={viewType}
               onChange={(e) => setViewType(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
+              className="w-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="race">🏁 Race Result</option>
               <option value="grid">🚦 Starting Grid</option>
@@ -221,9 +221,9 @@ export default function Wiki() {
         </div>
 
         {/* Data Display */}
-        <div className="bg-neutral-900 border border-neutral-800 rounded-lg shadow-sm overflow-hidden">
-          <div className="p-4 border-b border-neutral-800 flex justify-between items-center">
-            <h2 className="text-xl font-semibold text-neutral-100">
+        <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-lg shadow-sm overflow-hidden">
+          <div className="p-4 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center">
+            <h2 className="text-xl font-semibold text-neutral-900 dark:text-neutral-100">
               {viewType === 'race' && "Race Classification"}
               {viewType === 'grid' && "Starting Grid"}
               {viewType === 'qualifying' && "Qualifying Results"}
@@ -233,7 +233,7 @@ export default function Wiki() {
 
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-neutral-800 text-neutral-300 uppercase text-xs">
+              <thead className="bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 uppercase text-xs">
                 <tr>
                   <th className="px-6 py-3">Pos</th>
                   <th className="px-6 py-3">Driver</th>
@@ -258,40 +258,40 @@ export default function Wiki() {
                   )}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-800">
+              <tbody className="divide-y divide-neutral-200 dark:divide-neutral-800">
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-neutral-500">
+                    <td colSpan="6" className="px-6 py-8 text-center text-neutral-500 dark:text-neutral-400">
                       Fetching data...
                     </td>
                   </tr>
                 ) : tableData.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-neutral-500">
+                    <td colSpan="6" className="px-6 py-8 text-center text-neutral-500 dark:text-neutral-400">
                       No data available for this session.
                     </td>
                   </tr>
                 ) : (
                   tableData.map((row, index) => (
-                    <tr key={index} className="hover:bg-neutral-800/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-neutral-300">{row.position}</td>
-                      <td className="px-6 py-4 font-bold text-neutral-100">{formatName(row.driver)}</td>
-                      <td className="px-6 py-4 text-neutral-400">{row.team}</td>
+                    <tr key={index} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
+                      <td className="px-6 py-4 font-medium text-neutral-700 dark:text-neutral-300">{row.position}</td>
+                      <td className="px-6 py-4 font-bold text-neutral-900 dark:text-neutral-100">{formatName(row.driver)}</td>
+                      <td className="px-6 py-4 text-neutral-500 dark:text-neutral-400">{row.team}</td>
                       
                       {viewType === 'race' && (
                         <>
-                          <td className="px-6 py-4 font-mono text-sm text-neutral-300">{row.time}</td>
+                          <td className="px-6 py-4 font-mono text-sm text-neutral-600 dark:text-neutral-300">{row.time}</td>
                           <td className="px-6 py-4 text-green-400 font-bold">{row.points > 0 ? `+${row.points}` : ''}</td>
                         </>
                       )}
                       {viewType === 'grid' && (
-                        <td className="px-6 py-4 font-mono text-sm text-neutral-300">{row.time}</td>
+                        <td className="px-6 py-4 font-mono text-sm text-neutral-600 dark:text-neutral-300">{row.time}</td>
                       )}
                       {viewType === 'qualifying' && (
                         <>
-                          <td className="px-6 py-4 font-mono text-sm text-neutral-500">{row.q1}</td>
-                          <td className="px-6 py-4 font-mono text-sm text-neutral-500">{row.q2}</td>
-                          <td className="px-6 py-4 font-mono text-sm text-neutral-100 font-bold">{row.q3}</td>
+                          <td className="px-6 py-4 font-mono text-sm text-neutral-500 dark:text-neutral-400">{row.q1}</td>
+                          <td className="px-6 py-4 font-mono text-sm text-neutral-500 dark:text-neutral-400">{row.q2}</td>
+                          <td className="px-6 py-4 font-mono text-sm text-neutral-900 dark:text-neutral-100 font-bold">{row.q3}</td>
                         </>
                       )}
                     </tr>
