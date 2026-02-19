@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { ACCENTS as TEAM_THEMES } from "../providers/ThemeProvider";
 
 export default function Wiki() {
   // State for filters
@@ -102,6 +103,16 @@ export default function Wiki() {
       .split(" ")
       .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
+  };
+
+  // Helper to get team color
+  const getTeamColor = (teamName) => {
+    if (!teamName) return "#808080";
+    const theme = TEAM_THEMES.find(t => 
+      teamName.toLowerCase().includes(t.label.toLowerCase()) || 
+      t.label.toLowerCase().includes(teamName.toLowerCase())
+    );
+    return theme ? theme.hex : "#808080";
   };
 
   // 1. Fetch Races when Year changes
@@ -274,7 +285,13 @@ export default function Wiki() {
                 ) : (
                   tableData.map((row, index) => (
                     <tr key={index} className="hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors">
-                      <td className="px-6 py-4 font-medium text-neutral-700 dark:text-neutral-300">{row.position}</td>
+                      <td className="relative px-6 py-4 font-medium text-neutral-700 dark:text-neutral-300">
+                        <div 
+                          className="absolute left-0 top-0 h-full w-1 rounded-l" 
+                          style={{ backgroundColor: getTeamColor(row.team) }}
+                        />
+                        {row.position}
+                      </td>
                       <td className="px-6 py-4 font-bold text-neutral-900 dark:text-neutral-100">{formatName(row.driver)}</td>
                       <td className="px-6 py-4 text-neutral-500 dark:text-neutral-400">{row.team}</td>
                       
