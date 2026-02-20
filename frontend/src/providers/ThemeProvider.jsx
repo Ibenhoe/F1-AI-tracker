@@ -5,43 +5,110 @@ const STORAGE_KEY = "f1ai.theme";
 const ACCENT_KEY = "f1ai.accent";
 
 export const ACCENTS = [
-  { id: "white", label: "White", hex: "#FFFFFF" },
-  { id: "blue", label: "Blue", hex: "#3B82F6" },
-  { id: "green", label: "Green", hex: "#22C55E" },
-  { id: "orange", label: "Orange", hex: "#F97316" },
-  { id: "purple", label: "Purple", hex: "#8B5CF6" },
-  { id: "pink", label: "Pink", hex: "#EC4899" },
+  {
+    id: "mercedes",
+    label: "Mercedes",
+    primary: "#00D7B6",
+    secondary: "#C0C0C0",
+  },
+  {
+    id: "redbull",
+    label: "Red Bull Racing",
+    primary: "#4781D7",
+    secondary: "#DC1E35",
+  },
+  {
+    id: "ferrari",
+    label: "Ferrari",
+    primary: "#ED1131",
+    secondary: "#FFD200",
+  },
+  {
+    id: "mclaren",
+    label: "McLaren",
+    primary: "#F47600",
+    secondary: "#00A3E0",
+  },
+  {
+    id: "alpine",
+    label: "Alpine",
+    primary: "#00A1E8",
+    secondary: "#FF4DA6",
+  },
+  {
+    id: "racingbulls",
+    label: "Racing Bulls",
+    primary: "#6C98FF",
+    secondary: "#1E2A78",
+  },
+  {
+    id: "astonmartin",
+    label: "Aston Martin",
+    primary: "#229971",
+    secondary: "#CEDC00",
+  },
+  {
+    id: "williams",
+    label: "Williams",
+    primary: "#1868DB",
+    secondary: "#00C3FF",
+  },
+  {
+    id: "kicksauber",
+    label: "Kick Sauber",
+    primary: "#01C00E",
+    secondary: "#000000",
+  },
+  {
+    id: "haas",
+    label: "Haas",
+    primary: "#9C9FA2",
+    secondary: "#E10600",
+  },
 ];
 
 function getSystemPrefersDark() {
-  return window.matchMedia &&
-    window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return (
+    window.matchMedia &&
+    window.matchMedia("(prefers-color-scheme: dark)").matches
+  );
 }
 
 function applyThemeClass(theme) {
   const root = document.documentElement;
-
-  const isDark =
-    theme === "dark" || (theme === "system" && getSystemPrefersDark());
-
+  const isDark = theme === "dark" || (theme === "system" && getSystemPrefersDark());
   root.classList.toggle("dark", isDark);
+  return isDark;
 }
 
 function hexToRgb(hex) {
   const h = hex.replace("#", "");
   const n = parseInt(h, 16);
-  return {
-    r: (n >> 16) & 255,
-    g: (n >> 8) & 255,
-    b: n & 255,
-  };
+  return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
 }
 
-function applyAccent(hex) {
+function applyAccentVars(accentId, primaryHex, secondaryHex, isDark) {
   const root = document.documentElement;
-  const { r, g, b } = hexToRgb(hex);
 
-  root.style.setProperty("--accent", `${r} ${g} ${b}`);
+  const p = hexToRgb(primaryHex);
+  const s = hexToRgb(secondaryHex ?? primaryHex);
+
+  root.style.setProperty("--accent", `${p.r} ${p.g} ${p.b}`);
+  root.style.setProperty("--accent-weak", `${p.r} ${p.g} ${p.b}`);
+  root.style.setProperty("--accent-strong", `${p.r} ${p.g} ${p.b}`);
+
+  root.style.setProperty("--accent-secondary", `${s.r} ${s.g} ${s.b}`);
+
+  root.style.setProperty("--accent-fg", isDark ? "10 10 10" : "255 255 255");
+
+  root.style.setProperty("--accent-secondary-fg", isDark ? "10 10 10" : "255 255 255");
+
+  if (primaryHex.toUpperCase() === "#FFFFFF") {
+    root.style.setProperty("--accent-fg", "17 24 39");
+  }
+  if ((secondaryHex ?? primaryHex).toUpperCase() === "#FFFFFF") {
+    root.style.setProperty("--accent-secondary-fg", "17 24 39");
+  }
 }
 
 export function ThemeProvider({ children }) {
@@ -54,17 +121,15 @@ export function ThemeProvider({ children }) {
   const [accent, setAccent] = useState(() => {
     const stored = localStorage.getItem(ACCENT_KEY);
     const exists = ACCENTS.find((a) => a.id === stored);
-    return exists?.id ?? "white";
+    return exists?.id ?? "mercedes";
   });
 
   useEffect(() => {
-    applyThemeClass(theme);
+    const isDark = applyThemeClass(theme);
     localStorage.setItem(STORAGE_KEY, theme);
 
-    const hex =
-      ACCENTS.find((a) => a.id === accent)?.hex ?? ACCENTS[3].hex;
-
-    applyAccent(hex);
+    const a = ACCENTS.find((x) => x.id === accent) ?? ACCENTS[0];
+    applyAccentVars(a.id, a.primary, a.secondary, isDark);
     localStorage.setItem(ACCENT_KEY, accent);
   }, [theme, accent]);
 
@@ -73,7 +138,10 @@ export function ThemeProvider({ children }) {
 
     const media = window.matchMedia("(prefers-color-scheme: dark)");
     const handler = () => {
-      applyThemeClass(theme);
+      // re-apply theme + accent when system theme flips
+      const isDark = applyThemeClass(theme);
+      const a = ACCENTS.find((x) => x.id === accent) ?? ACCENTS[0];
+      applyAccentVars(a.id, a.primary, a.secondary, isDark);
     };
 
     if (media.addEventListener) media.addEventListener("change", handler);
@@ -83,16 +151,14 @@ export function ThemeProvider({ children }) {
       if (media.removeEventListener) media.removeEventListener("change", handler);
       else media.removeListener(handler);
     };
-  }, [theme]);
+  }, [theme, accent]);
 
   const value = useMemo(
     () => ({
       theme,
       setTheme,
       toggle: () =>
-        setTheme((t) =>
-          t === "dark" ? "light" : t === "light" ? "dark" : "dark"
-        ),
+        setTheme((t) => (t === "dark" ? "light" : t === "light" ? "dark" : "dark")),
       accent,
       setAccent,
       accents: ACCENTS,
@@ -105,8 +171,6 @@ export function ThemeProvider({ children }) {
 
 export function useTheme() {
   const ctx = useContext(ThemeContext);
-  if (!ctx) {
-    throw new Error("useTheme must be used within ThemeProvider");
-  }
+  if (!ctx) throw new Error("useTheme must be used within ThemeProvider");
   return ctx;
 }

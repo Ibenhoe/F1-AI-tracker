@@ -329,6 +329,33 @@ class PreRaceModel:
         df['quali_pace_deficit'] = df['best_quali_time'] / df['pole_time']
         df['quali_pace_deficit'] = df['quali_pace_deficit'].fillna(1.07)
 
+        # --- 11b. QUALIFYING SKILL & AGGRESSION (NEW) ---
+        # Ensure quali_pos_filled exists for form calculation
+        if 'quali_position' in df.columns:
+            df['quali_pos_filled'] = df['quali_position'].fillna(df['grid'])
+        else:
+            df['quali_pos_filled'] = df['grid']
+
+        # Skill: Improvement from Q1 to best time (Adaptability/Pushing)
+        df['quali_improvement'] = np.where(
+            (df['q1_sec'] > 0) & (df['best_quali_time'] > 0),
+            (df['q1_sec'] - df['best_quali_time']) / df['q1_sec'],
+            0.0
+        )
+        df['quali_improvement'] = df['quali_improvement'].fillna(0.0)
+
+        # Skill: Teammate comparison in Qualifying (Raw Speed vs Car Potential)
+        df['quali_teammate_diff'] = df.groupby(['raceId', 'team_continuity_id'])['best_quali_time'].transform(
+            lambda x: x - x.mean()
+        )
+        df['quali_teammate_diff'] = df['quali_teammate_diff'].fillna(0.0)
+        
+        # Aggression/Form: Rolling average of qualifying position (One-lap consistency)
+        df['driver_quali_form'] = df.groupby('driverId')['quali_pos_filled'].transform(
+            lambda x: x.shift(1).rolling(5, min_periods=1).mean()
+        )
+        df['driver_quali_form'] = df['driver_quali_form'].fillna(12.0)
+
         # --- 12. TEAMMATE BATTLE ---
         df['teammate_form_diff'] = df.groupby(['raceId', 'team_continuity_id'])['driver_recent_form'].transform(lambda x: x - x.mean())
 
@@ -400,10 +427,7 @@ class PreRaceModel:
 
         # --- 17. POINTS & PENALTIES ---
         df['points_before_race'] = (df.groupby(['year', 'driverId'])['points'].cumsum() - df['points']).fillna(0)
-        if 'quali_position' in df.columns:
-            df['quali_pos_filled'] = df['quali_position'].fillna(df['grid'])
-        else:
-            df['quali_pos_filled'] = df['grid']
+        # quali_pos_filled is now calculated in section 11b
         df['grid_penalty'] = df['grid'] - df['quali_pos_filled']
 
         # --- 18. WEATHER CONFIDENCE ---
@@ -561,6 +585,9 @@ class PreRaceModel:
                 'age_bin_code',
                 'driver_recent_form',
                 'constructor_recent_form',
+                'driver_quali_form',        # NEW
+                'quali_improvement',        # NEW
+                'quali_teammate_diff',      # NEW
                 'driver_track_avg_grid',
                 'driver_track_avg_finish',
                 'driver_track_podiums',
@@ -796,9 +823,12 @@ class PreRaceModel:
                 'age_bin_code': int(self.le_age.transform(['Prime'])[0]),
                 'driver_recent_form': float(self._get_recent_form('driverId', current_driver_id)),
                 'constructor_recent_form': float(self._get_recent_form('team_continuity_id', team_cont_id)),
-                'driver_track_avg_grid': self._get_track_history(current_driver_id, int(race_num), 'grid'),
-                'driver_track_avg_finish': self._get_track_history(current_driver_id, int(race_num), 'positionOrder'),
-                'driver_track_podiums': self._get_track_history(current_driver_id, int(race_num), 'is_podium', agg='sum'),
+                'driver_quali_form': float(self._get_recent_form('driverId', driver_id, 'quali_pos_filled', 10.0)),
+                'quali_improvement': float(self._get_recent_form('driverId', driver_id, 'quali_improvement', 0.0)),
+                'quali_teammate_diff': float(self._get_recent_form('driverId', driver_id, 'quali_teammate_diff', 0.0)),
+                'driver_track_avg_grid': self._get_track_history(driver_id, int(race_num), 'grid'),
+                'driver_track_avg_finish': self._get_track_history(driver_id, int(race_num), 'positionOrder'),
+                'driver_track_podiums': self._get_track_history(driver_id, int(race_num), 'is_podium', agg='sum'),
                 'weather_temp_c': 20.0,
                 'weather_precip_mm': 0.5,
                 'weather_cloud_pct': 50.0,
@@ -899,11 +929,19 @@ class PreRaceModel:
                     'final_conf': confidence
                 })
             
+            _driver_num = int(driver_info.get('number', 0))
+            _driver_code = driver_info.get('driver', f'Driver {i+1}')
+            _driver_name = (
+                driver_id_to_name.get(_driver_num) or
+                driver_code_to_name.get(_driver_code) or
+                _driver_code
+            )
+
             results.append({
                 'position': i + 1,
-                'driver': driver_info.get('driver', f'Driver {i+1}'),
-                'driver_name': driver_info.get('driver_name', driver_code),  # Use driver_name field directly from grid_data
-                'number': int(driver_info.get('number', 0)),
+                'driver': _driver_code,
+                'driver_name': _driver_name,
+                'number': _driver_num,
                 'team': driver_info.get('team', 'Unknown'),
                 'grid_position': int(driver_info.get('grid_pos', i + 1)),
                 'ai_score': float(score),
@@ -912,7 +950,7 @@ class PreRaceModel:
             
             # Debug: print first 3 drivers with mapping lookup
             if i < 3:
-                print(f"[PRERACE] Driver {i}: {driver_info.get('driver')} ({driver_info.get('driver_name')})")
+                print(f"[PRERACE] Driver {i}: {_driver_code} -> {_driver_name}")
         
         # Print debug info
         if debug_info:

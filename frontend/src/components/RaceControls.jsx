@@ -148,8 +148,8 @@ export default function RaceControls({
             className={[
               "w-40 rounded-lg border px-3 py-2 text-sm",
               "border-neutral-300 bg-white text-neutral-900",
-              "focus:outline-none focus:ring-2 focus:ring-neutral-300",
-              "dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-100 dark:focus:ring-neutral-700",
+              "focus:outline-none focus:ring-2 focus:ring-[rgb(var(--accent)_/_0.28)]",
+              "dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-100 dark:focus:ring-[rgb(var(--accent)_/_0.22)]",
               !connected ? "opacity-60" : "hover:border-neutral-400 dark:hover:border-neutral-700",
             ].join(" ")}
           >
@@ -163,7 +163,7 @@ export default function RaceControls({
       </div>
 
       {/* Lap progress (moved here) */}
-      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
+      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40 dark:ring-1 dark:ring-[rgb(var(--accent)_/_0.10)]">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Flag size={16} className="text-neutral-500" />
@@ -184,10 +184,19 @@ export default function RaceControls({
           </div>
         </div>
 
-        <div className="mt-3 h-2 w-full rounded-full bg-neutral-200 dark:bg-neutral-900">
+        <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/70 dark:bg-neutral-900/60">
           <div
-            className="h-2 rounded-full bg-neutral-900 dark:bg-neutral-100"
-            style={{ width: `${total > 0 ? progressPct : 0}%` }}
+            className={[
+              "h-2 rounded-full",
+              // subtle accent fill
+              "bg-[rgb(var(--accent))]",
+              // soft glow on dark only, subtle
+              "dark:shadow-[0_0_0_1px_rgb(var(--accent)_/_0.18),0_8px_22px_rgb(var(--accent)_/_0.10)]",
+            ].join(" ")}
+            style={{
+              width: `${total > 0 ? progressPct : 0}%`,
+              opacity: 0.9,
+            }}
           />
         </div>
 
