@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import RaceSelector from "../components/RaceSelector";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
+import TireBadge from "../components/ui/TireBadge";
 
 export default function PreRaceAnalysis() {
   const [raceNumber, setRaceNumber] = useState(21);
@@ -387,16 +388,16 @@ export default function PreRaceAnalysis() {
 
                       {strat.tire_sequence?.length ? (
                         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                          {strat.tire_sequence.map((compound, i) => (
-                            <span key={i} className="inline-flex items-center gap-2">
-                              <span className="rounded-full border border-neutral-200/70 bg-neutral-50 px-2 py-1 font-medium text-neutral-700 dark:border-white/10 dark:bg-white/5 dark:text-neutral-300">
-                                {compound}
-                              </span>
-                              {i < strat.tire_sequence.length - 1 ? (
-                                <span className="text-neutral-400 dark:text-neutral-600">→</span>
-                              ) : null}
-                            </span>
-                          ))}
+                          <div className="flex items-center gap-3 flex-wrap">
+                            {strat.tire_sequence.map((compound, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <TireBadge compound={compound} />
+                                {i < strat.tire_sequence.length - 1 && (
+                                  <span className="text-neutral-500 text-sm">→</span>
+                                )}
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       ) : null}
 
