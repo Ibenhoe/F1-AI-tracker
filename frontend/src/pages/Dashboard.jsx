@@ -6,6 +6,8 @@ import PredictionsPanel from "../components/PredictionsPanel";
 import NotificationsPanel from "../components/NotificationsPanel";
 import RaceControls from "../components/RaceControls";
 import RaceSelector from "../components/RaceSelector";
+import PositionChart from "../components/PositionChart";
+import BattlesWidget from "../components/BattlesWidget";
 import apiClient from "../services/apiClient";
 
 import Card from "../components/ui/Card";
@@ -18,13 +20,15 @@ function InsightsCard({
   totalLaps,
   weatherData,
   notifications,
+  drivers,
 }) {
   const [tab, setTab] = useState("predictions");
 
   const tabs = [
     { id: "predictions", label: "Predictions" },
-    { id: "weather", label: "Weather" },
-    { id: "notifications", label: "Notifications" },
+    { id: "battles",     label: "Battles" },
+    { id: "weather",     label: "Weather" },
+    { id: "notifications", label: "Feed" },
   ];
 
   return (
@@ -58,6 +62,8 @@ function InsightsCard({
             />
           )}
 
+          {tab === "battles" && <BattlesWidget drivers={drivers} />}
+
           {tab === "weather" && <WeatherWidget data={weatherData} />}
 
           {tab === "notifications" && (
@@ -66,6 +72,115 @@ function InsightsCard({
         </div>
       </div>
     </Card>
+  );
+}
+
+function StatsBar({ drivers, currentLap, totalLaps, raceRunning, trackStatus }) {
+  const sorted  = [...(drivers || [])].sort((a, b) => a.position - b.position);
+  const leader  = sorted[0];
+
+  // Fastest lap: driver with shortest lap_time string (rough heuristic)
+  const fastestDriver = sorted.reduce((best, d) => {
+    if (!d.lap_time || d.lap_time === "—") return best;
+    if (!best) return d;
+    return d.lap_time < best.lap_time ? d : best;
+  }, null);
+
+  const pct = totalLaps > 0 ? Math.round((currentLap / totalLaps) * 100) : 0;
+
+  // Map FastF1 track status codes to display info
+  const FLAG_MAP = {
+    '1': {
+      label: 'Green Flag',
+      sub: 'Track clear',
+      color: 'text-emerald-500 dark:text-emerald-400',
+      flag: <span className="inline-block w-8 h-5 rounded-sm bg-emerald-500 shadow-[0_0_8px_2px_rgba(16,185,129,0.45)]" />,
+    },
+    '2': {
+      label: 'Yellow Flag',
+      sub: 'Hazard on track',
+      color: 'text-yellow-500 dark:text-yellow-400',
+      flag: <span className="inline-block w-8 h-5 rounded-sm bg-yellow-400 shadow-[0_0_8px_2px_rgba(234,179,8,0.45)]" />,
+    },
+    '4': {
+      label: 'Safety Car',
+      sub: 'SC deployed',
+      color: 'text-orange-500 dark:text-orange-400',
+      flag: (
+        <span className="inline-flex items-center justify-center w-8 h-5 rounded-sm bg-orange-500 text-[9px] font-black text-white tracking-tight shadow-[0_0_8px_2px_rgba(249,115,22,0.45)]">
+          SC
+        </span>
+      ),
+    },
+    '5': {
+      label: 'Red Flag',
+      sub: 'Race suspended',
+      color: 'text-red-500 dark:text-red-400',
+      flag: <span className="inline-block w-8 h-5 rounded-sm bg-red-600 shadow-[0_0_8px_2px_rgba(220,38,38,0.55)]" />,
+    },
+    '6': {
+      label: 'Virtual SC',
+      sub: 'VSC deployed',
+      color: 'text-amber-500 dark:text-amber-400',
+      flag: (
+        <span className="inline-flex items-center justify-center w-8 h-5 rounded-sm bg-yellow-400 text-[8px] font-black text-neutral-900 tracking-tight shadow-[0_0_8px_2px_rgba(234,179,8,0.45)]">
+          VSC
+        </span>
+      ),
+    },
+  };
+  const flag = FLAG_MAP[String(trackStatus)] || FLAG_MAP['1'];
+
+  return (
+    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Race progress */}
+      <Card className="p-4" clip>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Race Progress</p>
+        <p className="text-lg font-bold tabular-nums text-neutral-900 dark:text-neutral-50">{currentLap}<span className="text-sm font-normal text-neutral-500"> / {totalLaps} laps</span></p>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
+          <div
+            className="h-full rounded-full bg-[rgb(var(--accent))] transition-all duration-700"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+      </Card>
+
+      {/* Race leader */}
+      <Card className="p-4" clip>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Race Leader</p>
+        {leader ? (
+          <>
+            <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">{leader.driver_code}</p>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">{leader.team}</p>
+          </>
+        ) : (
+          <p className="text-sm text-neutral-400">—</p>
+        )}
+      </Card>
+
+      {/* Fastest lap */}
+      <Card className="p-4" clip>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Fastest Lap</p>
+        {fastestDriver ? (
+          <>
+            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{fastestDriver.driver_code}</p>
+            <p className="text-xs font-mono text-purple-500 dark:text-purple-400">{fastestDriver.lap_time}</p>
+          </>
+        ) : (
+          <p className="text-sm text-neutral-400">—</p>
+        )}
+      </Card>
+
+      {/* Race Flag */}
+      <Card className="p-4" clip>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Race Flag</p>
+        <div className="flex items-center gap-2.5 mt-0.5">
+          {flag.flag}
+          <p className={`text-base font-bold leading-tight ${flag.color}`}>{flag.label}</p>
+        </div>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{flag.sub}</p>
+      </Card>
+    </div>
   );
 }
 
@@ -79,16 +194,32 @@ export default function Dashboard() {
   const [raceRunning, setRaceRunning] = useState(false);
   const [connected, setConnected] = useState(false);
   const [raceInitialized, setRaceInitialized] = useState(false);
+  const [trackStatus, setTrackStatus] = useState('1');
+
+  // Lap-by-lap position history for the chart
+  const [lapHistory, setLapHistory] = useState([]);
 
   // True only when race/ready event received
   const [raceReady, setRaceReady] = useState(false);
 
   const [selectedRace, setSelectedRace] = useState(1);
 
-  // NEW: track loading state for the selector UX
+  // Chart: which drivers to highlight (top 5 predicted + leader)
+  const [chartFocus, setChartFocus] = useState(null);
+
+  // track loading state for the selector UX
   const [raceLoading, setRaceLoading] = useState(false);
 
+  // true once Start has been pressed at least once; prevents Resume from
+  // firing before the race has ever begun, which would spawn a stale thread.
+  const [raceEverStarted, setRaceEverStarted] = useState(false);
+
   useEffect(() => {
+    // Guard flag: if selectedRace changes while async init is still running,
+    // the cleanup sets this to true and we skip any deferred listener registrations
+    // from the stale call – preventing duplicate / stale handlers.
+    let cancelled = false;
+
     const initializeApp = async () => {
       try {
         setRaceLoading(true);
@@ -96,10 +227,12 @@ export default function Dashboard() {
         setRaceInitialized(false);
 
         await apiClient.connect();
+        if (cancelled) return;
         setConnected(true);
         console.log("[DASHBOARD] Connected to backend");
 
         const result = await apiClient.initRace(selectedRace);
+        if (cancelled) return;
         console.log("[DASHBOARD] Race initialized:", result);
 
         setRaceData({
@@ -132,7 +265,9 @@ export default function Dashboard() {
           samples_processed: 0,
         });
 
-        // Listen for race ready event when a new race is initialized
+        // Register application-level socket listeners.
+        // apiClient.disconnect() in the cleanup already cleared any stale
+        // handlers from the previous race, so these are always fresh.
         apiClient.on("race/ready", (data) => {
           console.log("[DASHBOARD] Race ready event received:", data);
 
@@ -143,10 +278,7 @@ export default function Dashboard() {
             drivers: data.drivers || [],
           });
 
-          // Mark race as truly ready (when backend confirms)
           setRaceReady(true);
-
-          // NEW: stop loading indicator (we replace toast with inline UI)
           setRaceLoading(false);
         });
 
@@ -155,11 +287,36 @@ export default function Dashboard() {
 
           setCurrentLap(data.lap_number);
 
+          if (data.track_status) setTrackStatus(data.track_status);
+
           setRaceData((prev) => ({
             ...prev,
             currentLap: data.lap_number,
             drivers: data.drivers,
           }));
+
+          // Accumulate lap history for position chart
+          if (data.drivers && data.drivers.length > 0) {
+            setLapHistory((prev) => {
+              // avoid duplicates
+              if (prev.length > 0 && prev[prev.length - 1].lap === data.lap_number) return prev;
+              const frame = {
+                lap: data.lap_number,
+                drivers: data.drivers.map((d) => ({
+                  code: d.driver_code,
+                  position: d.position,
+                  team: d.team,
+                })),
+              };
+              return [...prev, frame];
+            });
+
+            // Update chart focus: highlight predicted top 5 + current leader
+            if (data.predictions && data.predictions.length > 0) {
+              const focusCodes = data.predictions.slice(0, 5).map((p) => p.driver_code).filter(Boolean);
+              setChartFocus(focusCodes.length > 0 ? focusCodes : null);
+            }
+          }
 
           setPredictions(data.predictions);
 
@@ -231,6 +388,7 @@ export default function Dashboard() {
           ]);
         });
       } catch (error) {
+        if (cancelled) return;
         console.error("[DASHBOARD] Initialization error:", error);
         setRaceLoading(false);
         setNotifications([
@@ -247,6 +405,10 @@ export default function Dashboard() {
     initializeApp();
 
     return () => {
+      // Signal any in-flight async init that it is stale
+      cancelled = true;
+      // Clear application-level listeners so the next race doesn't inherit them.
+      // The underlying socket stays alive (no unnecessary disconnect/reconnect).
       apiClient.disconnect();
     };
   }, [selectedRace]);
@@ -255,9 +417,13 @@ export default function Dashboard() {
     setSelectedRace(newRaceNumber);
     setRaceInitialized(false);
     setRaceReady(false);
-    setRaceLoading(true); // NEW: show spinner immediately when user changes race
+    setRaceLoading(true);
     setCurrentLap(0);
     setRaceRunning(false);
+    setRaceEverStarted(false);
+    setTrackStatus('1');
+    setLapHistory([]);
+    setChartFocus(null);
   };
 
   return (
@@ -299,14 +465,24 @@ export default function Dashboard() {
           <RaceControls
             raceReady={raceReady}
             raceRunning={raceRunning}
+            raceEverStarted={raceEverStarted}
             connected={connected}
             raceData={raceData}
-            onStarted={() => setRaceRunning(true)}
+            onStarted={() => { setRaceRunning(true); setRaceEverStarted(true); }}
             onPaused={() => setRaceRunning(false)}
             onResumed={() => setRaceRunning(true)}
           />
         </Card>
       </div>
+
+      {/* STATS BAR */}
+      <StatsBar
+        drivers={raceData?.drivers || []}
+        currentLap={currentLap}
+        totalLaps={raceData?.totalLaps || 0}
+        raceRunning={raceRunning}
+        trackStatus={trackStatus}
+      />
 
       {/* MAIN GRID */}
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
@@ -328,8 +504,29 @@ export default function Dashboard() {
           totalLaps={raceData?.totalLaps}
           weatherData={weatherData}
           notifications={notifications}
+          drivers={raceData?.drivers || []}
         />
       </div>
+
+      {/* POSITION HISTORY CHART */}
+      <Card className="p-5" clip>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight">Position History</h2>
+            <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+              Driver positions across all laps — AI top-5 highlighted
+            </p>
+          </div>
+          {lapHistory.length > 1 && (
+            <Badge variant="neutral">{lapHistory.length} data points</Badge>
+          )}
+        </div>
+        <PositionChart
+          lapHistory={lapHistory}
+          totalLaps={raceData?.totalLaps || 60}
+          highlightedDrivers={chartFocus}
+        />
+      </Card>
     </div>
   );
 }

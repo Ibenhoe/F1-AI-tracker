@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Pause, Play, Gauge, Flag } from "lucide-react";
+import { Pause, Play, Gauge } from "lucide-react";
 
 import apiClient from "../services/apiClient";
 import Button from "./ui/Button.jsx";
@@ -12,21 +12,18 @@ const SPEEDS = [
   { value: 4.0, label: "4×", hint: "Turbo" },
 ];
 
-function statusFor({ connected, raceReady, raceRunning }) {
+function statusFor({ connected, raceReady, raceRunning, raceEverStarted }) {
   if (!connected) return { label: "Connecting", variant: "warning" };
   if (connected && !raceReady) return { label: "Loading race", variant: "warning" };
-  if (connected && raceReady && !raceRunning) return { label: "Ready", variant: "success" };
-  return { label: "Running", variant: "warning" };
-}
-
-function clamp01(n) {
-  if (!Number.isFinite(n)) return 0;
-  return Math.min(1, Math.max(0, n));
+  if (connected && raceReady && raceRunning) return { label: "Running", variant: "warning" };
+  if (connected && raceReady && raceEverStarted && !raceRunning) return { label: "Paused", variant: "neutral" };
+  return { label: "Ready", variant: "success" };
 }
 
 export default function RaceControls({
   raceReady,
   raceRunning,
+  raceEverStarted,
   connected,
   raceData,
   onStarted,
@@ -36,13 +33,15 @@ export default function RaceControls({
   const [speed, setSpeed] = useState(1.0);
 
   const status = useMemo(
-    () => statusFor({ connected, raceReady, raceRunning }),
-    [connected, raceReady, raceRunning]
+    () => statusFor({ connected, raceReady, raceRunning, raceEverStarted }),
+    [connected, raceReady, raceRunning, raceEverStarted]
   );
 
-  const canStart = connected && raceReady && !raceRunning;
+  const canStart = connected && raceReady && !raceRunning && !raceEverStarted;
   const canPause = connected && raceRunning;
-  const canResume = connected && raceReady && !raceRunning;
+  // Resume only valid after race was started at least once — prevents spawning
+  // a fresh simulation thread before Start is ever pressed.
+  const canResume = connected && raceReady && !raceRunning && raceEverStarted;
 
   const handleStart = async () => {
     if (!canStart) return;
@@ -78,11 +77,6 @@ export default function RaceControls({
     setSpeed(newSpeed);
     if (connected) apiClient.setSimulationSpeed(newSpeed);
   };
-
-  const total = Number(raceData?.totalLaps ?? 0);
-  const current = Number(raceData?.currentLap ?? 0);
-  const progress = clamp01(total > 0 ? current / total : 0);
-  const progressPct = Math.round(progress * 100);
 
   return (
     <div className="space-y-4">
@@ -162,49 +156,28 @@ export default function RaceControls({
         </div>
       </div>
 
-      {/* Lap progress (moved here) */}
-      <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40 dark:ring-1 dark:ring-[rgb(var(--accent)_/_0.10)]">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <Flag size={16} className="text-neutral-500" />
-            <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300">
-              Lap progress
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Badge variant="neutral">
-              <span className="tabular-nums">
-                {current}/{total || "—"}
+      {/* Compact lap progress */}
+      {(() => {
+        const total = Number(raceData?.totalLaps ?? 0);
+        const current = Number(raceData?.currentLap ?? 0);
+        const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+        return (
+          <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-800 dark:bg-neutral-950/40">
+            <div className="mb-2 flex items-center justify-between text-xs">
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">Lap progress</span>
+              <span className="tabular-nums text-neutral-500 dark:text-neutral-400">
+                {total > 0 ? `${current} / ${total} laps · ${pct}%` : "—"}
               </span>
-            </Badge>
-            <span className="text-xs text-neutral-700 dark:text-neutral-300 tabular-nums">
-              {total > 0 ? `${progressPct}%` : "—"}
-            </span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200/70 dark:bg-neutral-900/60">
+              <div
+                className="h-2 rounded-full bg-[rgb(var(--accent))] transition-all duration-700"
+                style={{ width: `${pct}%` }}
+              />
+            </div>
           </div>
-        </div>
-
-        <div className="mt-3 h-2 w-full rounded-full bg-neutral-200/70 dark:bg-neutral-900/60">
-          <div
-            className={[
-              "h-2 rounded-full",
-              // subtle accent fill
-              "bg-[rgb(var(--accent))]",
-              // soft glow on dark only, subtle
-              "dark:shadow-[0_0_0_1px_rgb(var(--accent)_/_0.18),0_8px_22px_rgb(var(--accent)_/_0.10)]",
-            ].join(" ")}
-            style={{
-              width: `${total > 0 ? progressPct : 0}%`,
-              opacity: 0.9,
-            }}
-          />
-        </div>
-
-        <div className="mt-2 flex items-center justify-between text-[11px] text-neutral-600 dark:text-neutral-500">
-          <span>Start</span>
-          <span>Finish</span>
-        </div>
-      </div>
+        );
+      })()}
 
       {!connected ? (
         <div className="text-xs text-neutral-600 dark:text-neutral-500">

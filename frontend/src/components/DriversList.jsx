@@ -141,7 +141,8 @@ export default function DriversList({ drivers, currentLap }) {
               const team = driver.team || "—";
               
               // Calculate gap to leader (position 1)
-              const gapToLeader = idx === 0 ? 0 : (driver.gap ?? 0);
+              // driver.gap may arrive as a string like "+1.234" from the backend
+              const gapToLeader = idx === 0 ? 0 : parseFloat(driver.gap) || 0;
               const gapDisplay = gapToLeader > 0 ? `+${gapToLeader.toFixed(1)}s` : gapToLeader < 0 ? `${gapToLeader.toFixed(1)}s` : "Leader";
 
               return (

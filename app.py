@@ -1773,7 +1773,7 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     """Handle WebSocket disconnection"""
-    print(f"[SOCKETIO] ERROR: CLIENT DISCONNECTED: {request.sid}")
+    print(f"[SOCKETIO] INFO: CLIENT DISCONNECTED: {request.sid}")
 
 
 @socketio.on('race/start')
@@ -1856,7 +1856,8 @@ def run_simulation():
                     'drivers': lap_state['drivers'],
                     'predictions': lap_state['predictions'],
                     'events': events_to_send,
-                    'weather': lap_state.get('weather', {})
+                    'weather': lap_state.get('weather', {}),
+                    'track_status': lap_state.get('track_status', '1'),
                 }, to=None)
                 
                 if events_to_send:
@@ -1869,7 +1870,8 @@ def run_simulation():
                     'drivers': lap_state['drivers'],
                     'predictions': lap_state['predictions'],
                     'events': events_to_send,
-                    'weather': lap_state.get('weather', {})
+                    'weather': lap_state.get('weather', {}),
+                    'track_status': lap_state.get('track_status', '1'),
                 }, to=None)
                 print(f"[BROADCAST] Force-emitted lap/update with {len(events_to_send)} event(s) (bypassed rate limit)")
             

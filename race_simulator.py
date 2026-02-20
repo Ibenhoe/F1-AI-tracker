@@ -187,13 +187,20 @@ class RaceSimulator:
             'predictions': [],
             'events': [],
             'weather': self._get_weather_for_lap(lap_number),
-            'model_metrics': None
+            'model_metrics': None,
+            'track_status': '1',  # default: green flag
         }
         
         # Get actual lap data for this lap from FastF1
         lap_data = self._get_lap_data(lap_number)
         
         if lap_data is not None and len(lap_data) > 0:
+            # Extract track status from first available row (same for all drivers per lap)
+            try:
+                first_row = lap_data.iloc[0]
+                lap_state['track_status'] = str(first_row.get('track_status', '1') or '1')
+            except Exception:
+                pass  # keep default '1'
             # Use REAL data from FastF1
             print(f"[LAP {lap_number}] ✓ Real FastF1 data available ({len(lap_data)} drivers)")
             
