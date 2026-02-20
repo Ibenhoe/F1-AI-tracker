@@ -37,6 +37,7 @@ const RaceReplay = () => {
   const lastFrameTimeRef = useRef(performance.now());
   const lastPitStopStateRef = useRef({});  // Use ref to avoid infinite loops
   const smoothedGapsRef = useRef({});  // Track smoothed gaps per driver
+  const lastProcessedFrameRef = useRef(0);  // Detect large seeks to reset events
 
   // Load race data from API
   useEffect(() => {
@@ -72,6 +73,7 @@ const RaceReplay = () => {
   // Frame index for slider / lap display (updated by TrackRenderer callback, not per-frame setState)
   const frameIdx = raceData ? Math.min(Math.floor(frameIndex), raceData.frames.length - 1) : 0;
   const currentFrame = raceData?.frames[frameIdx] ?? null;
+  const totalLaps = raceData?.frames?.[raceData.frames.length - 1]?.lap ?? null;
 
   // Called by TrackRenderer to sync slider + lap counter (~every 10 frames)
   const handleFrameChange = (idx) => {
@@ -91,6 +93,14 @@ const RaceReplay = () => {
   // Track race events (pit stops, retirements, etc.)
   useEffect(() => {
     if (!currentFrame || !currentFrame.drivers) return;
+
+    // If user scrubbed significantly, reset event history to avoid duplicates
+    const jumpSize = Math.abs(frameIdx - lastProcessedFrameRef.current);
+    if (jumpSize > 5) {
+      setRaceEvents([]);
+      lastPitStopStateRef.current = {};
+    }
+    lastProcessedFrameRef.current = frameIdx;
 
     const newEvents = [];
 
@@ -199,34 +209,43 @@ const RaceReplay = () => {
 
   if (loading) {
     return (
-      <div className="race-replay-container">
-        <div className="loading">
-          <div className="spinner"></div>
-          <p>Loading race replay data...</p>
-        </div>
+      <div className="space-y-6">
+        <Card className="p-8" clip>
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-10 rounded-full border-4 border-neutral-200 border-t-red-500 animate-spin dark:border-neutral-800 dark:border-t-red-400" />
+            <div>
+              <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">Loading race replay</div>
+              <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">Fetching frame data from the server…</div>
+            </div>
+          </div>
+        </Card>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !raceData) {
     return (
-      <div className="race-replay-container">
-        <div className="error">
-          <h2>Error Loading Replay</h2>
-          <p>{error}</p>
-          <button onClick={() => window.location.reload()}>Retry</button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!raceData) {
-    return (
-      <div className="race-replay-container">
-        <div className="error">
-          <h2>No Data Available</h2>
-          <p>Could not load race data for replay.</p>
-        </div>
+      <div className="space-y-6">
+        <Card className="p-6" clip>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+                {error ? 'Error loading replay' : 'No data available'}
+              </div>
+              <div className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+                {error || 'Could not load race data for replay.'}
+              </div>
+            </div>
+            <Badge variant="danger">Error</Badge>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="mt-4 rounded-full border border-neutral-200 px-4 py-1.5 text-sm font-medium text-neutral-700 hover:bg-neutral-50 dark:border-neutral-700 dark:text-neutral-300 dark:hover:bg-neutral-900"
+          >
+            Retry
+          </button>
+        </Card>
       </div>
     );
   }
@@ -267,6 +286,7 @@ const RaceReplay = () => {
                 selectedDriver={selectedDriver}
                 onDriverSelect={setSelectedDriver}
                 currentLap={currentLap}
+                totalLaps={totalLaps}
               />
             </div>
           </div>
@@ -377,6 +397,7 @@ const RaceReplay = () => {
                   selectedDriver={selectedDriver}
                   onDriverSelect={setSelectedDriver}
                   currentLap={currentLap}
+                  totalLaps={totalLaps}
                 />
               )}
 
@@ -400,29 +421,30 @@ const RaceReplay = () => {
               {rightPanelTab === 'events' && (
                 <div className="space-y-2">
                   {raceEvents.length === 0 ? (
-                    <div className="flex items-center justify-center h-full text-neutral-500">
+                    <div className="flex items-center justify-center py-10 text-neutral-500">
                       <p className="text-sm">No events yet</p>
                     </div>
                   ) : (
                     raceEvents.map((event) => (
                       <div
                         key={event.id}
-                        className="p-2 rounded bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800"
+                        className={[
+                          'flex items-start gap-2.5 rounded-xl border p-3',
+                          event.type === 'pit_stop'
+                            ? 'border-amber-200/60 bg-amber-50/60 dark:border-amber-500/20 dark:bg-amber-500/5'
+                            : 'border-red-200/60 bg-red-50/60 dark:border-red-500/20 dark:bg-red-500/5',
+                        ].join(' ')}
                       >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-medium text-neutral-900 dark:text-neutral-100">
-                              {event.type === 'pit_stop' && '🛠 '}
-                              {event.type === 'retirement' && '❌ '}
-                              {event.message}
-                            </p>
-                            <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                              Lap {event.lap}
-                            </p>
-                          </div>
-                          <span className="flex-shrink-0 text-xs text-neutral-400">
-                            {event.timestamp}
-                          </span>
+                        <span className="mt-0.5 flex-shrink-0 text-base leading-none">
+                          {event.type === 'pit_stop' ? '🔧' : '🚩'}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold text-neutral-900 dark:text-neutral-100">
+                            {event.message}
+                          </p>
+                          <p className="mt-0.5 text-[11px] text-neutral-500 dark:text-neutral-400">
+                            Lap {event.lap}
+                          </p>
                         </div>
                       </div>
                     ))

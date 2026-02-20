@@ -1,10 +1,25 @@
 import React from 'react';
-import './ReplayControls.css';
+
+const SPEEDS = [0.25, 0.5, 1, 2, 4];
+
+const TogglePill = ({ active, onClick, title, children }) => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={title}
+    className={[
+      'rounded-full border px-3 py-1 text-xs font-semibold transition select-none',
+      active
+        ? 'border-red-500 bg-red-500/15 text-red-500 dark:border-red-400 dark:text-red-400'
+        : 'border-neutral-200 bg-white text-neutral-500 hover:border-neutral-400 hover:text-neutral-700 dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-400 dark:hover:border-neutral-600',
+    ].join(' ')}
+  >
+    {children}
+  </button>
+);
 
 /**
- * ReplayControls Component
- * Playback controls for race replay with speed adjustment,
- * frame seeking, and toggle options.
+ * ReplayControls — Tailwind-native playback bar
  */
 const ReplayControls = ({
   isPlaying,
@@ -21,134 +36,106 @@ const ReplayControls = ({
   onTelemetryToggle,
   onFocusToggle,
 }) => {
-  const progressPercent = totalFrames > 0 ? (currentFrame / totalFrames) * 100 : 0;
-
-  const handleSliderChange = (e) => {
-    onFrameChange(Number(e.target.value));
-  };
-
-  const handleSpeedClick = (speed) => {
-    onSpeedChange(speed);
-  };
+  const pct = totalFrames > 0 ? (Math.floor(currentFrame) / totalFrames) * 100 : 0;
+  const remaining = totalFrames - Math.floor(currentFrame);
 
   return (
-    <div className="replay-controls">
-      {/* Progress Bar */}
-      <div className="progress-section">
+    <div className="flex flex-col gap-3">
+      {/* ── Scrubber ── */}
+      <div className="group relative h-4 cursor-pointer">
+        {/* track */}
+        <div className="absolute inset-y-[5px] left-0 right-0 overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800">
+          <div
+            className="h-full rounded-full bg-red-500 transition-[width] duration-75"
+            style={{ width: `${pct}%` }}
+          />
+        </div>
+        {/* invisible range input on top */}
         <input
           type="range"
-          min="0"
+          min={0}
           max={totalFrames}
           value={Math.floor(currentFrame)}
-          onChange={handleSliderChange}
-          className="progress-slider"
-          title="Click to seek"
+          onChange={(e) => onFrameChange(Number(e.target.value))}
+          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+          title="Seek"
         />
+        {/* thumb dot (cosmetic) */}
         <div
-          className="progress-bar"
-          style={{
-            width: `${progressPercent}%`,
-          }}
+          className="pointer-events-none absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-red-500 bg-white shadow transition-opacity dark:bg-neutral-900"
+          style={{ left: `${pct}%` }}
         />
       </div>
 
-      {/* Controls Row */}
-      <div className="controls-row">
-        {/* Play/Pause Button */}
+      {/* ── Controls row ── */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Play / Pause */}
         <button
-          className="control-btn play-pause-btn"
+          type="button"
           onClick={onPlayPause}
           title={isPlaying ? 'Pause (SPACE)' : 'Play (SPACE)'}
+          className="flex h-9 w-9 items-center justify-center rounded-full border border-neutral-200 bg-white text-base text-neutral-900 shadow-sm transition hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800"
         >
-          {isPlaying ? (
-            <span className="icon">⏸</span>
-          ) : (
-            <span className="icon">▶</span>
-          )}
+          {isPlaying ? '⏸' : '▶'}
         </button>
 
-        {/* Speed Controls */}
-        <div className="speed-controls">
-          {[0.05, 0.1, 0.25, 0.5, 1, 2, 4].map((speed) => (
+        {/* Speed pill group */}
+        <div className="flex items-center gap-1 rounded-full border border-neutral-200 bg-neutral-100/60 px-1 py-0.5 dark:border-neutral-800 dark:bg-neutral-900/60">
+          {SPEEDS.map((s) => (
             <button
-              key={speed}
-              className={`speed-btn ${playbackSpeed === speed ? 'active' : ''}`}
-              onClick={() => handleSpeedClick(speed)}
-              title={`Speed: ${speed}x`}
+              key={s}
+              type="button"
+              onClick={() => onSpeedChange(s)}
+              className={[
+                'rounded-full px-2.5 py-0.5 text-xs font-semibold transition',
+                playbackSpeed === s
+                  ? 'bg-neutral-900 text-white dark:bg-neutral-100 dark:text-neutral-900'
+                  : 'text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-100',
+              ].join(' ')}
             >
-              {speed}x
+              {s}×
             </button>
           ))}
         </div>
 
         {/* Spacer */}
-        <div className="spacer"></div>
+        <div className="flex-1" />
 
-        {/* Frame Info */}
-        <div className="frame-info">
-          <span>
-            {Math.floor(currentFrame)} / {totalFrames} frames
-          </span>
-          <span className="time-remaining">
-            ~{formatFramesToTime(totalFrames - Math.floor(currentFrame))}
-          </span>
+        {/* Frame / time remaining */}
+        <div className="hidden sm:flex flex-col items-end text-xs tabular-nums text-neutral-500 dark:text-neutral-400">
+          <span>{Math.floor(currentFrame).toLocaleString()} / {totalFrames.toLocaleString()}</span>
+          <span>~{formatFrames(remaining)} left</span>
         </div>
 
-        {/* Spacer */}
-        <div className="spacer"></div>
+        {/* Divider */}
+        <div className="h-5 w-px bg-neutral-200 dark:bg-neutral-800" />
 
-        {/* Toggle Buttons */}
-        <button
-          className={`control-btn toggle-btn ${showDRS ? 'active' : ''}`}
-          onClick={onDRSToggle}
-          title="Toggle DRS Zones (D)"
-        >
-          <span className="label">DRS</span>
-        </button>
+        {/* Toggle pills */}
+        <TogglePill active={showDRS} onClick={onDRSToggle} title="Toggle DRS zones (D)">DRS</TogglePill>
+        <TogglePill active={showTelemetry} onClick={onTelemetryToggle} title="Toggle telemetry (T)">TEL</TogglePill>
+        <TogglePill active={focusMode} onClick={onFocusToggle} title="Focus mode (F)">FOCUS</TogglePill>
 
+        {/* Fullscreen */}
         <button
-          className={`control-btn toggle-btn ${showTelemetry ? 'active' : ''}`}
-          onClick={onTelemetryToggle}
-          title="Toggle Telemetry (T)"
-        >
-          <span className="label">TEL</span>
-        </button>
-
-        <button
-          className={`control-btn toggle-btn ${focusMode ? 'active' : ''}`}
-          onClick={onFocusToggle}
-          title="Toggle Focus Mode (F)"
-        >
-          <span className="label">FOCUS</span>
-        </button>
-
-        {/* Fullscreen Button (placeholder) */}
-        <button
-          className="control-btn"
+          type="button"
           title="Fullscreen"
-          onClick={() => {
-            document.documentElement.requestFullscreen?.();
-          }}
+          onClick={() => document.documentElement.requestFullscreen?.()}
+          className="flex h-7 w-7 items-center justify-center rounded border border-neutral-200 text-neutral-500 transition hover:border-neutral-400 hover:text-neutral-700 dark:border-neutral-800 dark:text-neutral-400 dark:hover:border-neutral-600"
         >
-          <span className="icon">⛶</span>
+          ⛶
         </button>
       </div>
     </div>
   );
 };
 
-/**
- * Format remaining frames to approximate time
- * Assumes 120 FPS
- */
-function formatFramesToTime(frames) {
-  const seconds = Math.ceil(frames / 120);
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-  if (minutes > 0) {
-    return `${minutes}m ${remainingSeconds}s`;
-  }
-  return `${remainingSeconds}s`;
+function formatFrames(frames) {
+  if (frames <= 0) return '0s';
+  // roughly 2 frames per second of real race time at 1× speed
+  const seconds = Math.ceil(frames / 2);
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
 export default ReplayControls;
