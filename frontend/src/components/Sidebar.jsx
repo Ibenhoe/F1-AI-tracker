@@ -1,6 +1,5 @@
 import { NavLink } from "react-router-dom";
-import { BarChart3, LineChart, Play } from "lucide-react";
-import { BarChart3, LineChart, BookOpen, FileText } from "lucide-react";
+import { BarChart3, LineChart, Play, BookOpen, FileText } from "lucide-react";
 
 function NavItem({ to, icon: Icon, label }) {
   return (
