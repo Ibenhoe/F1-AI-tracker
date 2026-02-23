@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Play, Pause } from "lucide-react";
 
 const RACES = {
   1: "Bahrain",
@@ -39,6 +39,14 @@ export default function RaceSelector({
 
   raceLoading = false,
   raceReady = false,
+
+  raceRunning = false,
+  raceEverStarted = false,
+  speed = 1,
+  onStart,
+  onPause,
+  onResume,
+  onSpeedChange,
 }) {
   const baseList = useMemo(
     () => Object.entries(RACES).map(([id, name]) => ({ id: Number(id), name })),
@@ -239,44 +247,48 @@ export default function RaceSelector({
 
   const showLoading = raceLoading;
   const showReady = showReadyCheck;
+  const speedOptions = [1, 2, 4, 8];
+  const canTransport = !disabled && raceReady && !raceLoading;
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-sm font-semibold tracking-tight">Selected race</div>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <div className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
+            Selected race
+          </div>
           <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
             Drag to choose a round
           </div>
         </div>
-        <div className="text-xs text-neutral-500 dark:text-neutral-400">
-          {disabled ? "Locked while running" : null}
+
+        <div className="shrink-0 flex items-center gap-2">
+          {raceLoading ? (
+            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
+              <Loader2 size={14} className="animate-spin" />
+              Loading…
+            </span>
+          ) : raceReady ? (
+            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
+              <Check size={14} />
+              Ready
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
+              Waiting…
+            </span>
+          )}
         </div>
       </div>
 
       <div
         className={[
-          "relative select-none rounded-2xl border p-3",
-          "border-neutral-200/80 bg-white/80 backdrop-blur",
-          "dark:border-white/10 dark:bg-neutral-950/50",
+          "relative select-none rounded-2xl p-3",
+          "bg-white ring-1 ring-neutral-200/70 shadow-sm",
+          "dark:bg-neutral-950/30 dark:ring-white/10 dark:shadow-none",
           disabled ? "opacity-60" : "",
         ].join(" ")}
       >
-        {/* Center highlight window */}
-        <div
-          className={[
-            "pointer-events-none absolute left-3 right-3 top-1/2 -translate-y-1/2",
-            "rounded-xl border",
-            "border-neutral-200/70 bg-white/60",
-            "dark:border-white/10 dark:bg-white/5",
-          ].join(" ")}
-          style={{ height: ITEM_H }}
-        />
-
-        {/* Fades */}
-        <div className="pointer-events-none absolute inset-x-3 top-3 h-10 bg-gradient-to-b from-white/90 to-transparent dark:from-neutral-950/70" />
-        <div className="pointer-events-none absolute inset-x-3 bottom-3 h-10 bg-gradient-to-t from-white/90 to-transparent dark:from-neutral-950/70" />
-
         {/* Drag surface */}
         <div
           ref={surfaceRef}
@@ -285,8 +297,10 @@ export default function RaceSelector({
             disabled ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
           ].join(" ")}
           style={{ height: VISIBLE * ITEM_H }}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
+          onPointerDown={(e) => {
+            if (e.target.closest("[data-transport]")) return;
+            onPointerDown(e);
+          }} onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           onLostPointerCapture={onLostPointerCapture}
@@ -306,10 +320,18 @@ export default function RaceSelector({
               const active = id === value;
 
               return (
-                <button
+                <div
                   key={`${i}-${id}`}
-                  type="button"
+                  role="button"
+                  tabIndex={disabled ? -1 : 0}
                   onClick={() => onRowClick(i, id)}
+                  onKeyDown={(e) => {
+                    if (disabled) return;
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      onRowClick(i, id);
+                    }
+                  }}
                   className={[
                     "flex h-[44px] w-full items-center justify-between rounded-xl px-3 text-left",
                     "border border-transparent transition-colors",
@@ -320,7 +342,10 @@ export default function RaceSelector({
                         "text-[rgb(var(--accent-fg))]",
                         "shadow-[0_0_0_1px_rgb(var(--accent)_/_0.22)_inset]",
                       ].join(" ")
-                      : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-100/60 dark:hover:bg-white/5",
+                      : "text-neutral-700 hover:bg-neutral-200/40 dark:text-neutral-300/80 dark:hover:bg-white/5",
+                    !disabled
+                      ? "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent)_/_0.25)]"
+                      : "",
                   ].join(" ")}
                 >
                   <div className="flex min-w-0 items-center gap-3">
@@ -330,9 +355,10 @@ export default function RaceSelector({
                     <span className="truncate">{name}</span>
                   </div>
 
-                  {/* Status indicator IN de geselecteerde race */}
+                  {/* Status / Transport controls IN de geselecteerde race */}
                   {active ? (
-                    <span className="ml-3 inline-flex items-center">
+                    <span className="ml-3 inline-flex items-center gap-2">
+                      {/* While loading -> spinner */}
                       {showLoading ? (
                         <Loader2
                           size={16}
@@ -341,6 +367,7 @@ export default function RaceSelector({
                           aria-label="Loading race"
                         />
                       ) : showReady ? (
+                        // Ready check briefly
                         <Check
                           size={16}
                           className="opacity-90"
@@ -348,9 +375,74 @@ export default function RaceSelector({
                           aria-label="Race ready"
                         />
                       ) : null}
+
+                      {/* Transport controls (only when ready & callbacks exist) */}
+                      {canTransport && (onStart || onPause || onResume || onSpeedChange) ? (
+                        <span
+                          data-transport
+                          className="ml-1 inline-flex items-center gap-2"
+                        >
+                          {/* Play / Pause */}
+                          {raceRunning ? (
+                            <button
+                              data-transport
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onPause?.();
+                              }}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-900/5 text-[rgb(var(--accent-fg))] hover:bg-neutral-900/10 dark:bg-white/10 dark:hover:bg-white/15"
+                              aria-label="Pause"
+                              title="Pause"
+                            >
+                              <Pause size={14} />
+                            </button>
+                          ) : (
+                            <button
+                              data-transport
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (raceEverStarted) onResume?.();
+                                else onStart?.();
+                              }}
+                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-900/5 text-[rgb(var(--accent-fg))] hover:bg-neutral-900/10 dark:bg-white/10 dark:hover:bg-white/15"
+                              aria-label="Play"
+                              title="Play"
+                            >
+                              <Play size={14} />
+                            </button>
+                          )}
+
+                          {/* Speed */}
+                          <div
+                            data-transport
+                            className="inline-flex items-center rounded-lg bg-neutral-900/5 px-2 py-1 text-[11px] font-semibold dark:bg-white/10"
+                          >
+                            <span className="mr-2 opacity-80">x</span>
+                            <select
+                              value={Number(speed) || 1}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                onSpeedChange?.(Number(e.target.value));
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className="cursor-pointer bg-transparent outline-none"
+                              aria-label="Simulation speed"
+                              title="Simulation speed"
+                            >
+                              {speedOptions.map((s) => (
+                                <option key={s} value={s}>
+                                  {s}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </span>
+                      ) : null}
                     </span>
                   ) : null}
-                </button>
+                </div>
               );
             })}
           </div>

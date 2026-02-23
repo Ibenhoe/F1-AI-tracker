@@ -4,7 +4,6 @@ import WeatherWidget from "../components/WeatherWidget";
 import DriversList from "../components/DriversList";
 import PredictionsPanel from "../components/PredictionsPanel";
 import NotificationsPanel from "../components/NotificationsPanel";
-import RaceControls from "../components/RaceControls";
 import RaceSelector from "../components/RaceSelector";
 import PositionChart from "../components/PositionChart";
 import BattlesWidget from "../components/BattlesWidget";
@@ -22,34 +21,79 @@ function InsightsCard({
   notifications,
   drivers,
 }) {
+
   const [tab, setTab] = useState("predictions");
+  const notifCount = Array.isArray(notifications) ? notifications.length : 0;
 
   const tabs = [
     { id: "predictions", label: "Predictions" },
-    { id: "battles",     label: "Battles" },
-    { id: "weather",     label: "Weather" },
-    { id: "notifications", label: "Feed" },
+    { id: "battles", label: "Battles" },
+    { id: "weather", label: "Weather" },
+    { id: "notifications", label: "Notifications" },
   ];
 
   return (
-    <Card className="xl:col-span-4 p-5" clip>
+    <div className="flex h-full min-w-0 flex-col gap-4">
       <div className="flex h-full min-w-0 flex-col gap-4">
-        <div className="flex flex-wrap gap-2">
-          {tabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTab(t.id)}
-              className={[
-                "rounded-full border px-3 py-1 text-sm font-medium transition",
-                tab === t.id
-                  ? "border-neutral-900 bg-neutral-900 text-white dark:border-neutral-200 dark:bg-neutral-100 dark:text-neutral-900"
-                  : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-neutral-800 dark:bg-neutral-950/40 dark:text-neutral-200 dark:hover:bg-neutral-900/40",
-              ].join(" ")}
-            >
-              {t.label}
-            </button>
-          ))}
+        {/* Tabs / Segmented control */}
+        <div className="min-w-0">
+          <div
+            className={[
+              "inline-flex w-full min-w-0 items-center justify-center gap-1",
+              "overflow-x-auto",
+              "rounded-2xl border border-neutral-200/70 bg-white/60 p-1 backdrop-blur",
+              "dark:border-white/10 dark:bg-neutral-950/30",
+            ].join(" ")}
+            role="tablist"
+            aria-label="Insights tabs"
+          >
+            {tabs.map((t) => {
+              const isActive = tab === t.id;
+              const showNotifBadge = t.id === "notifications" && notifCount > 0;
+              const badgeText = notifCount > 99 ? "99+" : String(notifCount);
+
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setTab(t.id)}
+                  role="tab"
+                  aria-selected={isActive}
+                  className={[
+                    "group",
+                    "relative inline-flex shrink-0 items-center justify-center gap-1.5 text-center",
+                    "rounded-lg px-3 py-1 text-sm font-medium",
+                    "transition-colors",
+                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2",
+                    "focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950",
+                    isActive
+                      ? "bg-neutral-900 text-white dark:bg-white/10 dark:text-neutral-50"
+                      : "text-neutral-600 hover:bg-neutral-100/70 dark:text-neutral-300 dark:hover:bg-white/5",
+                  ].join(" ")}
+                >
+                  <span className="whitespace-nowrap">{t.label}</span>
+
+                  {showNotifBadge ? (
+                    <span
+                      className={[
+                        "inline-flex items-center justify-center",
+                        "h-5 min-w-5 px-1.5",
+                        "rounded-full",
+                        "text-[11px] font-bold tabular-nums leading-none",
+                        "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]",
+                        "ring-2 ring-white dark:ring-neutral-950",
+                        "shadow-[0_10px_22px_rgba(0,0,0,0.22)]",
+                      ].join(" ")}
+                      aria-label={`${notifCount} notifications`}
+                      title={`${notifCount} notifications`}
+                    >
+                      {badgeText}
+                    </span>
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         <div className="min-h-0 min-w-0 flex-1 overflow-auto">
@@ -71,13 +115,13 @@ function InsightsCard({
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 
 function StatsBar({ drivers, currentLap, totalLaps, raceRunning, trackStatus }) {
-  const sorted  = [...(drivers || [])].sort((a, b) => a.position - b.position);
-  const leader  = sorted[0];
+  const sorted = [...(drivers || [])].sort((a, b) => a.position - b.position);
+  const leader = sorted[0];
 
   // Fastest lap: driver with shortest lap_time string (rough heuristic)
   const fastestDriver = sorted.reduce((best, d) => {
@@ -213,6 +257,50 @@ export default function Dashboard() {
   // true once Start has been pressed at least once; prevents Resume from
   // firing before the race has ever begun, which would spawn a stale thread.
   const [raceEverStarted, setRaceEverStarted] = useState(false);
+
+  const [simSpeed, setSimSpeed] = useState(1.0);
+
+  const [mainPanel, setMainPanel] = useState("standings"); // "standings" | "history"
+
+  const canStart = connected && raceReady && !raceRunning && !raceEverStarted;
+  const canPause = connected && raceRunning;
+  const canResume = connected && raceReady && !raceRunning && raceEverStarted;
+
+  const handleStart = async () => {
+    if (!canStart) return;
+    try {
+      await apiClient.startRace(simSpeed);
+      setRaceRunning(true);
+      setRaceEverStarted(true);
+    } catch (e) {
+      console.error("[DASHBOARD] startRace failed:", e);
+    }
+  };
+
+  const handlePause = async () => {
+    if (!canPause) return;
+    try {
+      await apiClient.pauseRace();
+      setRaceRunning(false);
+    } catch (e) {
+      console.error("[DASHBOARD] pauseRace failed:", e);
+    }
+  };
+
+  const handleResume = async () => {
+    if (!canResume) return;
+    try {
+      await apiClient.resumeRace();
+      setRaceRunning(true);
+    } catch (e) {
+      console.error("[DASHBOARD] resumeRace failed:", e);
+    }
+  };
+
+  const handleSpeedChange = (newSpeed) => {
+    setSimSpeed(newSpeed);
+    if (connected) apiClient.setSimulationSpeed(newSpeed);
+  };
 
   useEffect(() => {
     // Guard flag: if selectedRace changes while async init is still running,
@@ -424,55 +512,82 @@ export default function Dashboard() {
     setTrackStatus('1');
     setLapHistory([]);
     setChartFocus(null);
+    setMainPanel("standings");
+    setSimSpeed(1.0);
   };
 
   return (
     <div className="space-y-6">
       {/* HEADER */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-xl font-semibold tracking-tight">Dashboard</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
+            Dashboard
+          </h1>
           <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Live race tracking, model predictions and telemetry summaries.
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <Badge variant={connected ? "success" : "danger"}>
-            {connected ? "Connected" : "Disconnected"}
-          </Badge>
-          <Badge variant={raceRunning ? "warning" : "neutral"}>
-            {raceRunning ? "Race running" : "Paused"}
-          </Badge>
-          <Badge variant="accent">Lap {currentLap}</Badge>
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-neutral-200/70 bg-white/60 px-3 py-2 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30">
+            <Badge variant={connected ? "success" : "danger"}>
+              {connected ? "Connected" : "Disconnected"}
+            </Badge>
+            <Badge variant={raceRunning ? "warning" : "neutral"}>
+              {raceRunning ? "Race running" : "Paused"}
+            </Badge>
+            <Badge variant="accent">Lap {currentLap}</Badge>
+          </div>
         </div>
       </div>
 
       {/* TOP CONTROLS */}
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <Card className="lg:col-span-4 p-4" clip>
-          <RaceSelector
-            selectedRace={selectedRace}
-            onRaceChange={handleRaceChange}
-            disabled={raceRunning}
-            // NEW: drives spinner/check inside selected row
-            raceLoading={raceLoading}
-            raceReady={raceReady}
-          />
-        </Card>
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-600">
+            Session
+          </p>
+        </div>
 
-        <Card className="lg:col-span-8 p-4" clip>
-          <RaceControls
-            raceReady={raceReady}
-            raceRunning={raceRunning}
-            raceEverStarted={raceEverStarted}
-            connected={connected}
-            raceData={raceData}
-            onStarted={() => { setRaceRunning(true); setRaceEverStarted(true); }}
-            onPaused={() => setRaceRunning(false)}
-            onResumed={() => setRaceRunning(true)}
-          />
-        </Card>
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <Card className="lg:col-span-4 p-5 overflow-hidden" clip>
+            <div className="h-[320px] overflow-hidden">
+              <div className="h-full overflow-auto pr-1">
+                <RaceSelector
+                  selectedRace={selectedRace}
+                  onRaceChange={handleRaceChange}
+                  disabled={false}
+                  raceLoading={raceLoading}
+                  raceReady={raceReady}
+                  raceRunning={raceRunning}
+                  raceEverStarted={raceEverStarted}
+                  speed={simSpeed}
+                  onStart={handleStart}
+                  onPause={handlePause}
+                  onResume={handleResume}
+                  onSpeedChange={handleSpeedChange}
+                />
+              </div>
+            </div>
+          </Card>
+
+          <Card className="lg:col-span-8 p-5 overflow-hidden" clip>
+            <div className="h-[320px] overflow-hidden">
+              <div className="h-full overflow-auto pr-1">
+                <InsightsCard
+                  predictions={predictions}
+                  currentLap={raceData?.currentLap}
+                  modelMetrics={modelMetrics}
+                  totalLaps={raceData?.totalLaps}
+                  weatherData={weatherData}
+                  notifications={notifications}
+                  drivers={raceData?.drivers || []}
+                />
+              </div>
+            </div>
+          </Card>
+        </div>
       </div>
 
       {/* STATS BAR */}
@@ -484,49 +599,73 @@ export default function Dashboard() {
         trackStatus={trackStatus}
       />
 
-      {/* MAIN GRID */}
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
-        <Card className="xl:col-span-8 p-5" clip>
-          <div className="flex min-w-0 flex-col gap-4">
-            <div className="min-w-0">
-              <DriversList
-                drivers={raceData?.drivers || []}
-                currentLap={raceData?.currentLap}
-              />
-            </div>
-          </div>
-        </Card>
-
-        <InsightsCard
-          predictions={predictions}
-          currentLap={raceData?.currentLap}
-          modelMetrics={modelMetrics}
-          totalLaps={raceData?.totalLaps}
-          weatherData={weatherData}
-          notifications={notifications}
-          drivers={raceData?.drivers || []}
-        />
-      </div>
-
-      {/* POSITION HISTORY CHART */}
+      {/* MAIN PANEL */}
       <Card className="p-5" clip>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-sm font-semibold tracking-tight">Position History</h2>
-            <p className="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
-              Driver positions across all laps — AI top-5 highlighted
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-600">
+              Live
+            </p>
+
+            <h2 className="text-base font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
+              {mainPanel === "standings" ? "Standings" : "Position History"}
+            </h2>
+
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">
+              {mainPanel === "standings"
+                ? "Current classification, last lap and key race indicators."
+                : "Driver positions across all laps — AI top-5 highlighted."}
             </p>
           </div>
-          {lapHistory.length > 1 && (
-            <Badge variant="neutral">{lapHistory.length} data points</Badge>
-          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Segmented control */}
+            <div className="inline-flex rounded-2xl border border-neutral-200/70 bg-white/60 p-1 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30">
+              {[
+                { id: "standings", label: "Standings" },
+                { id: "history", label: "Position history" },
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setMainPanel(opt.id)}
+                  className={[
+                    "rounded-xl px-3 py-1.5 text-sm font-medium transition",
+                    mainPanel === opt.id
+                      ? "bg-neutral-900 text-white dark:bg-white/10 dark:text-neutral-50"
+                      : "text-neutral-600 hover:bg-neutral-100/70 dark:text-neutral-300 dark:hover:bg-white/5",
+                  ].join(" ")}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Context badge */}
+            {mainPanel === "standings" ? (
+              <Badge variant="neutral">Lap {currentLap}</Badge>
+            ) : lapHistory.length > 1 ? (
+              <Badge variant="neutral">{lapHistory.length} points</Badge>
+            ) : null}
+          </div>
         </div>
-        <PositionChart
-          lapHistory={lapHistory}
-          totalLaps={raceData?.totalLaps || 60}
-          highlightedDrivers={chartFocus}
-        />
+
+        {/* Content */}
+        {mainPanel === "standings" ? (
+          <div className="min-w-0">
+            <DriversList
+              drivers={raceData?.drivers || []}
+              currentLap={raceData?.currentLap}
+            />
+          </div>
+        ) : (
+          <PositionChart
+            lapHistory={lapHistory}
+            totalLaps={raceData?.totalLaps || 60}
+            highlightedDrivers={chartFocus}
+          />
+        )}
       </Card>
-    </div>
+    </div >
   );
 }

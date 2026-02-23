@@ -1,158 +1,115 @@
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
-import Badge from "./ui/Badge.jsx";
 
 function meta(type, colorCode) {
-  // Use color_code from backend if available, fallback to type
-  const effectiveType = colorCode || type;
-  
-  // Default badge is "neutral"
-  let badge = "neutral";
-  
+  const effectiveType = (colorCode || type || "").toString().toLowerCase();
+
   switch (effectiveType) {
     case "success":
-      badge = "success";
+    case "overtake":
       return {
         Icon: CheckCircle2,
-        badge: badge,
-        border: "border-emerald-200 dark:border-emerald-900/40",
-        bg: "bg-emerald-50 dark:bg-emerald-950/30",
-        icon: "text-emerald-700 dark:text-emerald-300",
+        rail: "bg-emerald-400/80",
+        icon: "text-emerald-600 dark:text-emerald-300",
+        iconBg: "bg-emerald-500/10 dark:bg-white/5",
       };
+
     case "warning":
-      badge = "warning";
+    case "battle":
       return {
         Icon: AlertTriangle,
-        badge: badge,
-        border: "border-amber-200 dark:border-amber-900/40",
-        bg: "bg-amber-50 dark:bg-amber-950/30",
-        icon: "text-amber-800 dark:text-amber-300",
+        rail: "bg-amber-400/80",
+        icon: "text-amber-600 dark:text-amber-300",
+        iconBg: "bg-amber-500/10 dark:bg-white/5",
       };
+
     case "danger":
-      badge = "danger";
-      return {
-        Icon: XCircle,
-        badge: badge,
-        border: "border-red-200 dark:border-red-900/40",
-        bg: "bg-red-50 dark:bg-red-950/30",
-        icon: "text-red-700 dark:text-red-300",
-      };
     case "error":
-      badge = "danger";
       return {
         Icon: XCircle,
-        badge: badge,
-        border: "border-red-200 dark:border-red-900/40",
-        bg: "bg-red-50 dark:bg-red-950/30",
-        icon: "text-red-700 dark:text-red-300",
+        rail: "bg-red-400/80",
+        icon: "text-red-600 dark:text-red-300",
+        iconBg: "bg-red-500/10 dark:bg-white/5",
       };
-    case "info":
-      badge = "neutral";
-      return {
-        Icon: Info,
-        badge: badge,
-        border: "border-blue-200 dark:border-blue-900/40",
-        bg: "bg-blue-50 dark:bg-blue-950/30",
-        icon: "text-blue-600 dark:text-blue-400",
-      };
+
     default:
       return {
         Icon: Info,
-        badge: badge,
-        border: "border-neutral-200 dark:border-neutral-800",
-        bg: "bg-white dark:bg-neutral-950/40",
+        rail: "bg-neutral-300/80 dark:bg-white/10",
         icon: "text-neutral-600 dark:text-neutral-400",
+        iconBg: "bg-neutral-500/10 dark:bg-white/5",
       };
   }
 }
 
 export default function NotificationsPanel({ notifications }) {
-  const count = notifications?.length ?? 0;
+  const list = Array.isArray(notifications) ? notifications : [];
+
+  if (list.length === 0) {
+    return (
+      <div
+        className={[
+          "flex h-full items-center justify-center rounded-2xl",
+          "bg-white ring-1 ring-neutral-200/70",
+          "dark:bg-white/5 dark:ring-white/10",
+        ].join(" ")}
+      >
+        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+          No events yet
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold tracking-tight">Notifications</h2>
-          <p className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
-            Race events and system messages
-          </p>
-        </div>
-        <Badge variant="neutral">{count}</Badge>
-      </div>
+    <div className="flex h-full min-h-0 flex-col overflow-auto pr-1 [scrollbar-width:thin]">
+      <div className="space-y-2">
+        {list.map((n) => {
+          const m = meta(n.type, n.color_code);
+          const Icon = m.Icon;
 
-      {count === 0 ? (
-        <div className="rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-10 text-center dark:border-neutral-800 dark:bg-neutral-950/40">
-          <div className="text-sm font-medium text-neutral-900 dark:text-neutral-200">
-            No notifications yet
-          </div>
-          <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-500">
-            Events will appear here during the race.
-          </div>
-        </div>
-      ) : (
-        <div className="max-h-[420px] space-y-2 overflow-auto pr-1">
-          {notifications.map((n) => {
-            const m = meta(n.type, n.color_code);
-            const Icon = m.Icon;
-            
-            // Debug logging
-            console.log("[NOTIFICATION] Event:", { type: n.type, color_code: n.color_code, message: n.message });
-            
-            // Determine badge text based on type and subtype
-            let badgeText = "BATTLE";
-            if (n.type === "overtake") {
-              badgeText = "OVERTAKE";
-            } else if (n.type === "battle") {
-              badgeText = "BATTLE";
-            }
-            
-            // Build color-based classes
-            let cardClasses = "rounded-xl border px-3 py-3 transition-all";
-            
-            switch (n.color_code) {
-              case "success":
-                cardClasses += " border-green-300 dark:border-green-800 bg-green-50 dark:bg-green-950/40";
-                break;
-              case "danger":
-                cardClasses += " border-red-300 dark:border-red-800 bg-red-50 dark:bg-red-950/40";
-                break;
-              case "warning":
-                cardClasses += " border-amber-300 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/40";
-                break;
-              case "info":
-                cardClasses += " border-blue-300 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/40";
-                break;
-              default:
-                cardClasses += " border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-950/40";
-            }
+          return (
+            <div
+              key={n.id}
+              className={[
+                "relative overflow-hidden rounded-2xl",
+                // light
+                "bg-white ring-1 ring-neutral-200/70",
+                "shadow-[0_1px_0_rgba(0,0,0,0.03),0_10px_28px_rgba(0,0,0,0.08)]",
+                // dark
+                "dark:bg-neutral-950/30 dark:ring-white/10",
+                "dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_12px_34px_rgba(0,0,0,0.45)]",
+                // consistent height
+                "h-[86px]",
+              ].join(" ")}
+            >
+              {/* left rail */}
+              <div className={["absolute left-0 top-0 h-full w-1.5", m.rail].join(" ")} />
 
-            return (
-              <div key={n.id} className={cardClasses}>
-                <div className="flex items-start gap-3">
-                  <div className="mt-0.5">
-                    <Icon size={16} className={m.icon} />
+              <div className="flex h-full items-center gap-4 px-6">
+                <div
+                  className={[
+                    "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
+                    "ring-1 ring-neutral-200/70",
+                    "dark:ring-white/10",
+                    m.iconBg,
+                  ].join(" ")}
+                >
+                  <Icon size={16} className={m.icon} />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-semibold leading-snug text-neutral-900 dark:text-neutral-50">
+                    {n.message}
                   </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
-                      {n.message}
-                    </div>
-                    <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-500">
-                      {n.time}
-                    </div>
-                  </div>
-
-                  <div className="shrink-0">
-                    <Badge variant={m.badge}>
-                      {badgeText}
-                    </Badge>
+                  <div className="mt-1 text-xs tabular-nums text-neutral-600 dark:text-neutral-400">
+                    {n.time}
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
