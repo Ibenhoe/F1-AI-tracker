@@ -9,12 +9,19 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import xgboost as xgb
+import os
 
 # %%
 # 1. DATA LADEN
 print("Bestand laden...")
 # We laden nu direct de samengevoegde file
-df = pd.read_csv('unprocessed_f1_training_data.csv')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.path.exists(os.path.join(script_dir, 'data')):
+    data_path = os.path.join(script_dir, 'data', 'unprocessed_f1_training_data.csv')
+else:
+    data_path = os.path.join(script_dir, '..', 'data', 'unprocessed_f1_training_data.csv')
+
+df = pd.read_csv(data_path)
 
 print(f"Data geladen. Totaal aantal rijen: {len(df)}")
 

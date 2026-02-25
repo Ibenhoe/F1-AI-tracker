@@ -423,7 +423,7 @@ def main():
     
     # Pre-train on historical data
     print("\n[PRETRAIN] Loading 5-year F1 historical data...")
-    model.pretrain_on_historical_data('f1_historical_5years.csv')
+    model.pretrain_on_historical_data('data/f1_historical_5years.csv')
     
     print("\n" + "="*70)
     print(f"[RACE-START] LIVE PREDICTION - {race_info['event']}")
