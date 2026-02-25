@@ -39,7 +39,20 @@ class PreRaceModel:
             # Handle relative/absolute paths
             if not os.path.isabs(csv_path):
                 script_dir = os.path.dirname(os.path.abspath(__file__))
-                csv_path = os.path.join(script_dir, csv_path)
+                
+                # Bepaal project root (werkt in root of in models/ submap)
+                if os.path.exists(os.path.join(script_dir, 'data')):
+                    project_root = script_dir
+                else:
+                    project_root = os.path.dirname(script_dir)
+                
+                # Probeer bestand te vinden vanuit project root
+                candidate_path = os.path.join(project_root, csv_path)
+                if os.path.exists(candidate_path):
+                    csv_path = candidate_path
+                else:
+                    # Fallback naar script dir (voor backward compatibility)
+                    csv_path = os.path.join(script_dir, csv_path)
             
             print(f"[PRERACE] Reading CSV from: {csv_path}")
             self.df = pd.read_csv(csv_path)

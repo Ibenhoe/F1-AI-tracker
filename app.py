@@ -17,8 +17,8 @@ from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 import fastf1
 from race_simulator import RaceSimulator
-from prerace_model import ensure_prerace_model_loaded
-from tire_strategy_model import ensure_tire_strategy_model_loaded
+from model.prerace_model import ensure_prerace_model_loaded
+from model.tire_strategy_model import ensure_tire_strategy_model_loaded
 
 # Performance optimization: Rate-limiting for Socket.IO emissions
 class RateLimiter:
@@ -205,6 +205,15 @@ def load_csv_data(filename):
     """Probeert CSV te laden uit de huidige map OF de F1_data_mangement map"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
+    # 0. Check in data/ map (NIEUW)
+    path0 = os.path.join(current_dir, 'data', filename)
+    if os.path.exists(path0):
+        try:
+            return pd.read_csv(path0).replace(r'\\N', None, regex=True)
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            return pd.DataFrame()
+
     # 1. Check in F1-AI-tracker map (waar app.py staat)
     path1 = os.path.join(current_dir, filename)
     if os.path.exists(path1):

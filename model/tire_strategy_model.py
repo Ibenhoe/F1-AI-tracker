@@ -60,6 +60,12 @@ class TireStrategyModel:
             # Handle paths with security validation
             script_dir = os.path.dirname(os.path.abspath(__file__))
             
+            # Bepaal project root (werkt in root of in models/ submap)
+            if os.path.exists(os.path.join(script_dir, 'data')):
+                project_root = script_dir
+            else:
+                project_root = os.path.dirname(script_dir)
+            
             # Security: Prevent path traversal attacks
             def validate_path(filename, base_dir):
                 """Validate that path stays within base directory (prevent ../)"""
@@ -70,9 +76,9 @@ class TireStrategyModel:
                 return full_path
             
             if not os.path.isabs(training_csv):
-                training_csv = validate_path(training_csv, script_dir)
+                training_csv = validate_path(training_csv, project_root)
             if not os.path.isabs(weather_csv):
-                weather_csv = validate_path(weather_csv, script_dir)
+                weather_csv = validate_path(weather_csv, project_root)
             
             # Load training data
             if not os.path.exists(training_csv):
