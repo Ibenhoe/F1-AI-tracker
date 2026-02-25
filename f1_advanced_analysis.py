@@ -21,7 +21,7 @@ warnings.filterwarnings("ignore")
 # %%
 # 1. DATA LADEN & BASIS VOORBEREIDING
 print("--- 1. DATA LADEN ---")
-df = pd.read_csv('unprocessed_f1_training_data.csv')
+df = pd.read_csv('data/unprocessed_f1_training_data.csv')
 
 # Sorteren op datum is cruciaal voor Time Series
 df['date'] = pd.to_datetime(df['date'])

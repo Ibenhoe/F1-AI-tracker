@@ -6,10 +6,13 @@ import os
 # 1. INSTELLINGEN
 RACES_PATH = '../F1_data_mangement/races.csv'
 CIRCUITS_PATH = '../F1_data_mangement/circuits.csv'
-OUTPUT_FILE = 'f1_weather_data.csv'
+OUTPUT_FILE = 'data/f1_weather_data.csv'
 
 def get_weather_data():
     print("--- START WEER DOWNLOAD SCRIPT ---")
+    
+    if not os.path.exists('data'):
+        os.makedirs('data')
     
     # Controleren of bestanden bestaan
     if not os.path.exists(RACES_PATH) or not os.path.exists(CIRCUITS_PATH):

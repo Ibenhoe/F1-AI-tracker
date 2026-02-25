@@ -11,6 +11,10 @@ print("Bestanden laden...")
 script_dir = os.path.dirname(os.path.abspath(__file__))
 data_dir = os.path.join(script_dir, '../F1_data_mangement')
 
+# Lokale data folder aanmaken indien nodig
+local_data_dir = os.path.join(script_dir, 'data')
+os.makedirs(local_data_dir, exist_ok=True)
+
 results = pd.read_csv(os.path.join(data_dir, 'results.csv'))
 races = pd.read_csv(os.path.join(data_dir, 'races.csv'))
 drivers = pd.read_csv(os.path.join(data_dir, 'drivers.csv'))
@@ -24,12 +28,12 @@ qualifying = pd.read_csv(os.path.join(data_dir, 'qualifying.csv'))
 seasons = pd.read_csv(os.path.join(data_dir, 'seasons.csv'))
 
 # Weerdata laden (indien beschikbaar)
-weather_file = os.path.join(script_dir, 'f1_weather_data.csv')
+weather_file = os.path.join(local_data_dir, 'f1_weather_data.csv')
 if os.path.exists(weather_file):
     print("Weerdata gevonden en aan het laden...")
     weather_data = pd.read_csv(weather_file)
 else:
-    print("LET OP: 'f1_weather_data.csv' niet gevonden. Run eerst 'fetch_weather.py'!")
+    print("LET OP: 'data/f1_weather_data.csv' niet gevonden. Run eerst 'fetch_weather.py'!")
     weather_data = pd.DataFrame()
 
 # 2. DATA SAMENVOEGEN (MERGEN)
@@ -111,6 +115,6 @@ print(final_df.head())
 print(f"\nTotaal aantal rijen om op te trainen: {len(final_df)}")
 
 # 5. OPSLAAN VOOR JE MODEL
-output_path = os.path.join(script_dir, 'unprocessed_f1_training_data.csv')
+output_path = os.path.join(local_data_dir, 'unprocessed_f1_training_data.csv')
 final_df.to_csv(output_path, index=False)
 print(f"Bestand '{output_path}' is aangemaakt!")

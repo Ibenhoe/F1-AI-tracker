@@ -54,8 +54,8 @@ class TireStrategyModel:
             if csv_paths is None:
                 csv_paths = {}
             
-            training_csv = csv_paths.get('training', 'processed_f1_training_data.csv')
-            weather_csv = csv_paths.get('weather', 'f1_weather_data.csv')
+            training_csv = csv_paths.get('training', 'data/processed_f1_training_data.csv')
+            weather_csv = csv_paths.get('weather', 'data/f1_weather_data.csv')
             
             # Handle paths with security validation
             script_dir = os.path.dirname(os.path.abspath(__file__))

@@ -14,7 +14,7 @@ import xgboost as xgb
 # 1. DATA LADEN
 print("Bestand laden...")
 # We laden nu direct de samengevoegde file
-df = pd.read_csv('unprocessed_f1_training_data.csv')
+df = pd.read_csv('data/unprocessed_f1_training_data.csv')
 
 print(f"Data geladen. Totaal aantal rijen: {len(df)}")
 

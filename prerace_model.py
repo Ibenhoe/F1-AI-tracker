@@ -28,7 +28,7 @@ class PreRaceModel:
         self.circuit_stats = None # Store circuit stats for prediction
         self.nationality_map = {}
     
-    def load(self, csv_path="unprocessed_f1_training_data.csv"):
+    def load(self, csv_path="data/unprocessed_f1_training_data.csv"):
         """Load and train model from CSV - separates ML logic from Flask"""
         if self.loaded:
             return True
