@@ -639,7 +639,7 @@ class ContinuousModelLearner:
         It only trains the position model if historical data is available.
         """
         if not os.path.exists(csv_path):
-            csv_path = 'processed_f1_training_data.csv'
+            csv_path = 'data/processed_f1_training_data.csv'
         
         if not os.path.exists(csv_path):
             print(f"[INFO] No historical data available, will train from race data only")
