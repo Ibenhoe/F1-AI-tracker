@@ -4,15 +4,22 @@ import time
 import os
 
 # 1. INSTELLINGEN
-RACES_PATH = '../F1_data_mangement/races.csv'
-CIRCUITS_PATH = '../F1_data_mangement/circuits.csv'
-OUTPUT_FILE = 'data/f1_weather_data.csv'
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.path.exists(os.path.join(script_dir, 'data')):
+    project_root = script_dir
+else:
+    project_root = os.path.dirname(script_dir)
+
+external_data_dir = os.path.join(project_root, '../F1_data_mangement')
+RACES_PATH = os.path.join(external_data_dir, 'races.csv')
+CIRCUITS_PATH = os.path.join(external_data_dir, 'circuits.csv')
+OUTPUT_FILE = os.path.join(project_root, 'data/f1_weather_data.csv')
 
 def get_weather_data():
     print("--- START WEER DOWNLOAD SCRIPT ---")
     
-    if not os.path.exists('data'):
-        os.makedirs('data')
+    # Zorg dat de data folder bestaat
+    os.makedirs(os.path.dirname(OUTPUT_FILE), exist_ok=True)
     
     # Controleren of bestanden bestaan
     if not os.path.exists(RACES_PATH) or not os.path.exists(CIRCUITS_PATH):

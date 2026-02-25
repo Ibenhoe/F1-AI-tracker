@@ -9,10 +9,17 @@ print("Bestanden laden...")
 
 # We gebruiken het pad van dit script om de data map te vinden, ongeacht waar je het script start
 script_dir = os.path.dirname(os.path.abspath(__file__))
-data_dir = os.path.join(script_dir, '../F1_data_mangement')
+
+# Bepaal project root (werkt in root of in scripts/ submap)
+if os.path.exists(os.path.join(script_dir, 'data')):
+    project_root = script_dir
+else:
+    project_root = os.path.dirname(script_dir)
+
+data_dir = os.path.join(project_root, '../F1_data_mangement')
 
 # Lokale data folder aanmaken indien nodig
-local_data_dir = os.path.join(script_dir, 'data')
+local_data_dir = os.path.join(project_root, 'data')
 os.makedirs(local_data_dir, exist_ok=True)
 
 results = pd.read_csv(os.path.join(data_dir, 'results.csv'))
