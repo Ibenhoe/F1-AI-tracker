@@ -142,6 +142,9 @@ class TireStrategyModel:
             19: {'name': 'Mexico', 'type': 'high_speed', 'wear': 0.45, 'brake': 0.58, 'overtaking': 0.68},
             20: {'name': 'Brazil', 'type': 'balanced', 'wear': 0.55, 'brake': 0.65, 'overtaking': 0.62},
             21: {'name': 'Abu Dhabi', 'type': 'high_speed', 'wear': 0.43, 'brake': 0.55, 'overtaking': 0.75},
+            22: {'name': 'Las Vegas', 'type': 'street', 'wear': 0.62, 'brake': 0.75, 'overtaking': 0.60},
+            23: {'name': 'Qatar', 'type': 'high_speed', 'wear': 0.65, 'brake': 0.62, 'overtaking': 0.55},
+            24: {'name': 'Abu Dhabi', 'type': 'high_speed', 'wear': 0.43, 'brake': 0.55, 'overtaking': 0.75},
         }
         
         # Apply known circuit data

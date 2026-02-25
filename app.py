@@ -177,11 +177,12 @@ def get_race_info(race_num):
         1: "Bahrain", 2: "Saudi Arabia", 3: "Australia", 4: "Japan", 5: "China",
         6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain", 10: "Austria",
         11: "UK", 12: "Hungary", 13: "Belgium", 14: "Netherlands", 15: "Italy",
-        16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil", 21: "Abu Dhabi"
+        16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil",
+        21: "Abu Dhabi", 22: "Las Vegas", 23: "Qatar", 24: "Abu Dhabi"
     }
     
-    if not isinstance(race_num, int) or race_num < 1 or race_num > 21:
-        raise ValueError(f'Invalid race number {race_num}. Must be 1-21.')
+    if not isinstance(race_num, int) or race_num < 1 or race_num > 24:
+        raise ValueError(f'Invalid race number {race_num}. Must be 1-24.')
     
     race_name = RACES_MAP.get(race_num, "Unknown")
     return race_name
@@ -338,6 +339,9 @@ def get_races():
         19: {"name": "Mexico", "circuit": "Mexico City"},
         20: {"name": "Brazil", "circuit": "Interlagos"},
         21: {"name": "Abu Dhabi", "circuit": "Yas Island"},
+        22: {"name": "Las Vegas", "circuit": "Las Vegas Strip"},
+        23: {"name": "Qatar", "circuit": "Lusail"},
+        24: {"name": "Abu Dhabi", "circuit": "Yas Island"},
     }
     return jsonify(races), 200
 

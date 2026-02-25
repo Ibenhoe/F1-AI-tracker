@@ -23,7 +23,9 @@ const RACES = {
   19: "Austin",
   20: "Mexico",
   21: "Brazil",
-  22: "Abu Dhabi",
+  22: "Las Vegas",
+  23: "Qatar",
+  24: "Abu Dhabi",
 };
 
 const ITEM_H = 44;
