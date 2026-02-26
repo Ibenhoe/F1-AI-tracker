@@ -40,10 +40,12 @@ export default function PreRaceAnalysis() {
     };
   }, [raceNumber]);
 
-  const fetchPreRaceData = async (raceNum) => {
+  const fetchPreRaceData = async (raceNum, isPolling = false) => {
     try {
-      setLoading(true);
-      setError(null);
+      if (!isPolling) {
+        setLoading(true);
+        setError(null);
+      }
 
       const [predResponse, tireResponse] = await Promise.all([
         fetch("http://localhost:5000/api/race/prerace-analysis", {
@@ -84,7 +86,7 @@ export default function PreRaceAnalysis() {
         if (tireResponse.status === 202) {
           if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
           retryTimerRef.current = setTimeout(() => {
-            fetchPreRaceData(raceNum);
+            fetchPreRaceData(raceNum, true);
           }, 2000);
         }
       } else if (tireResponse.status === 503) {
@@ -467,4 +469,3 @@ export default function PreRaceAnalysis() {
     </div>
   );
 }
-

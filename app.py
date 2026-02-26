@@ -17,8 +17,8 @@ from fastf1_data_fetcher import FastF1DataFetcher
 import pandas as pd
 import fastf1
 from race_simulator import RaceSimulator
-from prerace_model import ensure_prerace_model_loaded
-from tire_strategy_model import ensure_tire_strategy_model_loaded
+from model.prerace_model import ensure_prerace_model_loaded
+from model.tire_strategy_model import ensure_tire_strategy_model_loaded
 
 # Performance optimization: Rate-limiting for Socket.IO emissions
 class RateLimiter:
@@ -177,11 +177,12 @@ def get_race_info(race_num):
         1: "Bahrain", 2: "Saudi Arabia", 3: "Australia", 4: "Japan", 5: "China",
         6: "Miami", 7: "Monaco", 8: "Canada", 9: "Spain", 10: "Austria",
         11: "UK", 12: "Hungary", 13: "Belgium", 14: "Netherlands", 15: "Italy",
-        16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil", 21: "Abu Dhabi"
+        16: "Azerbaijan", 17: "Singapore", 18: "Austin", 19: "Mexico", 20: "Brazil",
+        21: "Abu Dhabi", 22: "Las Vegas", 23: "Qatar", 24: "Abu Dhabi"
     }
     
-    if not isinstance(race_num, int) or race_num < 1 or race_num > 21:
-        raise ValueError(f'Invalid race number {race_num}. Must be 1-21.')
+    if not isinstance(race_num, int) or race_num < 1 or race_num > 24:
+        raise ValueError(f'Invalid race number {race_num}. Must be 1-24.')
     
     race_name = RACES_MAP.get(race_num, "Unknown")
     return race_name
@@ -194,8 +195,8 @@ def get_race_grid(race_num):
     if not grid or len(grid) == 0:
         print(f"[API] WARNING: Could not fetch FastF1 data, using fallback")
         grid = _get_fallback_grid(race_num)
-    else:
-        print(f"[API] ✓ Using REAL FastF1 qualifying grid")
+    # else:
+    #     print(f"[API] ✓ Using REAL FastF1 qualifying grid")
     
     return grid
 
@@ -205,6 +206,15 @@ def load_csv_data(filename):
     """Probeert CSV te laden uit de huidige map OF de F1_data_mangement map"""
     current_dir = os.path.dirname(os.path.abspath(__file__))
     
+    # 0. Check in data/ map (NIEUW)
+    path0 = os.path.join(current_dir, 'data', filename)
+    if os.path.exists(path0):
+        try:
+            return pd.read_csv(path0).replace(r'\\N', None, regex=True)
+        except Exception as e:
+            print(f"Error reading {filename}: {e}")
+            return pd.DataFrame()
+
     # 1. Check in F1-AI-tracker map (waar app.py staat)
     path1 = os.path.join(current_dir, filename)
     if os.path.exists(path1):
@@ -338,6 +348,9 @@ def get_races():
         19: {"name": "Mexico", "circuit": "Mexico City"},
         20: {"name": "Brazil", "circuit": "Interlagos"},
         21: {"name": "Abu Dhabi", "circuit": "Yas Island"},
+        22: {"name": "Las Vegas", "circuit": "Las Vegas Strip"},
+        23: {"name": "Qatar", "circuit": "Lusail"},
+        24: {"name": "Abu Dhabi", "circuit": "Yas Island"},
     }
     return jsonify(races), 200
 
@@ -383,9 +396,9 @@ def get_prerace_analysis():
         except ValueError as ve:
             return jsonify({'error': str(ve), 'status': 'error'}), 400
         
-        print(f"\n{'='*80}")
-        print(f"[PRERACE API] RACE {race_num}: {race_name} - Processing pre-race analysis")
-        print(f"{'='*80}")
+        # print(f"\n{'='*80}")
+        # print(f"[PRERACE API] RACE {race_num}: {race_name} - Processing pre-race analysis")
+        # print(f"{'='*80}")
         
         # Load model
         model = ensure_prerace_model_loaded()
@@ -397,22 +410,22 @@ def get_prerace_analysis():
         grid = get_race_grid(race_num)
         
         # Log grid positions for debugging
-        print(f"[PRERACE API] Grid positions for Race {race_num} ({race_name}):")
-        for i, driver in enumerate(grid[:10], 1):  # Show top 10
-            print(f"    P{driver.get('grid_pos', i):2d}: {driver.get('driver'):3s} - {driver.get('team', 'Unknown')}")
-        if len(grid) > 10:
-            print(f"    ... and {len(grid) - 10} more drivers")
+        # print(f"[PRERACE API] Grid positions for Race {race_num} ({race_name}):")
+        # for i, driver in enumerate(grid[:10], 1):  # Show top 10
+        #     print(f"    P{driver.get('grid_pos', i):2d}: {driver.get('driver'):3s} - {driver.get('team', 'Unknown')}")
+        # if len(grid) > 10:
+        #     print(f"    ... and {len(grid) - 10} more drivers")
         
-        print(f"[PRERACE API] Total: {len(grid)} drivers loaded")
+        # print(f"[PRERACE API] Total: {len(grid)} drivers loaded")
         
         # Get predictions from model
         predictions = model.predict(grid, race_num)
         
-        print(f"[PRERACE API] ✓ Generated {len(predictions)} predictions for Race {race_num} ({race_name})")
-        print(f"[PRERACE API] Top 5 predictions:")
-        for i, pred in enumerate(predictions[:5], 1):
-            print(f"    {i}. {pred.get('driver'):3s} (Grid P{pred.get('grid_position'):2d}) - Confidence: {pred.get('confidence', 0):.1f}%")
-        print(f"{'='*80}\n")
+        # print(f"[PRERACE API] ✓ Generated {len(predictions)} predictions for Race {race_num} ({race_name})")
+        # print(f"[PRERACE API] Top 5 predictions:")
+        # for i, pred in enumerate(predictions[:5], 1):
+        #     print(f"    {i}. {pred.get('driver'):3s} (Grid P{pred.get('grid_position'):2d}) - Confidence: {pred.get('confidence', 0):.1f}%")
+        # print(f"{'='*80}\n")
         
         return jsonify({
             'status': 'success',
@@ -449,9 +462,9 @@ def get_tire_strategy():
         except ValueError as ve:
             return jsonify({'error': str(ve), 'status': 'error'}), 400
         
-        print(f"\n{'='*80}")
-        print(f"[TIRE STRATEGY API] RACE {race_num}: {race_name} - Computing tire strategy")
-        print(f"{'='*80}")
+        # print(f"\n{'='*80}")
+        # print(f"[TIRE STRATEGY API] RACE {race_num}: {race_name} - Computing tire strategy")
+        # print(f"{'='*80}")
         
         # Load tire strategy model (with timeout to prevent UI freeze)
         try:
@@ -476,17 +489,17 @@ def get_tire_strategy():
         # Fetch grid using utility (P4.1 - caching opportunity identified)
         grid = get_race_grid(race_num)
         
-        print(f"[TIRE STRATEGY API] Grid loaded: {len(grid)} drivers")
+        # print(f"[TIRE STRATEGY API] Grid loaded: {len(grid)} drivers")
         
         # Get tire strategy predictions (includes per-driver strategies)
         strategies = tire_model.predict_strategy(grid, race_num, weather_forecast)
         
-        print(f"[TIRE STRATEGY API] ✓ Generated tire strategies for {len(strategies)} strategies")
-        print(f"[TIRE STRATEGY API] Top strategies:")
-        for i, strat in enumerate(strategies, 1):
-            if strat.get('strategy_type') != 'per_driver_details':
-                print(f"    {i}. {strat.get('strategy_type'):15s} - Confidence: {strat.get('confidence', 0):.0f}%")
-        print(f"{'='*80}\n")
+        # print(f"[TIRE STRATEGY API] ✓ Generated tire strategies for {len(strategies)} strategies")
+        # print(f"[TIRE STRATEGY API] Top strategies:")
+        # for i, strat in enumerate(strategies, 1):
+        #     if strat.get('strategy_type') != 'per_driver_details':
+        #         print(f"    {i}. {strat.get('strategy_type'):15s} - Confidence: {strat.get('confidence', 0):.0f}%")
+        # print(f"{'='*80}\n")
         
         # Extract general strategies (first 2) and per-driver strategies
         general_strategies = [s for s in strategies if s.get('strategy_type') != 'per_driver_details']
@@ -521,7 +534,7 @@ def get_tire_strategy():
 def _fetch_qualifying_grid(race_num):
     """Fetch REAL qualifying grid from FastF1 for the specified race"""
     try:
-        print(f"  [GRID] Attempting to fetch FastF1 qualifying data for race {race_num}...")
+        # print(f"  [GRID] Attempting to fetch FastF1 qualifying data for race {race_num}...")
         
         qual_session = fastf1.get_session(2024, race_num, 'Q')
         qual_session.load(telemetry=False, weather=False)  # Disable expensive data
@@ -539,7 +552,7 @@ def _fetch_qualifying_grid(race_num):
                         'grid_pos': grid_pos
                     })
             
-            print(f"  [GRID] ✓ Successfully loaded {len(grid)} drivers from FastF1 qualifying")
+            # print(f"  [GRID] ✓ Successfully loaded {len(grid)} drivers from FastF1 qualifying")
             return grid
         else:
             print(f"  [GRID] No qualifying results found in FastF1 for race {race_num}")
@@ -593,11 +606,11 @@ def _get_fallback_grid(race_num):
             'grid_pos': grid_pos
         })
     
-    print(f"  [GRID] Using fallback grid for race {race_num}")
-    print(f"  [GRID] Top 10 drivers in fallback grid:")
-    sorted_grid = sorted(grid, key=lambda x: x['grid_pos'])[:10]
-    for driver in sorted_grid:
-        print(f"    P{driver['grid_pos']:2d}: {driver['driver']:3s} - {driver['team']}")
+    # print(f"  [GRID] Using fallback grid for race {race_num}")
+    # print(f"  [GRID] Top 10 drivers in fallback grid:")
+    # sorted_grid = sorted(grid, key=lambda x: x['grid_pos'])[:10]
+    # for driver in sorted_grid:
+    #     print(f"    P{driver['grid_pos']:2d}: {driver['driver']:3s} - {driver['team']}")
     return grid
 
 

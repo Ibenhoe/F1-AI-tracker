@@ -16,12 +16,19 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.impute import SimpleImputer
 from sklearn.metrics import mean_absolute_error
 import warnings
+import os
 warnings.filterwarnings("ignore")
 
 # %%
 # 1. DATA LADEN & BASIS VOORBEREIDING
 print("--- 1. DATA LADEN ---")
-df = pd.read_csv('unprocessed_f1_training_data.csv')
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if os.path.exists(os.path.join(script_dir, 'data')):
+    data_path = os.path.join(script_dir, 'data', 'unprocessed_f1_training_data.csv')
+else:
+    data_path = os.path.join(script_dir, '..', 'data', 'unprocessed_f1_training_data.csv')
+
+df = pd.read_csv(data_path)
 
 # Sorteren op datum is cruciaal voor Time Series
 df['date'] = pd.to_datetime(df['date'])
