@@ -19,9 +19,9 @@
 }
 
 .dark {
-  --bg: 0 0 0;
+  --bg: 8 8 10;
   --fg: 245 245 246;
-  --panel: 0 0 0;
+  --panel: 18 18 20;
   --muted: 163 163 163;
   --hairline: 255 255 255;
 }
@@ -39,6 +39,7 @@ body {
     Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+    color-scheme: light dark;
 }
 
 /* Layout */

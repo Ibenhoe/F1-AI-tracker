@@ -65,14 +65,14 @@ export default function PredictionsPanel({ predictions }) {
 
   if (top.length === 0) {
     return (
-      <div className="rounded-2xl bg-white ring-1 ring-neutral-200/70 px-4 py-10 text-center dark:bg-white/5 dark:ring-white/10">
+      <Card className="p-6 text-center" bordered clip>
         <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
           Model is training
         </div>
         <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
           Predictions appear once enough laps are processed.
         </div>
-      </div>
+      </Card>
     );
   }
 
@@ -86,10 +86,10 @@ export default function PredictionsPanel({ predictions }) {
             disabled={!canPrev}
             className={[
               "inline-flex h-8 w-8 items-center justify-center rounded-xl",
-              "border border-neutral-200/70 bg-white/60 backdrop-blur",
-              "text-neutral-700 transition hover:bg-neutral-100/70",
-              "disabled:opacity-40 disabled:hover:bg-white/60",
-              "dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200 dark:hover:bg-white/5",
+              "ring-1 ring-black/5 dark:ring-white/10",
+              "bg-transparent hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
+              "text-neutral-700 dark:text-neutral-200 transition-colors",
+              "disabled:opacity-40 disabled:hover:bg-transparent",
             ].join(" ")}
             aria-label="Previous predictions"
           >
@@ -129,14 +129,14 @@ export default function PredictionsPanel({ predictions }) {
           return (
             <Card
               key={`${pred.driver_code ?? driver}-${idx}`}
-              className="relative overflow-hidden p-5"
+              className="relative p-5"
               clip
             >
               <div className="absolute left-0 top-0 h-1 w-full" style={{ background: teamColor }} />
 
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-500">
+                  <div className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
                     Prediction
                   </div>
 
@@ -195,8 +195,8 @@ export default function PredictionsPanel({ predictions }) {
 
         {visible.length < 3
           ? Array.from({ length: 3 - visible.length }).map((_, i) => (
-              <div key={`pad-${i}`} className="hidden lg:block" />
-            ))
+            <div key={`pad-${i}`} className="hidden lg:block" />
+          ))
           : null}
 
         {visible.length < 2 ? <div className="hidden sm:block lg:hidden" /> : null}

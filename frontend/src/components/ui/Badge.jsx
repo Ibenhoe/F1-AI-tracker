@@ -5,32 +5,28 @@ const base =
 
 const variants = {
   neutral: cn(
-    // LIGHT
-    "bg-neutral-100 text-neutral-700",
-    // DARK
-    "dark:bg-white/10 dark:text-neutral-200"
+    "bg-black/[0.04] text-neutral-700 ring-1 ring-black/5",
+    "dark:bg-white/[0.06] dark:text-neutral-200 dark:ring-white/10"
   ),
 
   accent: cn(
-    // LIGHT
-    "bg-[rgb(var(--accent)_/_0.12)] text-[rgb(var(--accent))]",
-    // DARK
-    "dark:bg-[rgb(var(--accent)_/_0.18)] dark:text-[rgb(var(--accent))]"
+    "bg-[rgb(var(--accent)_/_0.10)] text-[rgb(var(--accent))] ring-1 ring-black/5",
+    "dark:bg-[rgb(var(--accent)_/_0.18)] dark:text-[rgb(var(--accent))] dark:ring-white/10"
   ),
 
   success: cn(
-    "bg-emerald-50 text-emerald-700",
-    "dark:bg-emerald-950/40 dark:text-emerald-200"
+    "bg-black/[0.04] text-emerald-700 ring-1 ring-black/5",
+    "dark:bg-white/[0.06] dark:text-emerald-200 dark:ring-white/10"
   ),
 
   warning: cn(
-    "bg-amber-50 text-amber-800",
-    "dark:bg-amber-950/40 dark:text-amber-200"
+    "bg-black/[0.04] text-amber-800 ring-1 ring-black/5",
+    "dark:bg-white/[0.06] dark:text-amber-200 dark:ring-white/10"
   ),
 
   danger: cn(
-    "bg-red-50 text-red-700",
-    "dark:bg-red-950/40 dark:text-red-200"
+    "bg-black/[0.04] text-red-700 ring-1 ring-black/5",
+    "dark:bg-white/[0.06] dark:text-red-200 dark:ring-white/10"
   ),
 };
 

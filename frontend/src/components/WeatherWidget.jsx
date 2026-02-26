@@ -1,4 +1,5 @@
 import { Wind, Droplets, Thermometer, Cloud, CloudRain, Sun } from "lucide-react";
+import Card from "./ui/Card";
 
 function clampNum(v, fallback = 0) {
   const n = Number(v);
@@ -60,7 +61,7 @@ export default function WeatherWidget({ data }) {
   return (
     <div className="h-full min-h-0">
       {/* Single calm surface */}
-      <div className="flex h-full min-h-0 flex-col rounded-2xl bg-white/70 ring-1 ring-neutral-200/70 px-5 py-5 backdrop-blur-sm dark:bg-[rgb(var(--panel))] dark:ring-white/10 dark:backdrop-blur-none">
+      <Card className="flex h-full min-h-0 flex-col px-5 py-5" clip bordered>
         {/* Top summary */}
         <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
@@ -98,10 +99,10 @@ export default function WeatherWidget({ data }) {
         </div>
 
         {/* Divider */}
-        <div className="my-4 h-px w-full bg-neutral-200/70 dark:bg-white/10" />
+        <div className="my-4 h-px w-full bg-black/5 dark:bg-white/10" />
 
         {/* Secondary stats as list rows */}
-        <div className="divide-y divide-neutral-200/70 dark:divide-white/10">
+        <div className="divide-y divide-black/5 dark:divide-white/10">
           <StatRow
             icon={Droplets}
             label="Humidity"
@@ -118,7 +119,7 @@ export default function WeatherWidget({ data }) {
             value={`${Math.round(track)}°C`}
           />
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

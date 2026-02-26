@@ -1,4 +1,5 @@
 import { getTeamColor } from "../utils/teamColors";
+import Card from "./ui/Card";
 
 function clamp(n, a, b) {
   const x = Number(n);
@@ -20,9 +21,9 @@ function battleTone(gapSeconds) {
     hot,
     label: hot ? "ATTACK" : "DRS",
     pill: hot
-      ? "bg-red-500/10 text-red-700 dark:bg-red-500/10 dark:text-red-200"
-      : "bg-amber-400/15 text-amber-800 dark:bg-amber-400/10 dark:text-amber-200",
-    bar: hot ? "bg-red-500" : "bg-amber-400",
+      ? "bg-black/[0.04] text-red-700 ring-1 ring-black/5 dark:bg-white/[0.05] dark:text-red-200 dark:ring-white/10"
+      : "bg-black/[0.04] text-amber-800 ring-1 ring-black/5 dark:bg-white/[0.05] dark:text-amber-200 dark:ring-white/10",
+    bar: hot ? "bg-red-500/80" : "bg-amber-400/80",
   };
 }
 
@@ -32,7 +33,7 @@ function GapBar({ gap }) {
   const tone = battleTone(gap);
 
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200/70 dark:bg-white/10">
+    <div className="h-2 w-full overflow-hidden rounded-full bg-black/5 dark:bg-white/10">
       <div className={`h-full rounded-full ${tone.bar}`} style={{ width: `${pct}%` }} />
     </div>
   );
@@ -77,7 +78,7 @@ export default function BattlesWidget({ drivers = [] }) {
   return (
     <div className="h-full min-h-0 overflow-auto">
       {/* Same surface language as Notifications */}
-      <div className="divide-y divide-neutral-200/70 rounded-2xl bg-white/70 ring-1 ring-neutral-200/70 backdrop-blur-sm dark:divide-white/10 dark:bg-[rgb(var(--panel))] dark:ring-white/10 dark:backdrop-blur-none">
+      <Card className="divide-y divide-black/5 dark:divide-white/10" clip bordered>
         {battles.map((b) => {
           const tone = battleTone(b.between);
 
@@ -91,11 +92,14 @@ export default function BattlesWidget({ drivers = [] }) {
           const railColor = behindTeam ? getTeamColor(behindTeam) : null;
 
           return (
-            <div key={`${b.ahead.driver_code}-${b.behind.driver_code}`} className="relative px-4 py-3">
-              {/* Optional ultra-subtle rail (can remove if you want zero color hints) */}
+            <div
+              key={`${b.ahead.driver_code}-${b.behind.driver_code}`}
+              className="relative px-4 py-3 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
+            >
+              {/* Optional ultra-subtle rail */}
               {railColor ? (
                 <div
-                  className="absolute left-0 top-0 h-full w-[3px] opacity-70"
+                  className="absolute left-px top-0 h-full w-[3px] opacity-70"
                   style={{ backgroundColor: railColor }}
                   aria-hidden="true"
                 />
@@ -138,7 +142,7 @@ export default function BattlesWidget({ drivers = [] }) {
             </div>
           );
         })}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,8 @@
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
 import TireBadge from "../components/ui/TireBadge";
 import { getTeamColor } from "../utils/teamColors";
+import Card from "./ui/Card";
+
 
 function PosDelta({ value }) {
   const v = Number(value ?? 0);
@@ -51,7 +53,7 @@ export default function DriversList({ drivers }) {
   const list = Array.isArray(drivers) ? drivers : [];
 
   return (
-    <div className="overflow-hidden rounded-2xl bg-white/70 ring-1 ring-neutral-200/70 backdrop-blur-sm dark:bg-[rgb(var(--panel))] dark:ring-white/10 dark:backdrop-blur-none">
+    <Card className="overflow-hidden" clip bordered>
       {/* Header row */}
       <div
         className={[
@@ -60,7 +62,7 @@ export default function DriversList({ drivers }) {
           "items-center gap-3 px-4 py-2.5",
           "text-[11px] font-semibold uppercase tracking-widest",
           "text-neutral-500 dark:text-neutral-400",
-          "border-b border-neutral-200/70 dark:border-white/10",
+          "border-b border-black/5 dark:border-white/10",
           "bg-transparent",
         ].join(" ")}
       >
@@ -74,7 +76,7 @@ export default function DriversList({ drivers }) {
       </div>
 
       {/* Rows */}
-      <div className="divide-y divide-neutral-200/70 dark:divide-white/10">
+      <div className="divide-y divide-black/5 dark:divide-white/10">
         {list.length > 0 ? (
           list.map((driver, idx) => {
             const name = driver.driver_name || driver.driver_code || "Unknown";
@@ -100,8 +102,7 @@ export default function DriversList({ drivers }) {
                   "grid min-w-0",
                   "grid-cols-[44px_1fr_92px_64px_72px_60px] md:grid-cols-[44px_1fr_110px_92px_64px_72px_60px]",
                   "items-center gap-3 px-4 py-3",
-                  "bg-white/60 hover:bg-neutral-50/80",
-                  "dark:bg-transparent dark:hover:bg-white/[0.04]",
+                  "bg-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.03]",
                   "transition-colors",
                 ].join(" ")}
               >
@@ -125,7 +126,7 @@ export default function DriversList({ drivers }) {
                   <div className="truncate text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                     {name}
                   </div>
-                  <div className="truncate text-xs text-neutral-500 dark:text-neutral-500">
+                  <div className="truncate text-xs text-neutral-500 dark:text-neutral-400">
                     {team}
                   </div>
 
@@ -183,7 +184,7 @@ export default function DriversList({ drivers }) {
             );
           })
         ) : (
-          <div className="px-6 py-12 text-center bg-neutral-50/60 dark:bg-transparent">
+          <div className="px-6 py-12 text-center">
             <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
               Waiting for race data…
             </div>
@@ -193,6 +194,6 @@ export default function DriversList({ drivers }) {
           </div>
         )}
       </div>
-    </div>
+    </Card>
   );
 }

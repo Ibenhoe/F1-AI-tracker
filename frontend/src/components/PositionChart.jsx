@@ -14,7 +14,6 @@ function snapHalf(v) {
 
 export default function PositionChart({
   lapHistory = [],
-  totalLaps = 60,
   highlightedDrivers = null,
 }) {
   if (!lapHistory || lapHistory.length < 2) {
@@ -60,8 +59,8 @@ export default function PositionChart({
   const yScale = (pos) =>
     snapHalf(
       PAD.top +
-        SAFE_Y +
-        ((pos - 1) / (maxPos - 1)) * (innerH - 2 * SAFE_Y)
+      SAFE_Y +
+      ((pos - 1) / (maxPos - 1)) * (innerH - 2 * SAFE_Y)
     );
 
   const yTicks = [1, 5, 10, 15, 20];
@@ -168,7 +167,7 @@ export default function PositionChart({
             y2={yScale(pos)}
             stroke="currentColor"
             strokeWidth={0.8}
-            className="text-neutral-200 dark:text-neutral-800"
+            className="text-neutral-200 dark:text-white/10"
             strokeDasharray="4 7"
           />
         ))}
@@ -253,11 +252,11 @@ export default function PositionChart({
                     "pointer-events-none select-none",
                     "inline-flex items-center gap-2",
                     "w-full justify-start",
-                    "rounded-full border px-2.5",
-                    "backdrop-blur",
+                    "rounded-full px-2.5",
+                    "ring-1 ring-black/5 dark:ring-white/10",
                     muted
-                      ? "bg-white/70 border-neutral-200/60 opacity-70 dark:bg-neutral-950/40 dark:border-white/10"
-                      : "bg-white/85 border-neutral-200/70 dark:bg-neutral-950/55 dark:border-white/10",
+                      ? "bg-white/70 opacity-70 dark:bg-neutral-950/40"
+                      : "bg-white/90 dark:bg-neutral-950/55",
                   ].join(" ")}
                   style={{ height: `${pillH}px` }}
                 >
@@ -273,8 +272,8 @@ export default function PositionChart({
                     className={[
                       "font-medium tracking-tight",
                       muted
-                        ? "text-neutral-500 dark:text-neutral-500"
-                        : "text-neutral-700 dark:text-neutral-200",
+  ? "text-neutral-500 dark:text-neutral-400"
+  : "text-neutral-700 dark:text-neutral-200"
                     ].join(" ")}
                     style={{ fontSize: `${fontSize}px`, lineHeight: "1" }}
                   >

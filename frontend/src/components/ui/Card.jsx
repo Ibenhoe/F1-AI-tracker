@@ -5,29 +5,28 @@ export default function Card({
   children,
   clip = false,
   hover = false,
-  bordered = false,
+  bordered = true,
 }) {
   return (
     <div
       className={cn(
-        "relative rounded-2xl transition-shadow duration-200",
+        "relative min-w-0 rounded-2xl",
+        hover ? "transition-colors duration-200" : "",
 
         // overflow handling
         clip ? "overflow-hidden" : "overflow-visible",
 
-        // light mode: iOS-like surface
-        "bg-white",
-        bordered ? "ring-1 ring-neutral-200/70" : "ring-0",
-        "shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.06)]",
+        // surface (no shadows)
+        "bg-white dark:bg-neutral-950/40",
 
-        // dark mode: pure black surface
-        "dark:bg-[rgb(var(--panel))]",
-        bordered ? "dark:ring-1 dark:ring-white/10" : "dark:ring-0",
-        "dark:shadow-none",
+        // border/ring
+        bordered ? "ring-1 ring-black/5 dark:ring-white/10" : "ring-0",
 
-        // subtle hover elevation (optional)
+        // hover: slightly stronger border + tiny bg change
         hover &&
-  "hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_16px_40px_rgba(0,0,0,0.10)]",
+          (bordered
+            ? "hover:ring-black/10 dark:hover:ring-white/15 hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
+            : "hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"),
 
         className
       )}

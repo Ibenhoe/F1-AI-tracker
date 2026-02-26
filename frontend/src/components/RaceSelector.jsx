@@ -23,9 +23,7 @@ const RACES = {
   19: "Austin",
   20: "Mexico",
   21: "Brazil",
-  22: "Las Vegas",
-  23: "Qatar",
-  24: "Abu Dhabi",
+  22: "Abu Dhabi",
 };
 
 const ITEM_H = 44;
@@ -35,7 +33,7 @@ const LOOPS = 3;
 
 function Pill({ children }) {
   return (
-    <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
+    <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs ring-1 ring-black/5 bg-black/[0.02] text-neutral-700 dark:ring-white/10 dark:bg-white/[0.04] dark:text-neutral-200">
       {children}
     </span>
   );
@@ -58,15 +56,15 @@ function IconButton({
       title={title}
       className={[
         "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
-        "transition-all duration-150",
+        "transition-colors duration-150",
         "active:scale-[0.98]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2",
         "focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950",
         disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
         active
           ? "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]"
-          : "bg-neutral-900/5 hover:bg-neutral-900/10 dark:bg-white/10 dark:hover:bg-white/15",
-        "ring-1 ring-neutral-200/70 dark:ring-white/10",
+          : "bg-transparent hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
+        "ring-1 ring-black/5 dark:ring-white/10",
         !active && accentIcon ? "text-[rgb(var(--accent))]" : "",
       ].join(" ")}
     >
@@ -82,9 +80,8 @@ function SpeedPill({ value, onChange, disabled }) {
     <div
       className={[
         "inline-flex items-center gap-1 rounded-2xl p-1",
-        "bg-white/60 backdrop-blur",
-        "ring-1 ring-neutral-200/70",
-        "dark:bg-neutral-950/30 dark:ring-white/10",
+        "bg-transparent",
+        "ring-1 ring-black/5 dark:ring-white/10",
         disabled ? "opacity-60" : "",
       ].join(" ")}
       aria-label="Simulation speed"
@@ -104,7 +101,7 @@ function SpeedPill({ value, onChange, disabled }) {
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
               active
                 ? "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]"
-                : "text-neutral-600 hover:bg-neutral-100/70 dark:text-neutral-300 dark:hover:bg-white/5",
+                : "text-neutral-600 hover:bg-black/[0.03] dark:text-neutral-300 dark:hover:bg-white/[0.05]"
             ].join(" ")}
             aria-pressed={active}
             title={`x${s}`}
@@ -274,7 +271,7 @@ export default function RaceSelector({
     if (pointerIdRef.current !== null) {
       try {
         e.currentTarget.releasePointerCapture?.(pointerIdRef.current);
-      } catch {}
+      } catch { }
     }
     pointerIdRef.current = null;
 
@@ -306,7 +303,7 @@ export default function RaceSelector({
   const canPause = canTransport && raceRunning;
   const canResume = canTransport && !raceRunning && raceEverStarted;
 
-  // ✅ Primary action highlight (action-based, not state-based)
+  // Primary action highlight (action-based, not state-based)
   const playPrimary = canTransport && !raceRunning; // paused/ready -> Play primary
   const pausePrimary = canTransport && raceRunning; // running -> Pause primary
 
@@ -346,8 +343,8 @@ export default function RaceSelector({
           ref={surfaceRef}
           className={[
             "relative select-none overflow-hidden rounded-2xl",
-            "ring-1 ring-neutral-200/70 bg-white/60 backdrop-blur",
-            "dark:ring-white/10 dark:bg-neutral-950/30",
+            "bg-white dark:bg-neutral-950/40",
+            "ring-1 ring-black/5 dark:ring-white/10",
             disabled ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
           ].join(" ")}
           style={{ height: VISIBLE * ITEM_H }}
@@ -366,10 +363,6 @@ export default function RaceSelector({
               boxShadow: "none",
             }}
           />
-
-          {/* Top/bottom fade like iOS pickers */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/90 to-transparent dark:from-neutral-950/70" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/90 to-transparent dark:from-neutral-950/70" />
 
           <div
             className="will-change-transform"
@@ -393,7 +386,7 @@ export default function RaceSelector({
                     "text-sm",
                     active
                       ? "text-[rgb(var(--accent-fg))] font-semibold"
-                      : "text-neutral-500 dark:text-neutral-400",
+                      : "text-neutral-500 dark:text-neutral-300",
                   ].join(" ")}
                   role="button"
                   tabIndex={disabled ? -1 : 0}
@@ -470,6 +463,6 @@ export default function RaceSelector({
           />
         </div>
       </div>
-    </div>
+    </div >
   );
 }

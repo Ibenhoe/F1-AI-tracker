@@ -15,18 +15,40 @@ import Badge from "../components/ui/Badge";
 import { getTeamColor } from "../utils/teamColors";
 
 function SegmentedControl({ value, onChange, items, ariaLabel }) {
+  const activeIndex = Math.max(0, items.findIndex((i) => i.id === value));
+
   return (
     <div
       className={[
-        "inline-flex w-full sm:w-auto items-center justify-center gap-1",
-        "rounded-2xl bg-neutral-100 p-1",
-        "dark:bg-white/5",
+        "relative inline-flex w-full items-stretch justify-center",
+        "rounded-2xl p-1",
+        // remove the gray track
+        "bg-transparent",
+        // keep only a very subtle container outline
+        "ring-1 ring-black/5 dark:ring-white/10",
       ].join(" ")}
       role="tablist"
       aria-label={ariaLabel}
     >
+      {/* Active pill (accent) */}
+      <div
+        className={[
+          "pointer-events-none absolute top-1 bottom-1 left-1",
+          "rounded-2xl",
+          "bg-[rgb(var(--accent))]",
+          "ring-1 ring-black/10 dark:ring-white/10",
+          "transition-transform duration-200 ease-out",
+        ].join(" ")}
+        style={{
+          width: `calc((100% - 0.5rem) / ${items.length})`,
+          transform: `translateX(calc(${activeIndex} * 100%))`,
+        }}
+        aria-hidden="true"
+      />
+
       {items.map((item) => {
         const active = value === item.id;
+
         return (
           <button
             key={item.id}
@@ -35,15 +57,14 @@ function SegmentedControl({ value, onChange, items, ariaLabel }) {
             role="tab"
             aria-selected={active}
             className={[
-              "relative inline-flex shrink-0 items-center justify-center gap-2",
-              "rounded-2xl px-3 py-1.5 text-sm font-medium transition",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
+              "relative z-10 flex-1 min-w-0",
+              "inline-flex items-center justify-center gap-2",
+              "rounded-2xl px-3 py-1.5 text-sm font-semibold",
+              "transition-colors",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
               active
-                ? [
-                  "bg-white text-neutral-900 shadow-sm",
-                  "dark:bg-white/10 dark:text-neutral-50 dark:shadow-none",
-                ].join(" ")
-                : "text-neutral-600 hover:bg-white/60 dark:text-neutral-300 dark:hover:bg-white/5",
+                ? "text-[rgb(var(--accent-fg))]"
+                : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-50 hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
             ].join(" ")}
           >
             <span className="whitespace-nowrap">{item.label}</span>
@@ -100,7 +121,7 @@ function InsightsCard({
               "h-5 min-w-5 px-1.5 rounded-full",
               "text-[11px] font-bold tabular-nums leading-none",
               "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]",
-              "ring-2 ring-white dark:ring-neutral-950",
+              "ring-1 ring-black/5 dark:ring-white/10 opacity-95",
             ].join(" ")}
             aria-label={`${notifCount} notifications`}
             title={`${notifCount} notifications`}
@@ -194,7 +215,7 @@ function StatsBar({ drivers, currentLap, totalLaps, raceRunning, trackStatus }) 
   const leaderColor = leader ? getTeamColor(leader.team) : null;
 
   const Tile = ({ title, accentColor, children }) => (
-    <Card className="relative overflow-hidden p-5 transition-all" clip>
+    <Card className="relative overflow-hidden p-5" clip>
       {/* Subtle top accent line */}
       {accentColor ? (
         <div
@@ -603,14 +624,19 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-neutral-100 px-3 py-2 dark:bg-white/5">
+          <div
+            className={[
+              "flex flex-wrap items-center gap-2 rounded-2xl px-3 py-2",
+              "bg-white dark:bg-neutral-950/40",
+              "",
+            ].join(" ")}
+          >
             <Badge variant={connected ? "success" : "danger"}>
               {connected ? "Connected" : "Disconnected"}
             </Badge>
             <Badge variant={raceRunning ? "warning" : "neutral"}>
               {raceRunning ? "Race running" : "Paused"}
             </Badge>
-            <Badge variant="accent">Lap {currentLap}</Badge>
           </div>
         </div>
       </div>

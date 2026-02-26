@@ -1,4 +1,5 @@
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
+import Card from "./ui/Card";
 
 function meta(type, colorCode) {
   const effectiveType = (colorCode || type || "").toString().toLowerCase();
@@ -32,7 +33,7 @@ function meta(type, colorCode) {
       return {
         Icon: Info,
         icon: "text-neutral-500 dark:text-neutral-400",
-        rail: "rgba(0,0,0,0.14)", // subtle in light
+        rail: "rgba(0,0,0,0.14)",
         railDark: "rgba(255,255,255,0.14)",
       };
   }
@@ -44,7 +45,7 @@ export default function NotificationsPanel({ notifications }) {
   if (list.length === 0) {
     return (
       <div className="flex h-full items-center justify-center">
-        <div className="text-sm text-neutral-500 dark:text-neutral-400">
+        <div className="text-sm font-medium text-neutral-900 dark:text-neutral-100">
           No events yet
         </div>
       </div>
@@ -53,40 +54,42 @@ export default function NotificationsPanel({ notifications }) {
 
   return (
     <div className="h-full min-h-0 overflow-auto">
-      <div className="divide-y divide-neutral-200/70 rounded-2xl bg-white/70 ring-1 ring-neutral-200/70 backdrop-blur-sm dark:divide-white/10 dark:bg-[rgb(var(--panel))] dark:ring-white/10 dark:backdrop-blur-none">
+      <Card className="divide-y divide-black/5 dark:divide-white/10" clip bordered>
         {list.map((n) => {
           const m = meta(n.type, n.color_code);
           const Icon = m.Icon;
 
-          // If backend sends a color_code that is a hex, you can optionally use it as rail color.
-          // For now we stick to meta rails for consistency.
-          const railStyle = {
-            backgroundColor: m.rail,
-          };
-
           return (
             <div
               key={n.id}
-              className="relative px-4 py-3"
-              style={{ minHeight: 74 }} // makes it feel like Battles rows (tweak to 72/76 if you want)
+              className="relative px-4 py-3 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
+              style={{ minHeight: 74 }}
             >
-              {/* Left rail (same concept as Battles) */}
+              {/* Left rail */}
               <div
-                className="absolute left-0 top-0 h-full w-[3px] opacity-70"
-                style={
-                  m.rail === "rgba(0,0,0,0.14)"
-                    ? { backgroundColor: railStyle.backgroundColor }
-                    : railStyle
-                }
+                className="absolute left-px top-0 h-full w-[3px] opacity-70"
+                style={{
+                  backgroundColor:
+                    m.rail === "rgba(0,0,0,0.14)"
+                      ? undefined
+                      : m.rail,
+                }}
                 aria-hidden="true"
               />
-              {/* Dark-mode neutral rail override */}
+
               {m.rail === "rgba(0,0,0,0.14)" ? (
-                <div
-                  className="absolute left-0 top-0 hidden h-full w-[3px] opacity-70 dark:block"
-                  style={{ backgroundColor: m.railDark }}
-                  aria-hidden="true"
-                />
+                <>
+                  <div
+                    className="absolute left-px top-0 h-full w-[3px] opacity-70 dark:hidden"
+                    style={{ backgroundColor: m.rail }}
+                    aria-hidden="true"
+                  />
+                  <div
+                    className="absolute left-px top-0 h-full w-[3px] opacity-70 hidden dark:block"
+                    style={{ backgroundColor: m.railDark }}
+                    aria-hidden="true"
+                  />
+                </>
               ) : null}
 
               <div className="flex items-start gap-3">
@@ -111,7 +114,7 @@ export default function NotificationsPanel({ notifications }) {
             </div>
           );
         })}
-      </div>
-    </div>
+      </Card>
+    </div >
   );
 }
