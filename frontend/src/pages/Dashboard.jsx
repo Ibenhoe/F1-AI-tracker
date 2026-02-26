@@ -12,6 +12,67 @@ import apiClient from "../services/apiClient";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 
+import { getTeamColor } from "../utils/teamColors";
+
+function SegmentedControl({ value, onChange, items, ariaLabel }) {
+  return (
+    <div
+      className={[
+        "inline-flex w-full sm:w-auto items-center justify-center gap-1",
+        "rounded-2xl bg-neutral-100 p-1",
+        "dark:bg-white/5",
+      ].join(" ")}
+      role="tablist"
+      aria-label={ariaLabel}
+    >
+      {items.map((item) => {
+        const active = value === item.id;
+        return (
+          <button
+            key={item.id}
+            type="button"
+            onClick={() => onChange(item.id)}
+            role="tab"
+            aria-selected={active}
+            className={[
+              "relative inline-flex shrink-0 items-center justify-center gap-2",
+              "rounded-2xl px-3 py-1.5 text-sm font-medium transition",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
+              active
+                ? [
+                  "bg-white text-neutral-900 shadow-sm",
+                  "dark:bg-white/10 dark:text-neutral-50 dark:shadow-none",
+                ].join(" ")
+                : "text-neutral-600 hover:bg-white/60 dark:text-neutral-300 dark:hover:bg-white/5",
+            ].join(" ")}
+          >
+            <span className="whitespace-nowrap">{item.label}</span>
+            {item.trailing ? item.trailing : null}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Consistent placeholder/empty state for all panels */
+function EmptyState({ title, subtitle }) {
+  return (
+    <div className="flex h-full min-h-[220px] items-center justify-center">
+      <div className="text-center">
+        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
+          {title}
+        </p>
+        {subtitle ? (
+          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+            {subtitle}
+          </p>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 function InsightsCard({
   predictions,
   currentLap,
@@ -21,99 +82,89 @@ function InsightsCard({
   notifications,
   drivers,
 }) {
-
   const [tab, setTab] = useState("predictions");
   const notifCount = Array.isArray(notifications) ? notifications.length : 0;
 
-  const tabs = [
+  const items = [
     { id: "predictions", label: "Predictions" },
     { id: "battles", label: "Battles" },
     { id: "weather", label: "Weather" },
-    { id: "notifications", label: "Notifications" },
+    {
+      id: "notifications",
+      label: "Notifications",
+      trailing:
+        notifCount > 0 ? (
+          <span
+            className={[
+              "inline-flex items-center justify-center",
+              "h-5 min-w-5 px-1.5 rounded-full",
+              "text-[11px] font-bold tabular-nums leading-none",
+              "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]",
+              "ring-2 ring-white dark:ring-neutral-950",
+            ].join(" ")}
+            aria-label={`${notifCount} notifications`}
+            title={`${notifCount} notifications`}
+          >
+            {notifCount > 99 ? "99+" : String(notifCount)}
+          </span>
+        ) : null,
+    },
   ];
 
   return (
     <div className="flex h-full min-w-0 flex-col gap-4">
-      <div className="flex h-full min-w-0 flex-col gap-4">
-        {/* Tabs / Segmented control */}
-        <div className="min-w-0">
-          <div
-            className={[
-              "inline-flex w-full min-w-0 items-center justify-center gap-1",
-              "overflow-x-auto",
-              "rounded-2xl border border-neutral-200/70 bg-white/60 p-1 backdrop-blur",
-              "dark:border-white/10 dark:bg-neutral-950/30",
-            ].join(" ")}
-            role="tablist"
-            aria-label="Insights tabs"
-          >
-            {tabs.map((t) => {
-              const isActive = tab === t.id;
-              const showNotifBadge = t.id === "notifications" && notifCount > 0;
-              const badgeText = notifCount > 99 ? "99+" : String(notifCount);
+      <SegmentedControl
+        value={tab}
+        onChange={setTab}
+        items={items}
+        ariaLabel="Insights tabs"
+      />
 
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  role="tab"
-                  aria-selected={isActive}
-                  className={[
-                    "group",
-                    "relative inline-flex shrink-0 items-center justify-center gap-1.5 text-center",
-                    "rounded-lg px-3 py-1 text-sm font-medium",
-                    "transition-colors",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2",
-                    "focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950",
-                    isActive
-                      ? "bg-neutral-900 text-white dark:bg-white/10 dark:text-neutral-50"
-                      : "text-neutral-600 hover:bg-neutral-100/70 dark:text-neutral-300 dark:hover:bg-white/5",
-                  ].join(" ")}
-                >
-                  <span className="whitespace-nowrap">{t.label}</span>
-
-                  {showNotifBadge ? (
-                    <span
-                      className={[
-                        "inline-flex items-center justify-center",
-                        "h-5 min-w-5 px-1.5",
-                        "rounded-full",
-                        "text-[11px] font-bold tabular-nums leading-none",
-                        "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]",
-                        "ring-2 ring-white dark:ring-neutral-950",
-                        "shadow-[0_10px_22px_rgba(0,0,0,0.22)]",
-                      ].join(" ")}
-                      aria-label={`${notifCount} notifications`}
-                      title={`${notifCount} notifications`}
-                    >
-                      {badgeText}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="min-h-0 min-w-0 flex-1 overflow-auto">
-          {tab === "predictions" && (
+      <div className="min-h-0 min-w-0 flex-1 overflow-auto">
+        {tab === "predictions" &&
+          (Array.isArray(predictions) && predictions.length > 0 ? (
             <PredictionsPanel
               predictions={predictions}
               currentLap={currentLap}
               modelMetrics={modelMetrics}
               totalLaps={totalLaps}
             />
-          )}
+          ) : (
+            <EmptyState
+              title="Model is training"
+              subtitle="Predictions will appear once enough laps are processed."
+            />
+          ))}
 
-          {tab === "battles" && <BattlesWidget drivers={drivers} />}
+        {tab === "battles" &&
+          (Array.isArray(drivers) && drivers.length > 0 ? (
+            <BattlesWidget drivers={drivers} />
+          ) : (
+            <EmptyState
+              title="No battles yet"
+              subtitle="Battles will show once gaps tighten."
+            />
+          ))}
 
-          {tab === "weather" && <WeatherWidget data={weatherData} />}
+        {tab === "weather" &&
+          (weatherData ? (
+            <WeatherWidget data={weatherData} />
+          ) : (
+            <EmptyState
+              title="Weather unavailable"
+              subtitle="Waiting for telemetry data."
+            />
+          ))}
 
-          {tab === "notifications" && (
+        {tab === "notifications" &&
+          (Array.isArray(notifications) && notifications.length > 0 ? (
             <NotificationsPanel notifications={notifications} />
-          )}
-        </div>
+          ) : (
+            <EmptyState
+              title="No events yet"
+              subtitle="Race events will appear here."
+            />
+          ))}
       </div>
     </div>
   );
@@ -123,7 +174,6 @@ function StatsBar({ drivers, currentLap, totalLaps, raceRunning, trackStatus }) 
   const sorted = [...(drivers || [])].sort((a, b) => a.position - b.position);
   const leader = sorted[0];
 
-  // Fastest lap: driver with shortest lap_time string (rough heuristic)
   const fastestDriver = sorted.reduce((best, d) => {
     if (!d.lap_time || d.lap_time === "—") return best;
     if (!best) return d;
@@ -132,98 +182,114 @@ function StatsBar({ drivers, currentLap, totalLaps, raceRunning, trackStatus }) 
 
   const pct = totalLaps > 0 ? Math.round((currentLap / totalLaps) * 100) : 0;
 
-  // Map FastF1 track status codes to display info
   const FLAG_MAP = {
-    '1': {
-      label: 'Green Flag',
-      sub: 'Track clear',
-      color: 'text-emerald-500 dark:text-emerald-400',
-      flag: <span className="inline-block w-8 h-5 rounded-sm bg-emerald-500 shadow-[0_0_8px_2px_rgba(16,185,129,0.45)]" />,
-    },
-    '2': {
-      label: 'Yellow Flag',
-      sub: 'Hazard on track',
-      color: 'text-yellow-500 dark:text-yellow-400',
-      flag: <span className="inline-block w-8 h-5 rounded-sm bg-yellow-400 shadow-[0_0_8px_2px_rgba(234,179,8,0.45)]" />,
-    },
-    '4': {
-      label: 'Safety Car',
-      sub: 'SC deployed',
-      color: 'text-orange-500 dark:text-orange-400',
-      flag: (
-        <span className="inline-flex items-center justify-center w-8 h-5 rounded-sm bg-orange-500 text-[9px] font-black text-white tracking-tight shadow-[0_0_8px_2px_rgba(249,115,22,0.45)]">
-          SC
-        </span>
-      ),
-    },
-    '5': {
-      label: 'Red Flag',
-      sub: 'Race suspended',
-      color: 'text-red-500 dark:text-red-400',
-      flag: <span className="inline-block w-8 h-5 rounded-sm bg-red-600 shadow-[0_0_8px_2px_rgba(220,38,38,0.55)]" />,
-    },
-    '6': {
-      label: 'Virtual SC',
-      sub: 'VSC deployed',
-      color: 'text-amber-500 dark:text-amber-400',
-      flag: (
-        <span className="inline-flex items-center justify-center w-8 h-5 rounded-sm bg-yellow-400 text-[8px] font-black text-neutral-900 tracking-tight shadow-[0_0_8px_2px_rgba(234,179,8,0.45)]">
-          VSC
-        </span>
-      ),
-    },
+    "1": { label: "Green Flag", sub: "Track clear", color: "#10B981" },
+    "2": { label: "Yellow Flag", sub: "Hazard on track", color: "#FACC15" },
+    "4": { label: "Safety Car", sub: "SC deployed", color: "#F97316" },
+    "5": { label: "Red Flag", sub: "Race suspended", color: "#EF4444" },
+    "6": { label: "Virtual SC", sub: "VSC deployed", color: "#F59E0B" },
   };
-  const flag = FLAG_MAP[String(trackStatus)] || FLAG_MAP['1'];
+
+  const flag = FLAG_MAP[String(trackStatus)] || FLAG_MAP["1"];
+  const leaderColor = leader ? getTeamColor(leader.team) : null;
+
+  const Tile = ({ title, accentColor, children }) => (
+    <Card className="relative overflow-hidden p-5 transition-all" clip>
+      {/* Subtle top accent line */}
+      {accentColor ? (
+        <div
+          className="absolute left-0 top-0 h-1 w-full opacity-80"
+          style={{ background: accentColor }}
+        />
+      ) : null}
+
+      <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-500">
+        {title}
+      </p>
+
+      <div className="mt-3">{children}</div>
+    </Card>
+  );
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      {/* Race progress */}
-      <Card className="p-4" clip>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Race Progress</p>
-        <p className="text-lg font-bold tabular-nums text-neutral-900 dark:text-neutral-50">{currentLap}<span className="text-sm font-normal text-neutral-500"> / {totalLaps} laps</span></p>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-700">
-          <div
-            className="h-full rounded-full bg-[rgb(var(--accent))] transition-all duration-700"
-            style={{ width: `${pct}%` }}
-          />
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      {/* Race Progress */}
+      <Tile title="Race Progress" accentColor="rgb(var(--accent))">
+        <div className="flex items-baseline gap-2">
+          <p className="text-2xl font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">
+            {currentLap}
+          </p>
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
+            / {totalLaps} laps
+          </p>
         </div>
-      </Card>
 
-      {/* Race leader */}
-      <Card className="p-4" clip>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Race Leader</p>
+        <div className="mt-4">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200/70 dark:bg-white/10">
+            <div
+              className="h-full rounded-full transition-all duration-700"
+              style={{
+                width: `${pct}%`,
+                background: "rgb(var(--accent))",
+              }}
+            />
+          </div>
+        </div>
+      </Tile>
+
+      {/* Race Leader */}
+      <Tile title="Race Leader" accentColor={leaderColor}>
         {leader ? (
           <>
-            <p className="text-lg font-bold text-neutral-900 dark:text-neutral-50">{leader.driver_code}</p>
-            <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">{leader.team}</p>
+            <p
+              className="text-2xl font-semibold tracking-tight"
+              style={{ color: leaderColor || "inherit" }}
+            >
+              {leader.driver_code}
+            </p>
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              {leader.team}
+            </p>
           </>
         ) : (
           <p className="text-sm text-neutral-400">—</p>
         )}
-      </Card>
+      </Tile>
 
-      {/* Fastest lap */}
-      <Card className="p-4" clip>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Fastest Lap</p>
+      {/* Fastest Lap */}
+      <Tile title="Fastest Lap" accentColor="#A855F7">
         {fastestDriver ? (
           <>
-            <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{fastestDriver.driver_code}</p>
-            <p className="text-xs font-mono text-purple-500 dark:text-purple-400">{fastestDriver.lap_time}</p>
+            <p className="text-2xl font-semibold text-purple-500 dark:text-purple-400">
+              {fastestDriver.driver_code}
+            </p>
+            <p className="mt-1 text-sm font-mono text-purple-400">
+              {fastestDriver.lap_time}
+            </p>
           </>
         ) : (
           <p className="text-sm text-neutral-400">—</p>
         )}
-      </Card>
+      </Tile>
 
       {/* Race Flag */}
-      <Card className="p-4" clip>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-1">Race Flag</p>
-        <div className="flex items-center gap-2.5 mt-0.5">
-          {flag.flag}
-          <p className={`text-base font-bold leading-tight ${flag.color}`}>{flag.label}</p>
+      <Tile title="Race Status" accentColor={flag.color}>
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-lg font-semibold" style={{ color: flag.color }}>
+              {flag.label}
+            </p>
+            <p className="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              {flag.sub}
+            </p>
+          </div>
+
+          <div
+            className="h-3 w-3 rounded-full"
+            style={{ background: flag.color }}
+          />
         </div>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">{flag.sub}</p>
-      </Card>
+      </Tile>
     </div>
   );
 }
@@ -238,7 +304,7 @@ export default function Dashboard() {
   const [raceRunning, setRaceRunning] = useState(false);
   const [connected, setConnected] = useState(false);
   const [raceInitialized, setRaceInitialized] = useState(false);
-  const [trackStatus, setTrackStatus] = useState('1');
+  const [trackStatus, setTrackStatus] = useState("1");
 
   // Lap-by-lap position history for the chart
   const [lapHistory, setLapHistory] = useState([]);
@@ -387,7 +453,11 @@ export default function Dashboard() {
           if (data.drivers && data.drivers.length > 0) {
             setLapHistory((prev) => {
               // avoid duplicates
-              if (prev.length > 0 && prev[prev.length - 1].lap === data.lap_number) return prev;
+              if (
+                prev.length > 0 &&
+                prev[prev.length - 1].lap === data.lap_number
+              )
+                return prev;
               const frame = {
                 lap: data.lap_number,
                 drivers: data.drivers.map((d) => ({
@@ -401,7 +471,10 @@ export default function Dashboard() {
 
             // Update chart focus: highlight predicted top 5 + current leader
             if (data.predictions && data.predictions.length > 0) {
-              const focusCodes = data.predictions.slice(0, 5).map((p) => p.driver_code).filter(Boolean);
+              const focusCodes = data.predictions
+                .slice(0, 5)
+                .map((p) => p.driver_code)
+                .filter(Boolean);
               setChartFocus(focusCodes.length > 0 ? focusCodes : null);
             }
           }
@@ -509,7 +582,7 @@ export default function Dashboard() {
     setCurrentLap(0);
     setRaceRunning(false);
     setRaceEverStarted(false);
-    setTrackStatus('1');
+    setTrackStatus("1");
     setLapHistory([]);
     setChartFocus(null);
     setMainPanel("standings");
@@ -530,7 +603,7 @@ export default function Dashboard() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-neutral-200/70 bg-white/60 px-3 py-2 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30">
+          <div className="flex flex-wrap items-center gap-2 rounded-2xl bg-neutral-100 px-3 py-2 dark:bg-white/5">
             <Badge variant={connected ? "success" : "danger"}>
               {connected ? "Connected" : "Disconnected"}
             </Badge>
@@ -551,40 +624,36 @@ export default function Dashboard() {
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-          <Card className="lg:col-span-4 p-5 overflow-hidden" clip>
-            <div className="h-[320px] overflow-hidden">
-              <div className="h-full overflow-auto pr-1">
-                <RaceSelector
-                  selectedRace={selectedRace}
-                  onRaceChange={handleRaceChange}
-                  disabled={false}
-                  raceLoading={raceLoading}
-                  raceReady={raceReady}
-                  raceRunning={raceRunning}
-                  raceEverStarted={raceEverStarted}
-                  speed={simSpeed}
-                  onStart={handleStart}
-                  onPause={handlePause}
-                  onResume={handleResume}
-                  onSpeedChange={handleSpeedChange}
-                />
-              </div>
+          <Card className="lg:col-span-4 p-5" clip>
+            <div className="h-[320px] min-h-0">
+              <RaceSelector
+                selectedRace={selectedRace}
+                onRaceChange={handleRaceChange}
+                disabled={false}
+                raceLoading={raceLoading}
+                raceReady={raceReady}
+                raceRunning={raceRunning}
+                raceEverStarted={raceEverStarted}
+                speed={simSpeed}
+                onStart={handleStart}
+                onPause={handlePause}
+                onResume={handleResume}
+                onSpeedChange={handleSpeedChange}
+              />
             </div>
           </Card>
 
-          <Card className="lg:col-span-8 p-5 overflow-hidden" clip>
-            <div className="h-[320px] overflow-hidden">
-              <div className="h-full overflow-auto pr-1">
-                <InsightsCard
-                  predictions={predictions}
-                  currentLap={raceData?.currentLap}
-                  modelMetrics={modelMetrics}
-                  totalLaps={raceData?.totalLaps}
-                  weatherData={weatherData}
-                  notifications={notifications}
-                  drivers={raceData?.drivers || []}
-                />
-              </div>
+          <Card className="lg:col-span-8 p-5" clip>
+            <div className="h-[320px] min-h-0">
+              <InsightsCard
+                predictions={predictions}
+                currentLap={raceData?.currentLap}
+                modelMetrics={modelMetrics}
+                totalLaps={raceData?.totalLaps}
+                weatherData={weatherData}
+                notifications={notifications}
+                drivers={raceData?.drivers || []}
+              />
             </div>
           </Card>
         </div>
@@ -601,7 +670,7 @@ export default function Dashboard() {
 
       {/* MAIN PANEL */}
       <Card className="p-5" clip>
-        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="mb-4 flex flex-col gap-3 sm:grid sm:grid-cols-3 sm:items-end">
           <div className="space-y-1">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-600">
               Live
@@ -618,35 +687,16 @@ export default function Dashboard() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Segmented control */}
-            <div className="inline-flex rounded-2xl border border-neutral-200/70 bg-white/60 p-1 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30">
-              {[
+          <div className="sm:flex sm:justify-center">
+            <SegmentedControl
+              value={mainPanel}
+              onChange={setMainPanel}
+              ariaLabel="Main panel"
+              items={[
                 { id: "standings", label: "Standings" },
                 { id: "history", label: "Position history" },
-              ].map((opt) => (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => setMainPanel(opt.id)}
-                  className={[
-                    "rounded-xl px-3 py-1.5 text-sm font-medium transition",
-                    mainPanel === opt.id
-                      ? "bg-neutral-900 text-white dark:bg-white/10 dark:text-neutral-50"
-                      : "text-neutral-600 hover:bg-neutral-100/70 dark:text-neutral-300 dark:hover:bg-white/5",
-                  ].join(" ")}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Context badge */}
-            {mainPanel === "standings" ? (
-              <Badge variant="neutral">Lap {currentLap}</Badge>
-            ) : lapHistory.length > 1 ? (
-              <Badge variant="neutral">{lapHistory.length} points</Badge>
-            ) : null}
+              ]}
+            />
           </div>
         </div>
 
@@ -666,6 +716,6 @@ export default function Dashboard() {
           />
         )}
       </Card>
-    </div >
+    </div>
   );
 }

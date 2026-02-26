@@ -9,7 +9,7 @@ function AccentDot({ primary, secondary, className }) {
     return (
       <span
         className={cn(
-          "h-2.5 w-2.5 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15",
+          "h-2.5 w-2.5 rounded-full ring-1 ring-black/10 dark:ring-white/15",
           className
         )}
         style={{ backgroundColor: primary }}
@@ -18,21 +18,14 @@ function AccentDot({ primary, secondary, className }) {
     );
   }
 
-  // Diagonal split (45°)
   return (
     <span
       className={cn(
-        "h-2.5 w-2.5 rounded-full ring-1 ring-neutral-900/10 dark:ring-white/15",
+        "h-2.5 w-2.5 rounded-full ring-1 ring-black/10 dark:ring-white/15",
         className
       )}
       style={{
-        backgroundImage: `
-          conic-gradient(
-            from 45deg,
-            ${primary} 0deg 180deg,
-            ${secondary} 180deg 360deg
-          )
-        `,
+        backgroundImage: `conic-gradient(from 45deg, ${primary} 0deg 180deg, ${secondary} 180deg 360deg)`,
       }}
       aria-hidden="true"
     />
@@ -62,7 +55,6 @@ export default function AccentSelect({
     setActiveIndex(idx);
   }, [options, value]);
 
-  // Click outside to close
   useEffect(() => {
     if (!open) return;
 
@@ -133,26 +125,22 @@ export default function AccentSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         className={cn(
-          "inline-flex h-10 items-center justify-between gap-2 rounded-lg border px-3 text-sm font-medium",
-          // Light mode (white) + Dark mode (near-black)
-          "border-neutral-200 bg-white text-neutral-900",
-          "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100",
-          "hover:border-neutral-300 dark:hover:border-neutral-700",
-          "focus:outline-none focus:ring-2 focus:ring-neutral-300/70 dark:focus:ring-neutral-700/60",
+          "inline-flex h-10 items-center justify-between gap-2 rounded-2xl px-3 text-sm font-medium",
+          "bg-neutral-100 text-neutral-900 hover:bg-neutral-200/70",
+          "dark:bg-white/10 dark:text-neutral-100 dark:hover:bg-white/15",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
           buttonClassName
         )}
       >
         <span className="flex items-center gap-2">
-          {/* Primary + optional secondary dot (minimal, no extra labels) */}
           <AccentDot
             primary="rgb(var(--accent))"
             secondary="rgb(var(--accent-secondary))"
           />
-
           <span className="tabular-nums">{selected?.label ?? "Accent"}</span>
         </span>
 
-        <ChevronDown size={16} className={cn("opacity-80", open && "rotate-180")} />
+        <ChevronDown size={16} className={cn("opacity-80 transition-transform", open && "rotate-180")} />
       </button>
 
       {open ? (
@@ -161,53 +149,47 @@ export default function AccentSelect({
           tabIndex={-1}
           onKeyDown={onKeyDown}
           className={cn(
-            "absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-xl border shadow-lg",
-            // Light mode (white) + Dark mode (near-black)
-            "border-neutral-200 bg-white text-neutral-900",
-            "dark:border-neutral-800 dark:bg-neutral-950 dark:text-neutral-100"
+            "absolute right-0 z-50 mt-2 w-56 overflow-hidden rounded-2xl",
+            // frosted popover
+            "bg-white/80 backdrop-blur-md ring-1 ring-neutral-200/70 shadow-[0_18px_60px_rgba(0,0,0,0.18)]",
+            "dark:bg-neutral-950/70 dark:ring-white/10 dark:shadow-[0_22px_70px_rgba(0,0,0,0.55)]"
           )}
         >
-          {options.map((o, idx) => {
-            const isSelected = o.id === value;
-            const isActive = idx === activeIndex;
+          <div className="divide-y divide-neutral-200/70 dark:divide-white/10">
+            {options.map((o, idx) => {
+              const isSelected = o.id === value;
+              const isActive = idx === activeIndex;
 
-            const primary = o.primary;
-            const secondary = o.secondary ?? o.primary;
+              const primary = o.primary;
+              const secondary = o.secondary ?? o.primary;
 
-            return (
-              <button
-                key={o.id}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                onMouseEnter={() => setActiveIndex(idx)}
-                onClick={() => commit(idx)}
-                className={cn(
-                  "flex w-full items-center justify-between px-3 py-2 text-left text-sm",
-                  "transition-colors",
-                  // Hover/active surfaces should be subtle and mode-aware
-                  isActive
-                    ? "bg-neutral-100 dark:bg-neutral-900"
-                    : "bg-transparent",
-                  "hover:bg-neutral-100 dark:hover:bg-neutral-900"
-                )}
-                style={
-                  isSelected
-                    ? {
-                      backgroundColor: "rgb(var(--accent) / 0.14)",
-                    }
-                    : undefined
-                }
-              >
-                <span className="flex items-center gap-2">
-                  <AccentDot primary={primary} secondary={secondary} />
-                  <span>{o.label}</span>
-                </span>
+              return (
+                <button
+                  key={o.id}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  onMouseEnter={() => setActiveIndex(idx)}
+                  onClick={() => commit(idx)}
+                  className={cn(
+                    "flex w-full items-center justify-between px-3 py-2 text-left text-sm",
+                    "transition-colors",
+                    isActive ? "bg-black/5 dark:bg-white/10" : "bg-transparent",
+                    "hover:bg-black/5 dark:hover:bg-white/10"
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <AccentDot primary={primary} secondary={secondary} />
+                    <span className={cn(isSelected && "font-medium")}>{o.label}</span>
+                  </span>
 
-                {isSelected ? <Check size={16} /> : null}
-              </button>
-            );
-          })}
+                  {isSelected ? (
+                    <Check size={16} className="text-[rgb(var(--accent))]" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
         </div>
       ) : null}
     </div>

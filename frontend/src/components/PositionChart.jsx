@@ -1,33 +1,22 @@
-/**
- * PositionChart – SVG multi-line chart of driver positions across laps.
- * No external chart library required.
- */
+import { TEAM_COLORS } from "../utils/teamColors";
 
-const TEAM_COLORS = {
-  "Mercedes":         "#00D7B6",
-  "Red Bull Racing":  "#4781D7",
-  "Ferrari":          "#ED1131",
-  "McLaren":          "#F47600",
-  "Alpine":           "#00A1E8",
-  "Racing Bulls":     "#6C98FF",
-  "Aston Martin":     "#229971",
-  "Williams":         "#1868DB",
-  "Kick Sauber":      "#01C00E",
-  "Haas":             "#9C9FA2",
-};
-
-const FALLBACK_COLORS = [
-  "#e74c3c","#3498db","#2ecc71","#f39c12","#9b59b6",
-  "#1abc9c","#e67e22","#e91e63","#00bcd4","#8bc34a",
-  "#ff5722","#607d8b","#795548","#ffc107","#673ab7",
-  "#03a9f4","#4caf50","#ff9800","#f44336","#9c27b0",
-];
-
-function getDriverColor(driver, index) {
-  return TEAM_COLORS[driver.team] || FALLBACK_COLORS[index % FALLBACK_COLORS.length];
+function getDriverColor(team) {
+  return TEAM_COLORS?.[team] || "currentColor";
 }
 
-export default function PositionChart({ lapHistory = [], totalLaps = 60, highlightedDrivers = null }) {
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
+}
+
+function snapHalf(v) {
+  return Math.round(v * 2) / 2;
+}
+
+export default function PositionChart({
+  lapHistory = [],
+  totalLaps = 60,
+  highlightedDrivers = null,
+}) {
   if (!lapHistory || lapHistory.length < 2) {
     return (
       <div className="flex h-48 items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
@@ -36,7 +25,6 @@ export default function PositionChart({ lapHistory = [], totalLaps = 60, highlig
     );
   }
 
-  // Collect all driver codes in the order they first appear (for stable color assignment)
   const driverMeta = {};
   for (const frame of lapHistory) {
     for (const d of frame.drivers) {
@@ -49,12 +37,14 @@ export default function PositionChart({ lapHistory = [], totalLaps = 60, highlig
     }
   }
 
-  const driverCodes = Object.keys(driverMeta);
+  const driverCodes = Object.keys(driverMeta).slice(0, 20);
 
-  // SVG layout constants
-  const W = 600;
-  const H = 220;
-  const PAD = { top: 10, right: 52, bottom: 24, left: 28 };
+  const W = 1400;
+  const H = 680;
+  const pillW = 120;
+  const pillGutter = 10;
+  const PAD = { top: 20, right: pillW + pillGutter * 2, bottom: 48, left: 48 };
+
   const innerW = W - PAD.left - PAD.right;
   const innerH = H - PAD.top - PAD.bottom;
 
@@ -62,141 +52,239 @@ export default function PositionChart({ lapHistory = [], totalLaps = 60, highlig
   const minLap = lapHistory[0].lap;
   const maxLap = Math.max(lapHistory[lapHistory.length - 1].lap, minLap + 1);
 
-  const xScale = (lap) => PAD.left + ((lap - minLap) / (maxLap - minLap)) * innerW;
-  const yScale = (pos) => PAD.top + ((pos - 1) / (maxPos - 1)) * innerH;
+  const xScale = (lap) =>
+    snapHalf(PAD.left + ((lap - minLap) / (maxLap - minLap)) * innerW);
 
-  // Build polyline points per driver
-  const lines = driverCodes.map((code, i) => {
-    const pts = lapHistory
-      .map((frame) => {
-        const d = frame.drivers.find((x) => x.code === code);
-        if (!d) return null;
-        return `${xScale(frame.lap).toFixed(1)},${yScale(d.position).toFixed(1)}`;
-      })
-      .filter(Boolean)
-      .join(" ");
+  const SAFE_Y = 14;
 
-    const lastFrame = [...lapHistory].reverse().find((f) => f.drivers.find((x) => x.code === code));
-    const lastDriver = lastFrame?.drivers.find((x) => x.code === code);
-    const color = getDriverColor({ team: driverMeta[code].team }, i);
-    const isHighlighted = !highlightedDrivers || highlightedDrivers.includes(code);
+  const yScale = (pos) =>
+    snapHalf(
+      PAD.top +
+        SAFE_Y +
+        ((pos - 1) / (maxPos - 1)) * (innerH - 2 * SAFE_Y)
+    );
 
-    return { code, pts, color, lastDriver, lastFrame, isHighlighted };
-  });
-
-  // Y-axis tick positions: 1, 5, 10, 15, 20
   const yTicks = [1, 5, 10, 15, 20];
 
-  // X-axis: show every ~10 laps
   const lapSpan = maxLap - minLap;
   const xTickStep = lapSpan <= 20 ? 5 : lapSpan <= 40 ? 10 : 15;
   const xTicks = [];
   for (let l = minLap; l <= maxLap; l += xTickStep) xTicks.push(l);
   if (!xTicks.includes(maxLap)) xTicks.push(maxLap);
 
+  const endX = xScale(maxLap);
+
+  const lines = driverCodes.map((code, i) => {
+    const pts = lapHistory
+      .map((frame) => {
+        const d = frame.drivers.find((x) => x.code === code);
+        if (!d) return null;
+        const x = xScale(frame.lap);
+        const y = yScale(d.position);
+        return `${x},${y}`;
+      })
+      .filter(Boolean)
+      .join(" ");
+
+    const lastFrame = [...lapHistory]
+      .reverse()
+      .find((f) => f.drivers.find((x) => x.code === code));
+
+    const lastDriver = lastFrame?.drivers.find((x) => x.code === code);
+
+    const team = driverMeta[code]?.team;
+    const color = getDriverColor(team);
+
+    const isHighlighted =
+      Array.isArray(highlightedDrivers) && highlightedDrivers.length > 0
+        ? highlightedDrivers.includes(code)
+        : true;
+
+    const endY = lastDriver ? yScale(lastDriver.position) : null;
+
+    return {
+      code,
+      pts,
+      color,
+      lastDriver,
+      isHighlighted,
+      endY,
+    };
+  });
+
+  const orderedLines = [
+    ...lines.filter((l) => !l.isHighlighted),
+    ...lines.filter((l) => l.isHighlighted),
+  ];
+
+  const rawLabels = lines
+    .filter((l) => l.lastDriver && typeof l.endY === "number")
+    .map((l) => ({
+      code: l.code,
+      color: l.color,
+      isHighlighted: l.isHighlighted,
+      y: l.endY,
+    }))
+    .sort((a, b) => a.y - b.y);
+
+  const count = rawLabels.length || 1;
+  const available = innerH;
+  const targetGap = 6;
+
+  let pillH = 26;
+  let gap = targetGap;
+
+  const needed = count * pillH + (count - 1) * gap;
+  if (needed > available) {
+    const scale = available / needed;
+    pillH = clamp(Math.floor(pillH * scale), 16, 26);
+    gap = clamp(Math.floor(gap * scale), 2, targetGap);
+  }
+
+  const fontSize = pillH <= 18 ? 11 : pillH <= 22 ? 12 : 16;
+
+  const alignedLabels = rawLabels.map((l) => ({
+    ...l,
+    y: l.y,
+  }));
+
+  const pillX = W - PAD.right + pillGutter;
+
   return (
     <div className="w-full overflow-x-auto">
       <svg
         viewBox={`0 0 ${W} ${H}`}
         className="w-full"
-        style={{ minWidth: 320, maxHeight: 260 }}
+        style={{ minWidth: 560, maxHeight: 520 }}
         aria-label="Driver position history chart"
+        shapeRendering="geometricPrecision"
       >
-        {/* subtle grid lines */}
         {yTicks.map((pos) => (
           <line
-            key={pos}
+            key={`grid-${pos}`}
             x1={PAD.left}
             y1={yScale(pos)}
             x2={W - PAD.right}
             y2={yScale(pos)}
             stroke="currentColor"
-            strokeWidth={0.5}
+            strokeWidth={0.8}
             className="text-neutral-200 dark:text-neutral-800"
-            strokeDasharray="3 3"
+            strokeDasharray="4 7"
           />
         ))}
 
-        {/* Y-axis labels */}
         {yTicks.map((pos) => (
           <text
-            key={pos}
-            x={PAD.left - 6}
+            key={`y-${pos}`}
+            x={PAD.left - 10}
             y={yScale(pos) + 4}
             textAnchor="end"
-            fontSize={9}
+            fontSize={10}
             className="fill-neutral-500 dark:fill-neutral-500 font-mono"
           >
             P{pos}
           </text>
         ))}
 
-        {/* X-axis labels */}
         {xTicks.map((lap) => (
           <text
-            key={lap}
+            key={`x-${lap}`}
             x={xScale(lap)}
-            y={H - 6}
+            y={H - 10}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={10}
             className="fill-neutral-500 dark:fill-neutral-500 font-mono"
           >
             {lap}
           </text>
         ))}
 
-        {/* X-axis label "Lap" */}
         <text
           x={PAD.left + innerW / 2}
-          y={H - 0}
+          y={H - 2}
           textAnchor="middle"
-          fontSize={8}
+          fontSize={9}
           className="fill-neutral-400 dark:fill-neutral-600"
         >
           LAPS
         </text>
 
-        {/* Driver lines — dimmed ones first, highlighted on top */}
-        {[...lines.filter((l) => !l.isHighlighted), ...lines.filter((l) => l.isHighlighted)].map((l) => (
-          <g key={l.code}>
+        {orderedLines.map((l) => (
+          <g key={`line-${l.code}`}>
             <polyline
               points={l.pts}
               fill="none"
               stroke={l.color}
-              strokeWidth={l.isHighlighted ? 2 : 1}
-              strokeOpacity={l.isHighlighted ? 0.9 : 0.25}
+              strokeWidth={l.isHighlighted ? 2.6 : 1.35}
+              strokeOpacity={l.isHighlighted ? 0.92 : 0.28}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
-            {/* driver label at end of line */}
-            {l.lastDriver && l.isHighlighted && (
-              <text
-                x={xScale(l.lastFrame.lap) + 4}
-                y={yScale(l.lastDriver.position) + 4}
-                fontSize={9}
-                fontWeight="600"
-                fill={l.color}
-                opacity={0.95}
-              >
-                {l.code}
-              </text>
-            )}
           </g>
         ))}
 
-        {/* Dot at current position for highlighted drivers */}
         {lines
-          .filter((l) => l.isHighlighted && l.lastDriver)
+          .filter((l) => l.lastDriver && typeof l.endY === "number")
           .map((l) => (
             <circle
               key={`dot-${l.code}`}
-              cx={xScale(l.lastFrame.lap)}
-              cy={yScale(l.lastDriver.position)}
-              r={3}
+              cx={endX}
+              cy={l.endY}
+              r={3.1}
               fill={l.color}
-              opacity={0.95}
+              opacity={l.isHighlighted ? 0.9 : 0.28}
             />
           ))}
+
+        {alignedLabels.map((lab) => {
+          const muted = !lab.isHighlighted;
+
+          return (
+            <g key={`pill-${lab.code}`}>
+              <foreignObject
+                x={pillX}
+                y={lab.y - pillH / 2}
+                width={pillW}
+                height={pillH}
+              >
+                <div
+                  xmlns="http://www.w3.org/1999/xhtml"
+                  className={[
+                    "pointer-events-none select-none",
+                    "inline-flex items-center gap-2",
+                    "w-full justify-start",
+                    "rounded-full border px-2.5",
+                    "backdrop-blur",
+                    muted
+                      ? "bg-white/70 border-neutral-200/60 opacity-70 dark:bg-neutral-950/40 dark:border-white/10"
+                      : "bg-white/85 border-neutral-200/70 dark:bg-neutral-950/55 dark:border-white/10",
+                  ].join(" ")}
+                  style={{ height: `${pillH}px` }}
+                >
+                  <span
+                    className="rounded-full"
+                    style={{
+                      height: `${Math.max(10, pillH - 12)}px`,
+                      width: "3px",
+                      backgroundColor: lab.color,
+                    }}
+                  />
+                  <span
+                    className={[
+                      "font-medium tracking-tight",
+                      muted
+                        ? "text-neutral-500 dark:text-neutral-500"
+                        : "text-neutral-700 dark:text-neutral-200",
+                    ].join(" ")}
+                    style={{ fontSize: `${fontSize}px`, lineHeight: "1" }}
+                  >
+                    {lab.code}
+                  </span>
+                </div>
+              </foreignObject>
+            </g>
+          );
+        })}
       </svg>
     </div>
   );

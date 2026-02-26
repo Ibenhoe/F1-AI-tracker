@@ -1,8 +1,9 @@
 import { cn } from "../../lib/cn.js";
 
 const base =
-  "inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium " +
-  "transition-all duration-150 ease-out " +
+  "inline-flex items-center justify-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium " +
+  "transition-colors duration-150 " +
+  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] " +
   "disabled:pointer-events-none disabled:opacity-50";
 
 const variants = {
@@ -12,20 +13,22 @@ const variants = {
   ),
 
   secondary: cn(
-    "bg-white text-neutral-900 border border-neutral-200",
-    "hover:bg-neutral-50",
-    "dark:bg-neutral-950 dark:text-neutral-100 dark:border-white/10 dark:hover:bg-neutral-900"
+    // iOS-like neutral button
+    "bg-neutral-100 text-neutral-900",
+    "hover:bg-neutral-200/70 active:bg-neutral-200",
+    "dark:bg-white/10 dark:text-neutral-100 dark:hover:bg-white/15 dark:active:bg-white/20"
   ),
 
   ghost: cn(
+    // toolbar-like pill
     "bg-transparent text-neutral-700",
-    "hover:bg-neutral-100",
-    "dark:text-neutral-200 dark:hover:bg-neutral-800/60"
+    "hover:bg-black/5 active:bg-black/10",
+    "dark:text-neutral-200 dark:hover:bg-white/10 dark:active:bg-white/15"
   ),
 
   danger: cn(
     "bg-red-600 text-white",
-    "hover:bg-red-500 active:bg-red-600/90"
+    "hover:brightness-95 active:brightness-90"
   ),
 };
 

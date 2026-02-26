@@ -8,35 +8,32 @@ function meta(type, colorCode) {
     case "overtake":
       return {
         Icon: CheckCircle2,
-        rail: "bg-emerald-400/80",
-        icon: "text-emerald-600 dark:text-emerald-300",
-        iconBg: "bg-emerald-500/10 dark:bg-white/5",
+        icon: "text-emerald-600 dark:text-emerald-400",
+        rail: "#10B981", // emerald-500
       };
 
     case "warning":
     case "battle":
       return {
         Icon: AlertTriangle,
-        rail: "bg-amber-400/80",
-        icon: "text-amber-600 dark:text-amber-300",
-        iconBg: "bg-amber-500/10 dark:bg-white/5",
+        icon: "text-amber-600 dark:text-amber-400",
+        rail: "#F59E0B", // amber-500
       };
 
     case "danger":
     case "error":
       return {
         Icon: XCircle,
-        rail: "bg-red-400/80",
-        icon: "text-red-600 dark:text-red-300",
-        iconBg: "bg-red-500/10 dark:bg-white/5",
+        icon: "text-red-600 dark:text-red-400",
+        rail: "#EF4444", // red-500
       };
 
     default:
       return {
         Icon: Info,
-        rail: "bg-neutral-300/80 dark:bg-white/10",
-        icon: "text-neutral-600 dark:text-neutral-400",
-        iconBg: "bg-neutral-500/10 dark:bg-white/5",
+        icon: "text-neutral-500 dark:text-neutral-400",
+        rail: "rgba(0,0,0,0.14)", // subtle in light
+        railDark: "rgba(255,255,255,0.14)",
       };
   }
 }
@@ -46,14 +43,8 @@ export default function NotificationsPanel({ notifications }) {
 
   if (list.length === 0) {
     return (
-      <div
-        className={[
-          "flex h-full items-center justify-center rounded-2xl",
-          "bg-white ring-1 ring-neutral-200/70",
-          "dark:bg-white/5 dark:ring-white/10",
-        ].join(" ")}
-      >
-        <div className="text-sm text-neutral-600 dark:text-neutral-400">
+      <div className="flex h-full items-center justify-center">
+        <div className="text-sm text-neutral-500 dark:text-neutral-400">
           No events yet
         </div>
       </div>
@@ -61,48 +52,59 @@ export default function NotificationsPanel({ notifications }) {
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col overflow-auto pr-1 [scrollbar-width:thin]">
-      <div className="space-y-2">
+    <div className="h-full min-h-0 overflow-auto">
+      <div className="divide-y divide-neutral-200/70 rounded-2xl bg-white/70 ring-1 ring-neutral-200/70 backdrop-blur-sm dark:divide-white/10 dark:bg-[rgb(var(--panel))] dark:ring-white/10 dark:backdrop-blur-none">
         {list.map((n) => {
           const m = meta(n.type, n.color_code);
           const Icon = m.Icon;
 
+          // If backend sends a color_code that is a hex, you can optionally use it as rail color.
+          // For now we stick to meta rails for consistency.
+          const railStyle = {
+            backgroundColor: m.rail,
+          };
+
           return (
             <div
               key={n.id}
-              className={[
-                "relative overflow-hidden rounded-2xl",
-                // light
-                "bg-white ring-1 ring-neutral-200/70",
-                "shadow-[0_1px_0_rgba(0,0,0,0.03),0_10px_28px_rgba(0,0,0,0.08)]",
-                // dark
-                "dark:bg-neutral-950/30 dark:ring-white/10",
-                "dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_12px_34px_rgba(0,0,0,0.45)]",
-                // consistent height
-                "h-[86px]",
-              ].join(" ")}
+              className="relative px-4 py-3"
+              style={{ minHeight: 74 }} // makes it feel like Battles rows (tweak to 72/76 if you want)
             >
-              {/* left rail */}
-              <div className={["absolute left-0 top-0 h-full w-1.5", m.rail].join(" ")} />
-
-              <div className="flex h-full items-center gap-4 px-6">
+              {/* Left rail (same concept as Battles) */}
+              <div
+                className="absolute left-0 top-0 h-full w-[3px] opacity-70"
+                style={
+                  m.rail === "rgba(0,0,0,0.14)"
+                    ? { backgroundColor: railStyle.backgroundColor }
+                    : railStyle
+                }
+                aria-hidden="true"
+              />
+              {/* Dark-mode neutral rail override */}
+              {m.rail === "rgba(0,0,0,0.14)" ? (
                 <div
-                  className={[
-                    "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
-                    "ring-1 ring-neutral-200/70",
-                    "dark:ring-white/10",
-                    m.iconBg,
-                  ].join(" ")}
-                >
-                  <Icon size={16} className={m.icon} />
-                </div>
+                  className="absolute left-0 top-0 hidden h-full w-[3px] opacity-70 dark:block"
+                  style={{ backgroundColor: m.railDark }}
+                  aria-hidden="true"
+                />
+              ) : null}
+
+              <div className="flex items-start gap-3">
+                <Icon size={18} className={["mt-1 shrink-0", m.icon].join(" ")} />
 
                 <div className="min-w-0 flex-1">
-                  <div className="text-sm font-semibold leading-snug text-neutral-900 dark:text-neutral-50">
+                  <div className="text-sm font-medium leading-snug text-neutral-900 dark:text-neutral-50">
                     {n.message}
                   </div>
-                  <div className="mt-1 text-xs tabular-nums text-neutral-600 dark:text-neutral-400">
-                    {n.time}
+
+                  <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+                    <span className="tabular-nums">{n.time}</span>
+                    {typeof n.lapNumber === "number" ? (
+                      <>
+                        <span className="text-neutral-300 dark:text-white/20">•</span>
+                        <span className="tabular-nums">Lap {n.lapNumber}</span>
+                      </>
+                    ) : null}
                   </div>
                 </div>
               </div>

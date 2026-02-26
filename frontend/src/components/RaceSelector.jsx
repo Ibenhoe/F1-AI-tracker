@@ -31,6 +31,90 @@ const VISIBLE = 5;
 const MID = Math.floor(VISIBLE / 2);
 const LOOPS = 3;
 
+function Pill({ children }) {
+  return (
+    <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
+      {children}
+    </span>
+  );
+}
+
+function IconButton({
+  onClick,
+  disabled,
+  title,
+  active = false,
+  children,
+  accentIcon = false,
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={title}
+      title={title}
+      className={[
+        "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
+        "transition-all duration-150",
+        "active:scale-[0.98]",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2",
+        "focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950",
+        disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer",
+        active
+          ? "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]"
+          : "bg-neutral-900/5 hover:bg-neutral-900/10 dark:bg-white/10 dark:hover:bg-white/15",
+        "ring-1 ring-neutral-200/70 dark:ring-white/10",
+        !active && accentIcon ? "text-[rgb(var(--accent))]" : "",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SpeedPill({ value, onChange, disabled }) {
+  const options = [1, 2, 4, 8];
+
+  return (
+    <div
+      className={[
+        "inline-flex items-center gap-1 rounded-2xl p-1",
+        "bg-white/60 backdrop-blur",
+        "ring-1 ring-neutral-200/70",
+        "dark:bg-neutral-950/30 dark:ring-white/10",
+        disabled ? "opacity-60" : "",
+      ].join(" ")}
+      aria-label="Simulation speed"
+      role="group"
+    >
+      {options.map((s) => {
+        const active = Number(value) === s;
+
+        return (
+          <button
+            key={s}
+            type="button"
+            disabled={disabled}
+            onClick={() => onChange?.(s)}
+            className={[
+              "rounded-xl px-2.5 py-1 text-xs font-semibold tabular-nums transition",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
+              active
+                ? "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]"
+                : "text-neutral-600 hover:bg-neutral-100/70 dark:text-neutral-300 dark:hover:bg-white/5",
+            ].join(" ")}
+            aria-pressed={active}
+            title={`x${s}`}
+          >
+            x{s}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 export default function RaceSelector({
   selectedRace,
   onRaceChange,
@@ -63,7 +147,7 @@ export default function RaceSelector({
 
   const value = Number(selectedRace ?? 1);
 
-  // Debounce timer om geen rapid API calls te doen tijdens scrollen
+  // Debounce to avoid rapid API calls while dragging
   const debounceTimerRef = useRef(null);
   const pendingRaceRef = useRef(null);
 
@@ -81,14 +165,12 @@ export default function RaceSelector({
       }
       debounceTimerRef.current = null;
       pendingRaceRef.current = null;
-    }, 400);
+    }, 350);
   };
 
   // offset in px
   const [offsetPx, _setOffsetPx] = useState(0);
   const offsetRef = useRef(0);
-
-  const [showReadyCheck, setShowReadyCheck] = useState(false);
 
   const setOffsetPx = (next) => {
     offsetRef.current = next;
@@ -97,9 +179,9 @@ export default function RaceSelector({
 
   const padTop = MID * ITEM_H;
 
-  // --- infinite normalization (NO jumps) ---
+  // infinite normalization (no jumps)
   const oneLoopPx = N * ITEM_H;
-  const centerLoopStartPx = oneLoopPx; // middle copy start
+  const centerLoopStartPx = oneLoopPx;
 
   const normalizeId = (id) => {
     const raw = Number(id);
@@ -109,15 +191,12 @@ export default function RaceSelector({
   };
 
   const normalizeOffset = (offPx) => {
-    // Keep offset always inside the middle loop range:
-    // [centerLoopStartPx, centerLoopStartPx + oneLoopPx)
     let x = offPx - centerLoopStartPx;
     x = ((x % oneLoopPx) + oneLoopPx) % oneLoopPx;
     return centerLoopStartPx + x;
   };
 
   const clampIndex = (idx) => Math.max(0, Math.min(loopList.length - 1, idx));
-
   const idxFromOffset = (offPx) => clampIndex(Math.round(offPx / ITEM_H));
 
   const snapToNearest = (offPx) => {
@@ -132,7 +211,7 @@ export default function RaceSelector({
     if (id !== value) emit(id);
   };
 
-  // When parent value changes, center to that value in the middle loop
+  // sync from parent to middle loop
   useEffect(() => {
     const baseIdx = baseList.findIndex((r) => r.id === value);
     if (baseIdx < 0) return;
@@ -142,26 +221,13 @@ export default function RaceSelector({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, baseList]);
 
-  // Cleanup debounce timer on unmount
   useEffect(() => {
     return () => {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
     };
   }, []);
 
-  useEffect(() => {
-    if (!raceReady) return;
-
-    setShowReadyCheck(true);
-
-    const t = setTimeout(() => {
-      setShowReadyCheck(false);
-    }, 2000); // 2 seconds
-
-    return () => clearTimeout(t);
-  }, [raceReady]);
-
-  // --- drag state ---
+  // drag state
   const isDraggingRef = useRef(false);
   const movedRef = useRef(false);
   const startYRef = useRef(0);
@@ -203,20 +269,19 @@ export default function RaceSelector({
   };
 
   const onPointerUp = (e) => {
-    // release capture
     if (pointerIdRef.current !== null) {
       try {
         e.currentTarget.releasePointerCapture?.(pointerIdRef.current);
-      } catch { }
+      } catch {}
     }
     pointerIdRef.current = null;
 
+    // tap-to-select within wheel (no drag)
     if (!disabled && isDraggingRef.current && movedRef.current === false) {
       const surface = surfaceRef.current;
       if (surface) {
         const rect = surface.getBoundingClientRect();
         const y = e.clientY - rect.top;
-
         const slot = Math.max(0, Math.min(VISIBLE - 1, Math.floor(y / ITEM_H)));
         const deltaSlots = slot - MID;
 
@@ -234,24 +299,18 @@ export default function RaceSelector({
     endDrag();
   };
 
-  const onRowClick = (loopIndex, id) => {
-    if (disabled) return;
-    if (movedRef.current) return; // ignore click after drag
-
-    const snapped = normalizeOffset(loopIndex * ITEM_H);
-    setOffsetPx(snapped);
-    snapToNearest(snapped);
-
-    if (id !== value) emit(id);
-  };
-
-  const showLoading = raceLoading;
-  const showReady = showReadyCheck;
-  const speedOptions = [1, 2, 4, 8];
   const canTransport = !disabled && raceReady && !raceLoading;
+  const canStart = canTransport && !raceRunning && !raceEverStarted;
+  const canPause = canTransport && raceRunning;
+  const canResume = canTransport && !raceRunning && raceEverStarted;
+
+  // ✅ Primary action highlight (action-based, not state-based)
+  const playPrimary = canTransport && !raceRunning; // paused/ready -> Play primary
+  const pausePrimary = canTransport && raceRunning; // running -> Pause primary
 
   return (
-    <div className="space-y-3">
+    <div className={["flex h-full flex-col", disabled ? "opacity-60" : ""].join(" ")}>
+      {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="text-sm font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
@@ -264,47 +323,52 @@ export default function RaceSelector({
 
         <div className="shrink-0 flex items-center gap-2">
           {raceLoading ? (
-            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
+            <Pill>
               <Loader2 size={14} className="animate-spin" />
               Loading…
-            </span>
+            </Pill>
           ) : raceReady ? (
-            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
+            <Pill>
               <Check size={14} />
               Ready
-            </span>
+            </Pill>
           ) : (
-            <span className="inline-flex items-center gap-2 rounded-full border border-neutral-200/60 bg-white/50 px-3 py-1 text-xs text-neutral-700 backdrop-blur dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200">
-              Waiting…
-            </span>
+            <Pill>Waiting…</Pill>
           )}
         </div>
       </div>
 
-      <div
-        className={[
-          "relative select-none rounded-2xl p-3",
-          "bg-white ring-1 ring-neutral-200/70 shadow-sm",
-          "dark:bg-neutral-950/30 dark:ring-white/10 dark:shadow-none",
-          disabled ? "opacity-60" : "",
-        ].join(" ")}
-      >
-        {/* Drag surface */}
+      {/* Wheel */}
+      <div className="mt-4">
         <div
           ref={surfaceRef}
           className={[
-            "relative overflow-hidden rounded-xl",
+            "relative select-none overflow-hidden rounded-2xl",
+            "ring-1 ring-neutral-200/70 bg-white/60 backdrop-blur",
+            "dark:ring-white/10 dark:bg-neutral-950/30",
             disabled ? "cursor-not-allowed" : "cursor-grab active:cursor-grabbing",
           ].join(" ")}
           style={{ height: VISIBLE * ITEM_H }}
-          onPointerDown={(e) => {
-            if (e.target.closest("[data-transport]")) return;
-            onPointerDown(e);
-          }} onPointerMove={onPointerMove}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           onLostPointerCapture={onLostPointerCapture}
         >
+          {/* Center highlight band */}
+          <div
+            className="pointer-events-none absolute left-2 right-2 top-1/2 -translate-y-1/2 rounded-xl"
+            style={{
+              height: ITEM_H,
+              background: "rgb(var(--accent))",
+              boxShadow: "none",
+            }}
+          />
+
+          {/* Top/bottom fade like iOS pickers */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-10 bg-gradient-to-b from-white/90 to-transparent dark:from-neutral-950/70" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-white/90 to-transparent dark:from-neutral-950/70" />
+
           <div
             className="will-change-transform"
             style={{
@@ -322,130 +386,86 @@ export default function RaceSelector({
               return (
                 <div
                   key={`${i}-${id}`}
+                  className={[
+                    "flex h-[44px] w-full items-center justify-between px-4",
+                    "text-sm",
+                    active
+                      ? "text-[rgb(var(--accent-fg))] font-semibold"
+                      : "text-neutral-500 dark:text-neutral-400",
+                  ].join(" ")}
                   role="button"
                   tabIndex={disabled ? -1 : 0}
-                  onClick={() => onRowClick(i, id)}
+                  onClick={() => {
+                    if (disabled) return;
+                    if (movedRef.current) return;
+                    const snapped = normalizeOffset(i * ITEM_H);
+                    setOffsetPx(snapped);
+                    snapToNearest(snapped);
+                    if (id !== value) emit(id);
+                  }}
                   onKeyDown={(e) => {
                     if (disabled) return;
                     if (e.key === "Enter" || e.key === " ") {
                       e.preventDefault();
-                      onRowClick(i, id);
+                      const snapped = normalizeOffset(i * ITEM_H);
+                      setOffsetPx(snapped);
+                      snapToNearest(snapped);
+                      if (id !== value) emit(id);
                     }
                   }}
-                  className={[
-                    "flex h-[44px] w-full items-center justify-between rounded-xl px-3 text-left",
-                    "border border-transparent transition-colors",
-                    disabled ? "cursor-not-allowed" : "cursor-pointer",
-                    active
-                      ? [
-                        "bg-[rgb(var(--accent))]",
-                        "text-[rgb(var(--accent-fg))]",
-                        "shadow-[0_0_0_1px_rgb(var(--accent)_/_0.22)_inset]",
-                      ].join(" ")
-                      : "text-neutral-700 hover:bg-neutral-200/40 dark:text-neutral-300/80 dark:hover:bg-white/5",
-                    !disabled
-                      ? "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent)_/_0.25)]"
-                      : "",
-                  ].join(" ")}
                 >
-                  <div className="flex min-w-0 items-center gap-3">
-                    <span className="w-8 text-right tabular-nums opacity-80">
-                      {String(id).padStart(2, "0")}
-                    </span>
-                    <span className="truncate">{name}</span>
-                  </div>
+                  <span className="w-10 text-right tabular-nums">
+                    {String(id).padStart(2, "0")}
+                  </span>
+                  <span className="ml-3 flex-1 truncate">{name}</span>
 
-                  {/* Status / Transport controls IN de geselecteerde race */}
                   {active ? (
-                    <span className="ml-3 inline-flex items-center gap-2">
-                      {/* While loading -> spinner */}
-                      {showLoading ? (
-                        <Loader2
-                          size={16}
-                          className="animate-spin opacity-90"
-                          style={{ color: "rgb(var(--accent-fg))" }}
-                          aria-label="Loading race"
-                        />
-                      ) : showReady ? (
-                        // Ready check briefly
-                        <Check
-                          size={16}
-                          className="opacity-90"
-                          style={{ color: "rgb(var(--accent-fg))" }}
-                          aria-label="Race ready"
-                        />
-                      ) : null}
-
-                      {/* Transport controls (only when ready & callbacks exist) */}
-                      {canTransport && (onStart || onPause || onResume || onSpeedChange) ? (
-                        <span
-                          data-transport
-                          className="ml-1 inline-flex items-center gap-2"
-                        >
-                          {/* Play / Pause */}
-                          {raceRunning ? (
-                            <button
-                              data-transport
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                onPause?.();
-                              }}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-900/5 text-[rgb(var(--accent-fg))] hover:bg-neutral-900/10 dark:bg-white/10 dark:hover:bg-white/15"
-                              aria-label="Pause"
-                              title="Pause"
-                            >
-                              <Pause size={14} />
-                            </button>
-                          ) : (
-                            <button
-                              data-transport
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (raceEverStarted) onResume?.();
-                                else onStart?.();
-                              }}
-                              className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-neutral-900/5 text-[rgb(var(--accent-fg))] hover:bg-neutral-900/10 dark:bg-white/10 dark:hover:bg-white/15"
-                              aria-label="Play"
-                              title="Play"
-                            >
-                              <Play size={14} />
-                            </button>
-                          )}
-
-                          {/* Speed */}
-                          <div
-                            data-transport
-                            className="inline-flex items-center rounded-lg bg-neutral-900/5 px-2 py-1 text-[11px] font-semibold dark:bg-white/10"
-                          >
-                            <span className="mr-2 opacity-80">x</span>
-                            <select
-                              value={Number(speed) || 1}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                onSpeedChange?.(Number(e.target.value));
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              className="cursor-pointer bg-transparent outline-none"
-                              aria-label="Simulation speed"
-                              title="Simulation speed"
-                            >
-                              {speedOptions.map((s) => (
-                                <option key={s} value={s}>
-                                  {s}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                        </span>
-                      ) : null}
+                    <span
+                      className="ml-3 inline-flex items-center"
+                      style={{ color: "rgb(var(--accent))" }}
+                      aria-label="Selected"
+                      title="Selected"
+                    >
+                      <Check size={16} />
                     </span>
-                  ) : null}
+                  ) : (
+                    <span className="ml-3 w-4" />
+                  )}
                 </div>
               );
             })}
           </div>
+        </div>
+
+        {/* Transport controls */}
+        <div className="mt-4 flex items-center justify-center gap-4">
+          <IconButton
+            disabled={!canStart && !canResume}
+            title={raceEverStarted ? "Resume" : "Start"}
+            active={playPrimary}
+            accentIcon
+            onClick={() => {
+              if (raceEverStarted) onResume?.();
+              else onStart?.();
+            }}
+          >
+            <Play size={18} />
+          </IconButton>
+
+          <IconButton
+            disabled={!canPause}
+            title="Pause"
+            active={pausePrimary}
+            onClick={() => onPause?.()}
+          >
+            <Pause size={18} />
+          </IconButton>
+
+          <SpeedPill
+            value={speed}
+            onChange={(s) => onSpeedChange?.(s)}
+            disabled={!canTransport}
+          />
         </div>
       </div>
     </div>

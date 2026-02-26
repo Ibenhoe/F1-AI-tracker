@@ -27,25 +27,14 @@ function getIcon(condition) {
   return Cloud;
 }
 
-function StatTile({ icon: Icon, label, value }) {
+function StatRow({ icon: Icon, label, value }) {
   return (
-    <div
-      className={[
-        "rounded-2xl px-4 py-3",
-        // light
-        "bg-white ring-1 ring-neutral-200/70",
-        "shadow-[0_1px_0_rgba(0,0,0,0.03),0_10px_28px_rgba(0,0,0,0.08)]",
-        // dark
-        "dark:bg-neutral-950/30 dark:ring-white/10",
-        "dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_18px_50px_rgba(0,0,0,0.45)]",
-      ].join(" ")}
-    >
-      <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-        <Icon size={13} />
-        {label}
+    <div className="flex items-center justify-between py-2">
+      <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
+        <Icon size={14} className="opacity-80" />
+        <span className="font-medium">{label}</span>
       </div>
-
-      <div className="mt-1 text-base font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">
+      <div className="text-sm font-medium tabular-nums text-neutral-900 dark:text-neutral-50">
         {value}
       </div>
     </div>
@@ -54,15 +43,7 @@ function StatTile({ icon: Icon, label, value }) {
 
 export default function WeatherWidget({ data }) {
   if (!data) {
-    return (
-      <div
-        className={[
-          "h-full rounded-2xl",
-          "bg-white ring-1 ring-neutral-200/70",
-          "dark:bg-white/5 dark:ring-white/10",
-        ].join(" ")}
-      />
-    );
+    return <div className="h-full" />;
   }
 
   const condition = normalizeCondition(data.condition);
@@ -73,74 +54,70 @@ export default function WeatherWidget({ data }) {
   const humidity = clampNum(data.humidity);
   const wind = clampNum(data.windSpeed);
 
-  // You said you don't want condition shown
+  // Keep as you wanted: no condition text
   const SHOW_CONDITION = false;
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-3">
-      <div
-        className={[
-          "flex-1 min-h-0",
-          "rounded-2xl px-6 py-6",
-          // light
-          "bg-white ring-1 ring-neutral-200/70",
-          "shadow-[0_1px_0_rgba(0,0,0,0.03),0_14px_40px_rgba(0,0,0,0.10)]",
-          // dark
-          "dark:bg-neutral-950/30 dark:ring-white/10",
-          "dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_18px_50px_rgba(0,0,0,0.55)]",
-        ].join(" ")}
-      >
-        <div className="flex h-full flex-col justify-between">
-          <div className="flex items-start justify-between gap-6">
-            <div className="min-w-0">
-              <div className="flex items-end gap-3">
-                <div className="text-5xl font-semibold tracking-tight tabular-nums leading-none text-neutral-900 dark:text-neutral-50">
-                  {Math.round(air)}°
-                </div>
-                <div className="pb-1 text-sm text-neutral-500 dark:text-neutral-400">
-                  air
-                </div>
+    <div className="h-full min-h-0">
+      {/* Single calm surface */}
+      <div className="flex h-full min-h-0 flex-col rounded-2xl bg-white/70 ring-1 ring-neutral-200/70 px-5 py-5 backdrop-blur-sm dark:bg-[rgb(var(--panel))] dark:ring-white/10 dark:backdrop-blur-none">
+        {/* Top summary */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <div className="flex items-end gap-2">
+              <div className="text-5xl font-semibold tracking-tight tabular-nums leading-none text-neutral-900 dark:text-neutral-50">
+                {Math.round(air)}°
               </div>
-
-              <div className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
-                Track{" "}
-                <span className="font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">
-                  {Math.round(track)}°C
-                </span>
-
-                {SHOW_CONDITION ? (
-                  <>
-                    <span className="text-neutral-400 dark:text-neutral-600"> · </span>
-                    <span className="text-neutral-700 dark:text-neutral-300">
-                      {condition}
-                    </span>
-                  </>
-                ) : null}
+              <div className="pb-1 text-sm text-neutral-500 dark:text-neutral-400">
+                air
               </div>
             </div>
 
-            <div
-              className={[
-                "grid h-14 w-14 place-items-center rounded-2xl",
-                //light
-                "bg-neutral-50 ring-1 ring-neutral-200/70",
-                //dark
-                "dark:bg-white/5 dark:ring-white/10",
-              ].join(" ")}
-            >
-              <Icon className="opacity-90 text-neutral-900 dark:text-neutral-50" size={24} />
+            <div className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+              Track{" "}
+              <span className="font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">
+                {Math.round(track)}°C
+              </span>
+
+              {SHOW_CONDITION ? (
+                <>
+                  <span className="text-neutral-300 dark:text-white/20"> · </span>
+                  <span className="text-neutral-600 dark:text-neutral-300">
+                    {condition}
+                  </span>
+                </>
+              ) : null}
             </div>
           </div>
 
-          {/* divider for spacing / fill */}
-          <div className="mt-6 h-px w-full bg-neutral-200/70 dark:bg-white/10" />
+          {/* Icon, no glow/chip */}
+          <Icon
+            size={26}
+            className="mt-1 shrink-0 text-neutral-700 dark:text-neutral-200"
+          />
         </div>
-      </div>
 
-      <div className="grid grid-cols-3 gap-2">
-        <StatTile icon={Droplets} label="Humidity" value={`${Math.round(humidity)}%`} />
-        <StatTile icon={Wind} label="Wind" value={`${wind.toFixed(1)} km/h`} />
-        <StatTile icon={Thermometer} label="Track" value={`${Math.round(track)}°C`} />
+        {/* Divider */}
+        <div className="my-4 h-px w-full bg-neutral-200/70 dark:bg-white/10" />
+
+        {/* Secondary stats as list rows */}
+        <div className="divide-y divide-neutral-200/70 dark:divide-white/10">
+          <StatRow
+            icon={Droplets}
+            label="Humidity"
+            value={`${Math.round(humidity)}%`}
+          />
+          <StatRow
+            icon={Wind}
+            label="Wind"
+            value={`${wind.toFixed(1)} km/h`}
+          />
+          <StatRow
+            icon={Thermometer}
+            label="Track"
+            value={`${Math.round(track)}°C`}
+          />
+        </div>
       </div>
     </div>
   );

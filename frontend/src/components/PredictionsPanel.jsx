@@ -1,4 +1,7 @@
-import { Brain } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import Card from "./ui/Card";
+import { getTeamColor } from "../utils/teamColors";
 
 function clamp01(n) {
   const x = Number(n);
@@ -6,175 +9,198 @@ function clamp01(n) {
   return Math.min(100, Math.max(0, x));
 }
 
-export default function PredictionsPanel({ predictions, currentLap, modelMetrics }) {
+function toInt(n, fallback = 0) {
+  const x = Number(n);
+  return Number.isFinite(x) ? Math.round(x) : fallback;
+}
+
+const DRIVER_TO_TEAM = {
+  VER: "Red Bull Racing",
+  PER: "Red Bull Racing",
+  LEC: "Ferrari",
+  SAI: "Ferrari",
+  HAM: "Mercedes",
+  RUS: "Mercedes",
+  NOR: "McLaren",
+  PIA: "McLaren",
+  ALO: "Aston Martin",
+  STR: "Aston Martin",
+  GAS: "Alpine",
+  OCO: "Alpine",
+  ALB: "Williams",
+  SAR: "Williams",
+  BOT: "Kick Sauber",
+  ZHO: "Kick Sauber",
+  HUL: "Haas F1 Team",
+  MAG: "Haas F1 Team",
+  TSU: "RB",
+  RIC: "RB",
+};
+
+function pickTeam(pred) {
+  if (!pred) return "";
+  if (typeof pred.team === "string" && pred.team) return pred.team;
+  if (typeof pred.team_name === "string" && pred.team_name) return pred.team_name;
+  if (typeof pred.constructor_name === "string" && pred.constructor_name) return pred.constructor_name;
+  const code = String(pred.driver_code || "").trim().toUpperCase();
+  return DRIVER_TO_TEAM[code] || "";
+}
+
+export default function PredictionsPanel({ predictions }) {
   const list = Array.isArray(predictions) ? predictions : [];
-  const top = list.slice(0, 5);
+  const top = useMemo(() => list.slice(0, 5), [list]);
 
-  const maturity = Math.round(Number(modelMetrics?.model_maturity_percentage ?? 0));
-  const updates = Number(modelMetrics?.total_updates ?? 0);
+  const visibleCount = 3;
+  const [start, setStart] = useState(0);
+  const maxStart = Math.max(0, top.length - visibleCount);
 
-  const mae =
-    modelMetrics && modelMetrics.recent_mae_average !== undefined
-      ? Number(modelMetrics.recent_mae_average)
-      : null;
+  useEffect(() => {
+    setStart((s) => Math.min(s, maxStart));
+  }, [maxStart]);
+
+  const canPrev = start > 0;
+  const canNext = start < maxStart;
+
+  const visible = top.slice(start, start + visibleCount);
+
+  if (top.length === 0) {
+    return (
+      <div className="rounded-2xl bg-white ring-1 ring-neutral-200/70 px-4 py-10 text-center dark:bg-white/5 dark:ring-white/10">
+        <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+          Model is training
+        </div>
+        <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+          Predictions appear once enough laps are processed.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
-      {/* context */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-neutral-600 dark:text-neutral-400">
-            <Brain size={14} className="text-[rgb(var(--accent))] opacity-90" />
-            <span>Expected top-5 finish order (AI)</span>
-          </div>
+      <div className="flex items-center justify-end px-1">
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => canPrev && setStart((s) => s - 1)}
+            disabled={!canPrev}
+            className={[
+              "inline-flex h-8 w-8 items-center justify-center rounded-xl",
+              "border border-neutral-200/70 bg-white/60 backdrop-blur",
+              "text-neutral-700 transition hover:bg-neutral-100/70",
+              "disabled:opacity-40 disabled:hover:bg-white/60",
+              "dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200 dark:hover:bg-white/5",
+            ].join(" ")}
+            aria-label="Previous predictions"
+          >
+            <ChevronLeft size={16} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => canNext && setStart((s) => s + 1)}
+            disabled={!canNext}
+            className={[
+              "inline-flex h-8 w-8 items-center justify-center rounded-xl",
+              "border border-neutral-200/70 bg-white/60 backdrop-blur",
+              "text-neutral-700 transition hover:bg-neutral-100/70",
+              "disabled:opacity-40 disabled:hover:bg-white/60",
+              "dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200 dark:hover:bg-white/5",
+            ].join(" ")}
+            aria-label="Next predictions"
+          >
+            <ChevronRight size={16} />
+          </button>
         </div>
       </div>
 
-      {/* model meta */}
-      <div className="rounded-xl px-1">
-        <div className="flex items-center justify-between gap-3 px-2">
-          <div className="flex items-baseline gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500/80 dark:text-neutral-500">
-              Updates
-            </span>
-            <span className="text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
-              {updates}
-            </span>
-          </div>
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {visible.map((pred, localIdx) => {
+          const idx = start + localIdx;
 
-          <div className="flex items-baseline gap-2">
-            <span className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500/80 dark:text-neutral-500">
-              Maturity
-            </span>
-            <span className="text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
-              {maturity}%
-            </span>
-          </div>
-        </div>
+          const driver = pred.driver_name || pred.driver_code || "Unknown";
+          const team = pickTeam(pred);
+          const teamColor = getTeamColor(team) || "rgba(0,0,0,0.12)";
 
-        <div className="mt-2 px-2">
-          <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-200/70 dark:bg-white/10">
-            <div
-              className="h-full rounded-full bg-[rgb(var(--accent))]"
-              style={{ width: `${clamp01(maturity)}%` }}
-            />
-          </div>
-        </div>
+          const fromPos = toInt(pred.position ?? 0);
+          const toPos = toInt(pred.prediction ?? 0);
+          const confidence = clamp01(pred.confidence ?? 0);
 
-        {mae !== null ? (
-          <div className="mt-2 flex items-center justify-between px-2 text-[11px] text-neutral-600 dark:text-neutral-400">
-            <span className="tabular-nums">MAE {mae.toFixed(2)}</span>
-            <span className="opacity-70">Lower is better</span>
-          </div>
-        ) : null}
-      </div>
+          return (
+            <Card
+              key={`${pred.driver_code ?? driver}-${idx}`}
+              className="relative overflow-hidden p-5"
+              clip
+            >
+              <div className="absolute left-0 top-0 h-1 w-full" style={{ background: teamColor }} />
 
-      {/* Predictions */}
-      {top.length === 0 ? (
-        <div className="rounded-2xl bg-white ring-1 ring-neutral-200/70 px-4 py-10 text-center dark:bg-white/5 dark:ring-white/10">
-          <div className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-            Model is training
-          </div>
-          <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
-            Predictions appear once enough laps are processed.
-          </div>
-        </div>
-      ) : (
-        <div
-          className={[
-            "flex-1 min-h-0",
-            "flex items-start gap-4 overflow-x-auto", // ✅ was items-stretch
-            "pb-2",
-            "snap-x snap-mandatory",
-            "[scrollbar-width:thin]",
-          ].join(" ")}
-        >
-          {top.map((pred, idx) => {
-            const driver = pred.driver_name || pred.driver_code || "Unknown";
-
-            const team =
-              typeof pred.team === "string"
-                ? pred.team
-                : typeof pred.team_name === "string"
-                  ? pred.team_name
-                  : typeof pred.constructor_name === "string"
-                    ? pred.constructor_name
-                    : "";
-
-            const fromPos = Math.round(Number(pred.position ?? 0));
-            const toPos = Math.round(Number(pred.prediction ?? 0));
-            const confidence = clamp01(pred.confidence ?? 0);
-
-            const podium = `P${idx + 1}`;
-
-            return (
-              <div
-                key={`${pred.driver_code ?? driver}-${idx}`}
-                className="snap-start min-w-[280px] max-w-[340px] flex-1 h-auto relative" // ✅ was h-full
-              >
-                {/* P badge */}
-                <div className="absolute left-1/2 top-4 z-10 -translate-x-1/2">
-                  <div
-                    className={[
-                      "rounded-full px-4 py-1.5",
-                      "text-sm font-semibold tabular-nums",
-                      "bg-[rgb(var(--accent))]",
-                      "text-neutral-950 dark:text-[rgb(var(--accent-fg))]",
-                      "ring-1 ring-black/10 dark:ring-white/10",
-                      "shadow-[0_12px_28px_rgba(0,0,0,0.25)] dark:shadow-[0_12px_28px_rgba(0,0,0,0.45)]",
-                    ].join(" ")}
-                  >
-                    {podium}
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-500">
+                    Prediction
                   </div>
+
+                  <div className="mt-2 truncate text-lg font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
+                    {driver}
+                  </div>
+
+                  {team ? (
+                    <div className="mt-1 truncate text-sm text-neutral-500 dark:text-neutral-400">
+                      {team}
+                    </div>
+                  ) : null}
                 </div>
 
-                {/* Card */}
                 <div
                   className={[
-                    "h-auto flex flex-col", // ✅ was h-full
-                    "rounded-2xl px-6 pt-12 pb-5",
-                    "overflow-hidden",
-                    // LIGHT MODE
-                    "bg-white ring-1 ring-neutral-200/70",
-                    "shadow-[0_1px_0_rgba(0,0,0,0.04),0_18px_50px_rgba(0,0,0,0.10)]",
-                    // DARK MODE
-                    "dark:bg-neutral-950/30 dark:ring-white/10",
-                    "dark:shadow-[0_1px_0_rgba(255,255,255,0.04),0_18px_50px_rgba(0,0,0,0.55)]",
-                    "text-center",
+                    "shrink-0 rounded-full px-3 py-1.5",
+                    "text-sm font-semibold tabular-nums",
+                    "bg-neutral-100 text-neutral-900 ring-1 ring-black/10",
+                    "dark:bg-white/10 dark:text-neutral-50 dark:ring-white/10",
                   ].join(" ")}
                 >
-                  <div className="min-w-0">
-                    {team ? (
-                      <div className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-                        {team}
-                      </div>
-                    ) : (
-                      <div className="h-[14px]" />
-                    )}
-
-                    <div className="mt-2 truncate text-xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
-                      {driver}
-                    </div>
-
-                    <div className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
-                      <span className="font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">
-                        {Math.round(confidence)}%
-                      </span>{" "}
-                      confidence
-                    </div>
-
-                    <div className="mt-4 flex justify-center gap-2 text-[11px] text-neutral-600 dark:text-neutral-400">
-                      <span className="tabular-nums">Pos {fromPos} → {toPos}</span>
-                      <span className="text-neutral-300 dark:text-neutral-700">•</span>
-                      <span className="tabular-nums">Pit {pred.pit_stops ?? 0}</span>
-                    </div>
-                  </div>
+                  P{idx + 1}
                 </div>
               </div>
-            );
-          })}
-        </div>
-      )}
+
+              <div className="mt-4 flex items-baseline justify-between gap-3">
+                <div className="text-sm text-neutral-600 dark:text-neutral-400">
+                  Confidence
+                </div>
+                <div className="text-base font-semibold tabular-nums text-neutral-900 dark:text-neutral-50">
+                  {Math.round(confidence)}%
+                </div>
+              </div>
+
+              <div className="mt-3">
+                <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200/70 dark:bg-white/10">
+                  <div
+                    className="h-full rounded-full"
+                    style={{ width: `${confidence}%`, background: teamColor }}
+                  />
+                </div>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between text-[11px] text-neutral-600 dark:text-neutral-400">
+                <span className="tabular-nums">
+                  Pos {fromPos} → {toPos}
+                </span>
+                <span className="tabular-nums">
+                  Pit {toInt(pred.pit_stops ?? 0)}
+                </span>
+              </div>
+            </Card>
+          );
+        })}
+
+        {visible.length < 3
+          ? Array.from({ length: 3 - visible.length }).map((_, i) => (
+              <div key={`pad-${i}`} className="hidden lg:block" />
+            ))
+          : null}
+
+        {visible.length < 2 ? <div className="hidden sm:block lg:hidden" /> : null}
+      </div>
     </div>
   );
 }
