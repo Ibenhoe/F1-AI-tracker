@@ -4,14 +4,11 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import RaceSelector from "../components/RaceSelector";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
-import TireBadge from "../components/ui/TireBadge";
 
 import PredictedPodium from "../components/prerace/PredictedPodium";
 import PreRaceStatTiles from "../components/prerace/PreRaceStatTiles";
 import PreRacePredictionsList from "../components/prerace/PreRacePredictionsList";
 import TireStrategyPanel from "../components/prerace/TireStrategyPanel";
-
-import { getTeamColor } from "../utils/teamColors";
 
 /* ---------- small utilities ---------- */
 function clamp(n, a, b) {
@@ -20,18 +17,18 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, x));
 }
 
-/* ---------- SegmentedControl (Dashboard style) ---------- */
+/* ---------- SegmentedControl (EXACT Dashboard style) ---------- */
 function SegmentedControl({ value, onChange, items, ariaLabel }) {
   const activeIndex = Math.max(0, items.findIndex((i) => i.id === value));
 
   return (
     <div
       className={[
-        "relative inline-flex w-full sm:w-auto items-stretch justify-center",
+        "relative inline-flex w-full items-stretch justify-center",
         "rounded-2xl p-1",
-        // remove track fill (match dashboard)
+        // remove the gray track
         "bg-transparent",
-        // subtle outline
+        // keep only a very subtle container outline
         "ring-1 ring-black/5 dark:ring-white/10",
       ].join(" ")}
       role="tablist"
@@ -83,9 +80,10 @@ function SegmentedControl({ value, onChange, items, ariaLabel }) {
   );
 }
 
+/** Consistent placeholder/empty state for all panels (EXACT Dashboard style) */
 function EmptyState({ title, subtitle }) {
   return (
-    <div className="flex min-h-[220px] items-center justify-center">
+    <div className="flex h-full min-h-[220px] items-center justify-center">
       <div className="text-center">
         <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
           {title}
@@ -147,16 +145,6 @@ export default function PreRaceAnalysis() {
     const hi = clamp(max + pad, 0, 100);
     return { lo, hi };
   }, [top10]);
-
-  const confidenceColor = (pct) => {
-    const p = clamp(Number(pct ?? 0), 0, 100);
-    const t =
-      confStats.hi === confStats.lo
-        ? 0.5
-        : clamp((p - confStats.lo) / (confStats.hi - confStats.lo), 0, 1);
-    const hue = 15 + t * 85;
-    return `hsl(${hue} 85% 52%)`;
-  };
 
   const movers = useMemo(() => {
     const withDelta = top10.map((p, i) => ({
@@ -245,12 +233,11 @@ export default function PreRaceAnalysis() {
     }
   };
 
-  // Use your RaceSelector as-is; it supports both prop names.
   const handleRaceSelect = (raceId) => setRaceNumber(raceId);
 
   return (
     <div className="space-y-6">
-      {/* HEADER (Dashboard style) */}
+      {/* HEADER (EXACT Dashboard style) */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-neutral-50">
@@ -276,15 +263,14 @@ export default function PreRaceAnalysis() {
         </div>
       </div>
 
-      {/* TOP GRID (same structure as dashboard) */}
+      {/* TOP GRID (EXACT Dashboard structure) */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        {/* LEFT: RaceSelector (keep visuals) */}
+        {/* LEFT */}
         <Card className="lg:col-span-4 p-5" clip>
           <div className="h-[320px] min-h-0">
             <RaceSelector
               selectedRace={raceNumber}
-              onSelectRace={handleRaceSelect}
-              /* make it look “Ready” like dashboard */
+              onSelectRace={handleRaceSelect} // if needed: onRaceChange={handleRaceSelect}
               raceLoading={loading}
               raceReady={!loading}
               raceRunning={false}
@@ -294,38 +280,31 @@ export default function PreRaceAnalysis() {
           </div>
         </Card>
 
-        {/* RIGHT: Podium / Tire strategy card */}
+        {/* RIGHT */}
         <Card className="lg:col-span-8 p-5" clip>
           <div className="flex h-[320px] min-h-0 flex-col gap-4">
-            <div className="flex flex-col gap-3 sm:grid sm:grid-cols-3 sm:items-center">
-  {/* Left spacer */}
-  <div className="hidden sm:block" />
-
-  {/* Center: tabs */}
-  <div className="sm:flex sm:justify-center">
-    <SegmentedControl
-      value={insightTab}
-      onChange={setInsightTab}
-      ariaLabel="Pre-race insights tabs"
-      items={[
-        { id: "podium", label: "Podium" },
-        { id: "strategy", label: "Tire strategy" },
-      ]}
-    />
-  </div>
-
-  {/* Right spacer */}
-  <div className="hidden sm:block" />
-</div>
+            {/* Tabs: same placement style as Dashboard InsightsCard */}
+            <SegmentedControl
+              value={insightTab}
+              onChange={setInsightTab}
+              ariaLabel="Pre-race insights tabs"
+              items={[
+                { id: "podium", label: "Podium" },
+                { id: "strategy", label: "Tire strategy" },
+              ]}
+            />
 
             <div className="min-h-0 flex-1 overflow-auto">
               {error ? (
-                <EmptyState title="Error" subtitle="Fix the backend request and retry." />
+                <EmptyState
+                  title="Error"
+                  subtitle="Fix the backend request and retry."
+                />
               ) : loading ? (
-                <EmptyState title="Loading" subtitle="Computing pre-race insights…" />
+                <EmptyState title="Loading" subtitle="Computing insights…" />
               ) : hasPredictions ? (
                 insightTab === "podium" ? (
-                  <PredictedPodium predictions={predictions} />
+                  <PredictedPodium predictions={predictions} analysis={analysis} />
                 ) : (
                   <TireStrategyPanel
                     tireStrategies={tireStrategies}
@@ -343,49 +322,13 @@ export default function PreRaceAnalysis() {
         </Card>
       </div>
 
-      {/* Optional error/loading cards under the grid */}
       {error ? <ErrorCard message={error} /> : null}
 
-      {/* STATS TILES (same rhythm as dashboard) */}
+      {/* STATS TILES */}
       <PreRaceStatTiles movers={movers} circuitAnalysis={circuitAnalysis} />
 
-      {/* AI Predictions (DriverList-like table) */}
+      {/* PREDICTIONS TABLE/LIST */}
       <PreRacePredictionsList predictions={predictions} />
-
-      {analysis ? (
-        <Card className="p-5" clip>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-600">
-            Summary
-          </p>
-
-          <div className="mt-3">
-            {typeof analysis === "string" ? (
-              <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
-                {analysis}
-              </p>
-            ) : typeof analysis === "object" ? (
-              <div className="space-y-1.5 text-xs">
-                {Object.entries(analysis).map(([k, v]) => (
-                  <div key={k} className="flex items-start justify-between gap-4">
-                    <span className="font-medium text-neutral-500 dark:text-neutral-400">
-                      {String(k).replace(/_/g, " ")}
-                    </span>
-                    <span className="text-right text-neutral-900 dark:text-neutral-200">
-                      {typeof v === "string" ||
-                        typeof v === "number" ||
-                        typeof v === "boolean"
-                        ? String(v)
-                        : Array.isArray(v)
-                          ? v.join(", ")
-                          : JSON.stringify(v)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </Card>
-      ) : null}
-    </div >
+    </div>
   );
 }

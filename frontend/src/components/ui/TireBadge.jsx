@@ -2,7 +2,7 @@ function tireMeta(compound) {
   const c = String(compound ?? "").toUpperCase();
 
   if (c === "SOFT") return { label: "S", color: "#DC2626" };
-  if (c === "MEDIUM") return { label: "M", color: "#D97706" };
+  if (c === "MEDIUM") return { label: "M", color: "#FFC800" };
   if (c === "HARD") return { label: "H", color: "#9CA3AF" };
   if (c === "INTERMEDIATE") return { label: "I", color: "#10B981" };
   if (c === "WET") return { label: "W", color: "#3B82F6" };

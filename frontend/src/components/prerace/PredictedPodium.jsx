@@ -1,4 +1,5 @@
 // src/components/prerace/PredictedPodium.jsx
+import { useMemo } from "react";
 import Card from "../ui/Card";
 import { getTeamColor } from "../../utils/teamColors";
 
@@ -13,44 +14,49 @@ function toInt(n, fallback = null) {
   return Number.isFinite(x) ? Math.round(x) : fallback;
 }
 
-export default function PredictedPodium({ predictions = [] }) {
-  const top10 = Array.isArray(predictions) ? predictions.slice(0, 10) : [];
+function formatDeltaVsGrid(delta) {
+  if (delta == null) return "Δ —";
+  if (delta > 0) return `▲ ${delta} vs grid`;
+  if (delta < 0) return `▼ ${Math.abs(delta)} vs grid`;
+  return "—";
+}
 
-  // Keep podium ordering + vertical offsets
-  const podium = [
-    { pred: top10?.[1], pos: 2, offset: "pt-6" },
-    { pred: top10?.[0], pos: 1, offset: "pt-0" },
-    { pred: top10?.[2], pos: 3, offset: "pt-10" },
-  ];
+export default function PredictedPodium({ predictions = [] }) {
+  const podium = useMemo(() => {
+    const top = Array.isArray(predictions) ? predictions.slice(0, 3) : [];
+    return [
+      { pred: top?.[0], pos: 1 },
+      { pred: top?.[1], pos: 2 },
+      { pred: top?.[2], pos: 3 },
+    ];
+  }, [predictions]);
 
   return (
-    <div className="grid grid-cols-3 gap-4">
-      {podium.map(({ pred, pos, offset }) => {
-        // Empty placeholder keeps spacing if data missing
-        if (!pred) return <div key={pos} className={offset} />;
+    // Match PredictionsPanel outer structure (without nav buttons)
+    <div className="flex h-full min-h-0 flex-col gap-3">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {podium.map(({ pred, pos }) => {
+          if (!pred) return null;
 
-        const driver = pred.driver_name || pred.driver || "Unknown";
-        const team = pred.team ?? "—";
-        const teamColor = getTeamColor(team) || "rgba(0,0,0,0.12)";
+          const driver = pred.driver_name || pred.driver || "Unknown";
+          const team = pred.team ?? "";
+          const teamColor = getTeamColor(team) || "rgba(0,0,0,0.12)";
 
-        const confidence = clamp01(pred.confidence ?? 0);
+          const confidence = clamp01(pred.confidence ?? 0);
 
-        // backend grid_position might be number-like string
-        const grid = toInt(pred.grid_position, null);
-        const predicted = pos;
-        const delta = grid == null ? null : grid - predicted; // positive = improved vs grid
+          const grid = toInt(pred.grid_position, null);
+          const delta = grid == null ? null : grid - pos; // positive = improved vs grid
 
-        return (
-          <div key={pos} className={offset}>
-            <Card className="relative p-5" clip>
-              {/* Same as PredictionsPanel: top accent line */}
+          return (
+            <Card key={pos} className="relative p-5" clip>
+              {/* Same top accent line */}
               <div
                 className="absolute left-0 top-0 h-1 w-full"
                 style={{ background: teamColor }}
                 aria-hidden="true"
               />
 
-              {/* Header row */}
+              {/* Same header anatomy */}
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <div className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
@@ -68,7 +74,7 @@ export default function PredictedPodium({ predictions = [] }) {
                   ) : null}
                 </div>
 
-                {/* Position pill (same style as PredictionsPanel) */}
+                {/* Same position pill */}
                 <div
                   className={[
                     "shrink-0 rounded-full px-3 py-1.5",
@@ -82,7 +88,7 @@ export default function PredictedPodium({ predictions = [] }) {
                 </div>
               </div>
 
-              {/* Confidence */}
+              {/* Same confidence row */}
               <div className="mt-4 flex items-baseline justify-between gap-3">
                 <div className="text-sm text-neutral-600 dark:text-neutral-400">
                   Confidence
@@ -92,6 +98,7 @@ export default function PredictedPodium({ predictions = [] }) {
                 </div>
               </div>
 
+              {/* Same bar */}
               <div className="mt-3">
                 <div className="h-2 w-full overflow-hidden rounded-full bg-neutral-200/70 dark:bg-white/10">
                   <div
@@ -102,38 +109,43 @@ export default function PredictedPodium({ predictions = [] }) {
                 </div>
               </div>
 
-              {/* Bottom meta row (match PredictionsPanel density) */}
+              {/* Bottom meta row: match PredictionsPanel density */}
               <div className="mt-4 flex items-center justify-between text-[11px] text-neutral-600 dark:text-neutral-400">
                 <span className="tabular-nums">
                   {grid == null ? "Grid —" : `Grid P${grid}`}
                 </span>
 
-                {delta == null ? (
-                  <span className="tabular-nums">Δ —</span>
-                ) : (
-                  <span
-                    className={[
-                      "tabular-nums font-semibold",
-                      delta > 0
-                        ? "text-emerald-600 dark:text-emerald-400"
+                <span
+                  className={[
+                    "tabular-nums",
+                    delta == null
+                      ? ""
+                      : delta > 0
+                        ? "font-semibold text-emerald-600 dark:text-emerald-400"
                         : delta < 0
-                          ? "text-red-600 dark:text-red-400"
+                          ? "font-semibold text-red-600 dark:text-red-400"
                           : "text-neutral-500 dark:text-neutral-500",
-                    ].join(" ")}
-                    title="Change versus grid position"
-                  >
-                    {delta > 0
-                      ? `▲ ${delta} vs grid`
-                      : delta < 0
-                        ? `▼ ${Math.abs(delta)} vs grid`
-                        : "—"}
-                  </span>
-                )}
+                  ].join(" ")}
+                  title="Change versus grid position"
+                >
+                  {formatDeltaVsGrid(delta)}
+                </span>
               </div>
             </Card>
-          </div>
-        );
-      })}
+          );
+        })}
+
+        {/* Keep identical empty-grid behavior as PredictionsPanel (optional but helps layout stability) */}
+        {podium.filter((x) => x.pred).length < 3
+          ? Array.from({ length: 3 - podium.filter((x) => x.pred).length }).map(
+              (_, i) => <div key={`pad-${i}`} className="hidden lg:block" />
+            )
+          : null}
+
+        {podium.filter((x) => x.pred).length < 2 ? (
+          <div className="hidden sm:block lg:hidden" />
+        ) : null}
+      </div>
     </div>
   );
 }

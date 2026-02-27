@@ -643,12 +643,6 @@ export default function Dashboard() {
 
       {/* TOP CONTROLS */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-600">
-            Session
-          </p>
-        </div>
-
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
           <Card className="lg:col-span-4 p-5" clip>
             <div className="h-[320px] min-h-0">

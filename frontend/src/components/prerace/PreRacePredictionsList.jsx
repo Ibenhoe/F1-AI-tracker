@@ -36,18 +36,18 @@ function PosDelta({ value }) {
 }
 
 function Confidence({ value }) {
-    const v = clamp(value, 0, 100);
+    const v = clamp(Number(value ?? 0), 0, 100);
 
     return (
-        <div className="flex items-center justify-end gap-2">
-            <div className="h-2 w-20 overflow-hidden rounded-full bg-black/[0.06] dark:bg-white/[0.08]">
+        <div className="flex items-center justify-end gap-4">
+            <div className="h-2 w-full overflow-hidden rounded-full bg-black/[0.06] dark:bg-white/[0.08]">
                 <div
                     className="h-2 rounded-full bg-[rgb(var(--accent))]"
                     style={{ width: `${v}%` }}
                     aria-hidden="true"
                 />
             </div>
-            <span className="w-10 text-right text-xs font-semibold tabular-nums text-neutral-700 dark:text-neutral-300">
+     <span className="w-8 text-right text-xs font-semibold tabular-nums text-neutral-700 dark:text-neutral-300">
                 {Math.round(v)}%
             </span>
         </div>
@@ -55,23 +55,23 @@ function Confidence({ value }) {
 }
 
 /**
- * predictions: array of objects from backend
- * expected keys (best-effort):
- *  - driver_name | driver
- *  - team
- *  - grid_position
- *  - confidence
+ * predictions: array from backend (best-effort keys):
+ * - driver_name | driver
+ * - team
+ * - grid_position
+ * - confidence
  */
 export default function PreRacePredictionsList({ predictions }) {
     const list = Array.isArray(predictions) ? predictions.slice(0, 10) : [];
 
     return (
         <Card className="overflow-hidden" clip bordered>
-            {/* Header row (DriversList style) */}
+            {/* Header row (EXACT DriversList language) */}
             <div
                 className={[
                     "grid min-w-0",
-                    "grid-cols-[44px_1fr_76px_64px_120px] md:grid-cols-[44px_1fr_92px_76px_64px_140px]",
+                    // Pos | Driver | Grid (md) | Conf (md) | Δ
+                    "grid-cols-[44px_1fr_64px] md:grid-cols-[44px_1fr_64px_76px_1fr]",
                     "items-center gap-3 px-4 py-2.5",
                     "text-[11px] font-semibold uppercase tracking-widest",
                     "text-neutral-500 dark:text-neutral-400",
@@ -81,11 +81,9 @@ export default function PreRacePredictionsList({ predictions }) {
             >
                 <div className="text-center">Pos</div>
                 <div className="min-w-0">Driver</div>
-                <div className="hidden text-right md:block">Grid</div>
-                <div className="text-right">Grid</div>
                 <div className="text-right">Δ</div>
+                <div className="hidden text-right md:block">Grid</div>
                 <div className="hidden text-right md:block">Confidence</div>
-                <div className="text-right md:hidden">Conf</div>
             </div>
 
             {/* Rows */}
@@ -99,7 +97,8 @@ export default function PreRacePredictionsList({ predictions }) {
                         const predictedPos = idx + 1;
 
                         const grid =
-                            Number.isFinite(Number(pred.grid_position)) && Number(pred.grid_position) > 0
+                            Number.isFinite(Number(pred.grid_position)) &&
+                                Number(pred.grid_position) > 0
                                 ? Number(pred.grid_position)
                                 : null;
 
@@ -114,13 +113,13 @@ export default function PreRacePredictionsList({ predictions }) {
                                 className={[
                                     "relative",
                                     "grid min-w-0",
-                                    "grid-cols-[44px_1fr_76px_64px_120px] md:grid-cols-[44px_1fr_92px_76px_64px_140px]",
+                                    "grid-cols-[44px_1fr_64px] md:grid-cols-[44px_1fr_64px_76px_1fr]",
                                     "items-center gap-3 px-4 py-3",
                                     "bg-transparent hover:bg-black/[0.02] dark:hover:bg-white/[0.03]",
                                     "transition-colors",
                                 ].join(" ")}
                             >
-                                {/* Team hairline accent */}
+                                {/* Team hairline accent (same as DriversList) */}
                                 <div
                                     className="absolute left-0 top-0 h-full w-[2px]"
                                     style={{
@@ -144,30 +143,29 @@ export default function PreRacePredictionsList({ predictions }) {
                                         {team}
                                     </div>
 
-                                    {/* Mobile: show confidence under name */}
-                                    <div className="mt-1 flex items-center justify-between gap-2 md:hidden">
-                                        <span className="text-[11px] font-medium text-neutral-400 dark:text-neutral-600">
-                                            Confidence
-                                        </span>
-                                        <span className="text-xs font-semibold tabular-nums text-neutral-700 dark:text-neutral-300">
-                                            {Math.round(conf)}%
-                                        </span>
+                                    {/* Mobile: show Grid + Confidence under driver (like DriversList “Last lap”) */}
+                                    <div className="mt-1 space-y-1 md:hidden">
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-[11px] font-medium text-neutral-400 dark:text-neutral-600">
+                                                Grid
+                                            </span>
+                                            <span className="text-xs font-semibold tabular-nums text-neutral-700 dark:text-neutral-300">
+                                                {grid != null ? `P${grid}` : "—"}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center justify-between gap-2">
+                                            <span className="text-[11px] font-medium text-neutral-400 dark:text-neutral-600">
+                                                Confidence
+                                            </span>
+                                            <span className="text-xs font-semibold tabular-nums text-neutral-700 dark:text-neutral-300">
+                                                {Math.round(conf)}%
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
 
-                                {/* Grid (desktop label column) */}
-                                <div className="hidden text-right md:block">
-                                    <div className="text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
-                                        {grid != null ? `P${grid}` : "—"}
-                                    </div>
-                                </div>
-
-                                {/* Grid (always visible) */}
-                                <div className="text-right text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
-                                    {grid != null ? `P${grid}` : "—"}
-                                </div>
-
-                                {/* Δ */}
+                                {/* Δ (always visible) */}
                                 <div className="text-right">
                                     {grid == null ? (
                                         <span className="text-xs font-semibold text-neutral-400 dark:text-neutral-600 tabular-nums">
@@ -178,16 +176,16 @@ export default function PreRacePredictionsList({ predictions }) {
                                     )}
                                 </div>
 
+                                {/* Grid (desktop) */}
+                                <div className="hidden text-right md:block">
+                                    <div className="text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
+                                        {grid != null ? `P${grid}` : "—"}
+                                    </div>
+                                </div>
+
                                 {/* Confidence (desktop) */}
                                 <div className="hidden md:block">
                                     <Confidence value={conf} />
-                                </div>
-
-                                {/* Confidence (mobile compact) */}
-                                <div className="text-right md:hidden">
-                                    <span className="text-xs font-semibold tabular-nums text-neutral-700 dark:text-neutral-300">
-                                        {Math.round(conf)}%
-                                    </span>
                                 </div>
                             </div>
                         );
@@ -198,7 +196,7 @@ export default function PreRacePredictionsList({ predictions }) {
                             Waiting for race data…
                         </div>
                         <div className="mt-1 text-xs text-neutral-500 dark:text-neutral-500">
-                            Standings will appear once telemetry is available.
+                            Predictions will appear once the pre-race model is ready.
                         </div>
                     </div>
                 )}
