@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation } from "react-router-dom";
 import { BarChart3, LineChart, Play, BookOpen, FileText } from "lucide-react";
 
 function NavItem({ to, icon: Icon, label }) {
@@ -47,14 +47,16 @@ function NavItem({ to, icon: Icon, label }) {
         />
       ) : null}
 
-      <span className="truncate group-aria-[current=page]:font-medium">{label}</span>
+      <span className="truncate group-aria-[current=page]:font-medium">
+        {label}
+      </span>
     </NavLink>
   );
 }
 
 function Section({ title, children }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       <div className="px-3 text-[10px] font-semibold uppercase tracking-widest text-neutral-400 dark:text-neutral-500">
         {title}
       </div>
@@ -63,7 +65,30 @@ function Section({ title, children }) {
   );
 }
 
+const DOCS_SECTIONS = [
+  { id: "overview", title: "Project Overview" },
+  { id: "architecture", title: "System Architecture" },
+  { id: "data-layer", title: "Data Layer" },
+  { id: "ml-model", title: "Machine Learning Model" },
+  { id: "confidence", title: "Confidence Scoring" },
+  { id: "race-sim", title: "Race Simulation" },
+  { id: "api", title: "Backend API" },
+  { id: "socketio", title: "Real-time Communication" },
+  { id: "frontend", title: "Frontend Architecture" },
+  { id: "tire-strategy", title: "Tire Strategy Model" },
+  { id: "battle", title: "Battle Detector" },
+  { id: "wiki", title: "Historical Wiki" },
+  { id: "setup", title: "Getting Started" },
+];
+
+function scrollToId(id) {
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+}
+
 export default function Sidebar() {
+  const { pathname } = useLocation();
+  const onDocs = pathname === "/docs";
+
   return (
     <div className="flex h-full flex-col px-3 py-5">
       {/* Header */}
@@ -77,16 +102,44 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <div className="mt-6 space-y-6">
+      <div className="mt-4 space-y-3">
         <Section title="General">
           <NavItem to="/" icon={BarChart3} label="Dashboard" />
         </Section>
 
-        <Section title="Analysis">
+        <Section title="Race">
           <NavItem to="/pre-race" icon={LineChart} label="Pre-race analysis" />
           <NavItem to="/race-replay" icon={Play} label="Race replay" />
+        </Section>
+
+        <Section title="Explore">
           <NavItem to="/wiki" icon={BookOpen} label="Wiki" />
+        </Section>
+
+        <Section title="Docs">
           <NavItem to="/docs" icon={FileText} label="Docs" />
+          {onDocs && (
+            <div className="mt-2">
+              {/* Indented group */}
+              <div className="mt-2 ml-3 pl-3 border-l border-neutral-200 dark:border-neutral-800 space-y-1">
+                {DOCS_SECTIONS.map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => scrollToId(s.id)}
+                    className={[
+                      "w-full text-left rounded-xl px-3 py-1.5",
+                      "text-[13px] transition-colors",
+                      "text-neutral-700 hover:bg-black/5",
+                      "dark:text-neutral-300 dark:hover:bg-white/[0.04]",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
+                    ].join(" ")}
+                  >
+                    <span className="truncate">{s.title}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Section>
       </div>
 

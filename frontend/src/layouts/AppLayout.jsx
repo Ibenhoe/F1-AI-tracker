@@ -10,26 +10,28 @@ export default function AppLayout() {
   const { theme, toggle, accent, setAccent, accents } = useTheme();
 
   return (
-    // Use global background tokens (iOS-like layer)
-    <div className="min-h-screen bg-[rgb(var(--bg))] text-[rgb(var(--fg))]">
-      <div className="flex min-h-screen">
-        {/* Sidebar */}
+    // Split scrolling: layout is fixed-height, only main content scrolls
+    <div className="h-screen overflow-hidden bg-[rgb(var(--bg))] text-[rgb(var(--fg))]">
+      <div className="flex h-full">
+        {/* Sidebar (fixed) */}
         <aside
           className={[
-            "w-72 shrink-0",
+            "w-72 shrink-0 h-full",
             // soft surface instead of hard border slab
             "bg-white/70 backdrop-blur-sm dark:backdrop-blur-none",
             "dark:bg-[rgb(var(--panel))]",
             // subtle divider (less harsh than border-r)
             "ring-1 ring-inset ring-neutral-200/70 dark:ring-white/10",
+            // optional: if sidebar ever becomes taller than viewport, it can scroll internally
+            "overflow-y-auto",
           ].join(" ")}
         >
           <Sidebar />
         </aside>
 
         {/* Main column */}
-        <div className="flex min-w-0 flex-1 flex-col">
-          {/* Top bar: frosted, minimal */}
+        <div className="flex min-w-0 flex-1 min-h-0 flex-col">
+          {/* Top bar */}
           <header className="sticky top-0 z-10">
             <div className="bg-white/60 backdrop-blur-md dark:bg-[#141416]/95 dark:backdrop-blur-md">
               <div className="mx-auto flex max-w-7xl items-center justify-end gap-3 px-6 py-4">
@@ -48,13 +50,13 @@ export default function AppLayout() {
                 <AccentSelect value={accent} options={accents} onChange={setAccent} />
               </div>
 
-              {/* Hairline separator (super subtle) */}
+              {/* Hairline separator */}
               <div className="h-px w-full bg-neutral-200/60 dark:bg-white/10" />
             </div>
           </header>
 
-          {/* Main */}
-          <main className="flex-1">
+          {/* Main scroll area */}
+          <main className="flex-1 min-h-0 overflow-y-auto">
             <div className="mx-auto max-w-7xl px-6 py-8">
               <Outlet />
             </div>
