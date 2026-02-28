@@ -132,12 +132,24 @@ export default function RaceSelector({
   onResume,
   onSpeedChange,
 
-  // ✅ NEW: allow per-page wheel density (default keeps Dashboard identical)
   visibleRows,
-}) {
-  const showTransport = mode !== "prerace";
 
-  // ✅ Determine visible rows safely
+  items,
+
+  years,
+  selectedYear,
+  onYearChange,
+  yearDisabled,
+}) {
+  const showTransport = mode === "dashboard";
+
+  const showYearSelector =
+    Array.isArray(years) &&
+    years.length > 0 &&
+    typeof selectedYear === "number" &&
+    typeof onYearChange === "function";
+
+  // Determine visible rows safely
   const VISIBLE =
     typeof visibleRows === "number" && Number.isFinite(visibleRows)
       ? Math.max(3, Math.min(9, Math.round(visibleRows)))
@@ -147,12 +159,27 @@ export default function RaceSelector({
 
   const SELECT_SLOT = Math.floor((VISIBLE - 1) / 2); // 5->2, 6->2
 
-  const baseList = useMemo(
-    () => Object.entries(RACES).map(([id, name]) => ({ id: Number(id), name })),
-    []
-  );
+  const baseList = useMemo(() => {
+    // If items provided (Wiki), trust them
+    if (Array.isArray(items) && items.length > 0) {
+      return items.map((it, idx) => ({
+        // keep id as string/number
+        id: it.id,
+        name: it.name ?? it.label ?? `Item ${idx + 1}`,
+        meta: it.meta ?? "",
+      }));
+    }
+
+    // Fallback (Dashboard/Pre-race): fixed races 1..24
+    return Object.entries(RACES).map(([id, name]) => ({ id: Number(id), name }));
+  }, [items]);
 
   const N = baseList.length;
+
+  const normalizeIndex = (i) => {
+    if (N <= 0) return 0;
+    return ((i % N) + N) % N;
+  };
 
   const loopList = useMemo(() => {
     const out = [];
@@ -160,7 +187,8 @@ export default function RaceSelector({
     return out;
   }, [baseList]);
 
-  const value = Number(selectedRace ?? 1);
+  // Selected ID as string (works for both numeric dashboard IDs and wiki raceIds)
+  const selectedId = selectedRace == null ? "" : String(selectedRace);
 
   // Debounce to avoid rapid API calls while dragging
   const debounceTimerRef = useRef(null);
@@ -198,13 +226,6 @@ export default function RaceSelector({
   const oneLoopPx = N * ITEM_H;
   const centerLoopStartPx = oneLoopPx;
 
-  const normalizeId = (id) => {
-    const raw = Number(id);
-    if (!Number.isFinite(raw)) return 1;
-    const m = ((raw - 1) % N + N) % N;
-    return m + 1;
-  };
-
   const normalizeOffset = (offPx) => {
     let x = offPx - centerLoopStartPx;
     x = ((x % oneLoopPx) + oneLoopPx) % oneLoopPx;
@@ -219,22 +240,23 @@ export default function RaceSelector({
     const snapped = idx * ITEM_H;
     setOffsetPx(snapped);
 
-    const row = loopList[idx];
+    const baseIdx = normalizeIndex(idx);
+    const row = baseList[baseIdx];
     if (!row) return;
 
-    const id = normalizeId(row.id);
-    if (id !== value) emit(id);
+    const id = row.id;
+    if (String(id) !== String(selectedRace)) emit(id);
   };
 
   // sync from parent to middle loop
   useEffect(() => {
-    const baseIdx = baseList.findIndex((r) => r.id === value);
+    const baseIdx = baseList.findIndex((r) => String(r.id) === String(selectedRace));
     if (baseIdx < 0) return;
 
     const target = centerLoopStartPx + baseIdx * ITEM_H;
     setOffsetPx(target);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value, baseList]);
+  }, [selectedId, baseList]);
 
   useEffect(() => {
     return () => {
@@ -401,14 +423,18 @@ export default function RaceSelector({
                 : "transform 160ms cubic-bezier(.2,.8,.2,1)",
             }}
           >
-            {loopList.map((r, i) => {
-              const id = normalizeId(r.id);
-              const name = baseList[id - 1]?.name ?? r.name;
-              const active = id === value;
+            {loopList.map((_, i) => {
+              // We use the loop index to pick the correct baseList row (works for any IDs)
+              const baseIdx = normalizeIndex(i);
+              const row = baseList[baseIdx];
+
+              const id = row?.id ?? "";
+              const name = row?.name ?? "—";
+              const active = String(id) === selectedId;
 
               return (
                 <div
-                  key={`${i}-${id}`}
+                  key={`${i}-${String(id)}`}
                   className={[
                     "flex h-[44px] w-full items-center justify-between px-4",
                     "text-sm",
@@ -421,10 +447,12 @@ export default function RaceSelector({
                   onClick={() => {
                     if (disabled) return;
                     if (movedRef.current) return;
+
                     const snapped = normalizeOffset(i * ITEM_H);
                     setOffsetPx(snapped);
                     snapToNearest(snapped);
-                    if (id !== value) emit(id);
+
+                    if (!active) emit(id);
                   }}
                   onKeyDown={(e) => {
                     if (disabled) return;
@@ -433,13 +461,16 @@ export default function RaceSelector({
                       const snapped = normalizeOffset(i * ITEM_H);
                       setOffsetPx(snapped);
                       snapToNearest(snapped);
-                      if (id !== value) emit(id);
+
+                      if (!active) emit(id);
                     }
                   }}
                 >
+                  {/* Left index: for dashboard/prerace this still shows 01..24, for wiki it's position in list */}
                   <span className="w-10 text-right tabular-nums">
-                    {String(id).padStart(2, "0")}
+                    {String(baseIdx + 1).padStart(2, "0")}
                   </span>
+
                   <span className="ml-3 flex-1 truncate">{name}</span>
 
                   {active ? (
@@ -459,6 +490,31 @@ export default function RaceSelector({
             })}
           </div>
         </div>
+
+        {showYearSelector ? (
+          <div className="mt-2">
+            <select
+              value={selectedYear}
+              onChange={(e) => onYearChange(Number(e.target.value))}
+              disabled={disabled || yearDisabled}
+              className={[
+                "mt-2 w-full",
+                "rounded-2xl px-4 py-2.5 text-sm font-semibold",
+                "bg-transparent",
+                "ring-1 ring-black/5 dark:ring-white/10",
+                "text-neutral-900 dark:text-neutral-50",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950",
+                "disabled:opacity-50 disabled:cursor-not-allowed",
+              ].join(" ")}
+            >
+              {years.map((y) => (
+                <option key={y} value={y} className="bg-white dark:bg-neutral-950">
+                  {y}
+                </option>
+              ))}
+            </select>
+          </div>
+        ) : null}
 
         {/* Transport controls (only when dashboard mode) */}
         {showTransport ? (
