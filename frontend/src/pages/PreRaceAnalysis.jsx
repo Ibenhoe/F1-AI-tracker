@@ -118,7 +118,7 @@ function ErrorCard({ message }) {
 
 /* ============================= PAGE ============================= */
 export default function PreRaceAnalysis() {
-  const [raceNumber, setRaceNumber] = useState(21);
+  const [raceNumber, setRaceNumber] = useState(1);
 
   const [predictions, setPredictions] = useState([]);
   const [analysis, setAnalysis] = useState(null);
@@ -269,8 +269,10 @@ export default function PreRaceAnalysis() {
         <Card className="lg:col-span-4 p-5" clip>
           <div className="h-[320px] min-h-0">
             <RaceSelector
+              mode="prerace"
+              visibleRows={6}
               selectedRace={raceNumber}
-              onSelectRace={handleRaceSelect} // if needed: onRaceChange={handleRaceSelect}
+              onSelectRace={handleRaceSelect}
               raceLoading={loading}
               raceReady={!loading}
               raceRunning={false}

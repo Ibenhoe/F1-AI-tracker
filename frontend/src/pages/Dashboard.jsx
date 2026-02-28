@@ -647,6 +647,7 @@ export default function Dashboard() {
           <Card className="lg:col-span-4 p-5" clip>
             <div className="h-[320px] min-h-0">
               <RaceSelector
+                mode="dashboard"
                 selectedRace={selectedRace}
                 onRaceChange={handleRaceChange}
                 disabled={false}

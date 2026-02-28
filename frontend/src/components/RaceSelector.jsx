@@ -29,8 +29,6 @@ const RACES = {
 };
 
 const ITEM_H = 44;
-const VISIBLE = 5;
-const MID = Math.floor(VISIBLE / 2);
 const LOOPS = 3;
 
 function Pill({ children }) {
@@ -103,7 +101,7 @@ function SpeedPill({ value, onChange, disabled }) {
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
               active
                 ? "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]"
-                : "text-neutral-600 hover:bg-black/[0.03] dark:text-neutral-300 dark:hover:bg-white/[0.05]"
+                : "text-neutral-600 hover:bg-black/[0.03] dark:text-neutral-300 dark:hover:bg-white/[0.05]",
             ].join(" ")}
             aria-pressed={active}
             title={`x${s}`}
@@ -117,6 +115,7 @@ function SpeedPill({ value, onChange, disabled }) {
 }
 
 export default function RaceSelector({
+  mode = "dashboard", // "dashboard" | "prerace"
   selectedRace,
   onRaceChange,
   onSelectRace,
@@ -132,7 +131,22 @@ export default function RaceSelector({
   onPause,
   onResume,
   onSpeedChange,
+
+  // ✅ NEW: allow per-page wheel density (default keeps Dashboard identical)
+  visibleRows,
 }) {
+  const showTransport = mode !== "prerace";
+
+  // ✅ Determine visible rows safely
+  const VISIBLE =
+    typeof visibleRows === "number" && Number.isFinite(visibleRows)
+      ? Math.max(3, Math.min(9, Math.round(visibleRows)))
+      : mode === "prerace"
+        ? 6
+        : 5;
+
+  const SELECT_SLOT = Math.floor((VISIBLE - 1) / 2); // 5->2, 6->2
+
   const baseList = useMemo(
     () => Object.entries(RACES).map(([id, name]) => ({ id: Number(id), name })),
     []
@@ -178,7 +192,7 @@ export default function RaceSelector({
     _setOffsetPx(next);
   };
 
-  const padTop = MID * ITEM_H;
+  const padTop = SELECT_SLOT * ITEM_H;
 
   // infinite normalization (no jumps)
   const oneLoopPx = N * ITEM_H;
@@ -284,7 +298,7 @@ export default function RaceSelector({
         const rect = surface.getBoundingClientRect();
         const y = e.clientY - rect.top;
         const slot = Math.max(0, Math.min(VISIBLE - 1, Math.floor(y / ITEM_H)));
-        const deltaSlots = slot - MID;
+        const deltaSlots = slot - SELECT_SLOT;
 
         const next = normalizeOffset(offsetRef.current + deltaSlots * ITEM_H);
         setOffsetPx(next);
@@ -306,11 +320,17 @@ export default function RaceSelector({
   const canResume = canTransport && !raceRunning && raceEverStarted;
 
   // Primary action highlight (action-based, not state-based)
-  const playPrimary = canTransport && !raceRunning; // paused/ready -> Play primary
-  const pausePrimary = canTransport && raceRunning; // running -> Pause primary
+  const playPrimary = canTransport && !raceRunning;
+  const pausePrimary = canTransport && raceRunning;
 
   return (
-    <div className={["flex h-full flex-col", disabled ? "opacity-60" : ""].join(" ")}>
+    <div
+      className={[
+        "flex min-h-0 flex-col",
+        showTransport ? "h-full" : "",
+        disabled ? "opacity-60" : "",
+      ].join(" ")}
+    >
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
@@ -340,7 +360,12 @@ export default function RaceSelector({
       </div>
 
       {/* Wheel */}
-      <div className="mt-4">
+      <div
+        className={[
+          "mt-4 flex min-h-0 flex-col",
+          showTransport ? "flex-1" : "",
+        ].join(" ")}
+      >
         <div
           ref={surfaceRef}
           className={[
@@ -358,8 +383,9 @@ export default function RaceSelector({
         >
           {/* Center highlight band */}
           <div
-            className="pointer-events-none absolute left-2 right-2 top-1/2 -translate-y-1/2 rounded-xl"
+            className="pointer-events-none absolute left-2 right-2 rounded-xl"
             style={{
+              top: SELECT_SLOT * ITEM_H,
               height: ITEM_H,
               background: "rgb(var(--accent))",
               boxShadow: "none",
@@ -434,37 +460,39 @@ export default function RaceSelector({
           </div>
         </div>
 
-        {/* Transport controls */}
-        <div className="mt-4 flex items-center justify-center gap-4">
-          <IconButton
-            disabled={!canStart && !canResume}
-            title={raceEverStarted ? "Resume" : "Start"}
-            active={playPrimary}
-            accentIcon
-            onClick={() => {
-              if (raceEverStarted) onResume?.();
-              else onStart?.();
-            }}
-          >
-            <Play size={18} />
-          </IconButton>
+        {/* Transport controls (only when dashboard mode) */}
+        {showTransport ? (
+          <div className="mt-4 flex items-center justify-center gap-4">
+            <IconButton
+              disabled={!canStart && !canResume}
+              title={raceEverStarted ? "Resume" : "Start"}
+              active={playPrimary}
+              accentIcon
+              onClick={() => {
+                if (raceEverStarted) onResume?.();
+                else onStart?.();
+              }}
+            >
+              <Play size={18} />
+            </IconButton>
 
-          <IconButton
-            disabled={!canPause}
-            title="Pause"
-            active={pausePrimary}
-            onClick={() => onPause?.()}
-          >
-            <Pause size={18} />
-          </IconButton>
+            <IconButton
+              disabled={!canPause}
+              title="Pause"
+              active={pausePrimary}
+              onClick={() => onPause?.()}
+            >
+              <Pause size={18} />
+            </IconButton>
 
-          <SpeedPill
-            value={speed}
-            onChange={(s) => onSpeedChange?.(s)}
-            disabled={!canTransport}
-          />
-        </div>
+            <SpeedPill
+              value={speed}
+              onChange={(s) => onSpeedChange?.(s)}
+              disabled={!canTransport}
+            />
+          </div>
+        ) : null}
       </div>
-    </div >
+    </div>
   );
 }
