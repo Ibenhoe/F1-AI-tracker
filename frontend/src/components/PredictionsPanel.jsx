@@ -123,7 +123,7 @@ export default function PredictionsPanel({ predictions }) {
           const teamColor = getTeamColor(team) || "rgba(0,0,0,0.12)";
 
           const fromPos = toInt(pred.position ?? 0);
-          const toPos = toInt(pred.prediction ?? 0);
+          const toPos = idx + 1;
           const confidence = clamp01(pred.confidence ?? 0);
 
           return (

@@ -123,8 +123,9 @@ class BattleDetector:
             d1_code = driver1.get('driver', 'UNK')
             d2_code = driver2.get('driver', 'UNK')
             
-            # Extract gap (distance to next driver)
-            gap = driver1.get('gap_to_next', None)
+            # Extract gap (distance between driver1 and driver2)
+            # gap_to_next on driver2 = how far driver2 is behind driver1 = correct inter-car gap
+            gap = driver2.get('gap_to_next', None)
             
             if gap is None:
                 gap1 = driver1.get('gap', 0)
@@ -212,7 +213,7 @@ class BattleDetector:
                         'type': 'battle_start'
                     }
                     
-                    prob_text = f" ({overtake_prob:.0f}% kans)" if overtake_prob > 30 else ""
+                    prob_text = f" ({overtake_prob:.0f}% chance)" if overtake_prob > 30 else ""
                     events.append({
                         'type': 'battle',
                         'subtype': 'battle_start',
@@ -244,11 +245,11 @@ class BattleDetector:
                         if gap < old_gap:
                             # Gap closing - driver1 is gaining
                             if overtake_prob > 50:
-                                risk_msg = "GROTE KANS!"
+                                risk_msg = "HIGH CHANCE!"
                             elif overtake_prob > 30:
-                                risk_msg = f"risico {overtake_prob:.0f}%"
+                                risk_msg = f"risk {overtake_prob:.0f}%"
                             else:
-                                risk_msg = f"lastig {overtake_prob:.0f}%"
+                                risk_msg = f"difficult {overtake_prob:.0f}%"
                             
                             events.append({
                                 'type': 'battle',
@@ -258,7 +259,7 @@ class BattleDetector:
                                 'lap': lap_num,
                                 'gap': round(gap, 2),
                                 'overtake_probability': round(overtake_prob, 1),
-                                'message': f'Gap closing! {d1_code} attacks {d2_code} - nu {gap:.2f}s - {risk_msg}',
+                                'message': f'Gap closing! {d1_code} attacks {d2_code} - now {gap:.2f}s - {risk_msg}',
                                 'color_code': 'danger' if overtake_prob > 50 else 'warning',
                                 'severity': 'high' if overtake_prob > 50 else 'medium'
                             })
@@ -277,7 +278,7 @@ class BattleDetector:
                                     'positions': [d1_current_pos, d2_current_pos],
                                     'lap': lap_num,
                                     'gap': round(gap, 2),
-                                    'message': f'{d2_code} defends: gap nu {gap:.2f}s (trend: {gap_trend})',
+                                    'message': f'{d2_code} defends: gap now {gap:.2f}s (trend: {gap_trend})',
                                     'color_code': 'info',
                                     'severity': 'low'
                                 })
@@ -300,7 +301,7 @@ class BattleDetector:
                             'winner': winner,
                             'lap': lap_num,
                             'duration_laps': duration,
-                            'message': f'Battle voorbij: {winner} wint! ({duration} laps intens gevecht)',
+                            'message': f'Battle over: {winner} wins! ({duration} laps of intense fighting)',
                             'color_code': 'success',
                             'severity': 'medium'
                         })
@@ -412,7 +413,7 @@ class BattleDetector:
                 'drivers': [driver1, driver2],
                 'lap': lap_num,
                 'new_position': driver1_current_pos,
-                'message': f'OVERTAKE! {driver1} haalt {driver2} in op lap {lap_num}!',
+                'message': f'OVERTAKE! {driver1} passes {driver2} on lap {lap_num}!',
                 'color_code': 'success',
                 'severity': 'high'
             })
@@ -435,7 +436,7 @@ class BattleDetector:
                 'lap': lap_num,
                 'gap_before': round(old_gap, 2),
                 'gap_after': round(new_gap, 2),
-                'message': f'{driver1} faalt in inhalingspoging! {driver2} breekt weg (+{gap_change:.2f}s)',
+                'message': f'{driver1} fails overtake attempt! {driver2} pulls away (+{gap_change:.2f}s)',
                 'color_code': 'danger',
                 'severity': 'medium'
             })
@@ -470,11 +471,11 @@ class BattleDetector:
             tire_diff = battle_data.get('tire_diff', 0)
             tire_advantage = ""
             if tire_diff > 0:
-                tire_advantage = f"🔴 {driver1} heeft frissere banden (+{tire_diff}L)"
+                tire_advantage = f"🔴 {driver1} has fresher tires (+{tire_diff}L)"
             elif tire_diff < 0:
-                tire_advantage = f"🔴 {driver2} heeft frissere banden (+{abs(tire_diff)}L)"
+                tire_advantage = f"🔴 {driver2} has fresher tires (+{abs(tire_diff)}L)"
             else:
-                tire_advantage = "⚪ Beide hebben gelijke bandenleeftijd"
+                tire_advantage = "⚪ Both drivers on equal tire age"
             
             summary.append({
                 'driver1': driver1,
@@ -493,14 +494,14 @@ class BattleDetector:
         """Return readable circuit overtaking difficulty"""
         diff = self.circuit_difficulty
         if diff < 0.5:
-            return "BUITENGEWOON MOEILIJK (Monaco-level)"
+            return "EXTREMELY DIFFICULT (Monaco-level)"
         elif diff < 0.8:
-            return "Moeilijk"
+            return "Difficult"
         elif diff < 1.0:
-            return "Gemiddeld moeilijk"
+            return "Moderately difficult"
         elif diff == 1.0:
-            return "Neutraal"
+            return "Neutral"
         elif diff < 1.2:
-            return "Gemiddeld gemakkelijk"
+            return "Moderately easy"
         else:
-            return "Gemakkelijk (Monza-style)"
+            return "Easy (Monza-style)"
