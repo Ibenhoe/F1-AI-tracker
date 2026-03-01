@@ -29,12 +29,14 @@ const ReplayControls = ({
   showDRS,
   showTelemetry,
   focusMode,
+  realTimeMode,
   onPlayPause,
   onSpeedChange,
   onFrameChange,
   onDRSToggle,
   onTelemetryToggle,
   onFocusToggle,
+  onRealTimeToggle,
 }) => {
   const pct = totalFrames > 0 ? (Math.floor(currentFrame) / totalFrames) * 100 : 0;
   const remaining = totalFrames - Math.floor(currentFrame);
@@ -113,7 +115,8 @@ const ReplayControls = ({
         {/* Toggle pills */}
         <TogglePill active={showDRS} onClick={onDRSToggle} title="Toggle DRS zones (D)">DRS</TogglePill>
         <TogglePill active={showTelemetry} onClick={onTelemetryToggle} title="Toggle telemetry (T)">TEL</TogglePill>
-        <TogglePill active={focusMode} onClick={onFocusToggle} title="Focus mode (F)">FOCUS</TogglePill>
+        <TogglePill active={focusMode} onClick={onFocusToggle} title="Focus mode + AI predictions (F)">FOCUS</TogglePill>
+        <TogglePill active={realTimeMode} onClick={onRealTimeToggle} title="Sync replay to real race speed (S)">SYNC</TogglePill>
 
         {/* Fullscreen */}
         <button

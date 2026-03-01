@@ -793,6 +793,258 @@ def get_replay_data():
         return jsonify({'error': str(e), 'status': 'error'}), 400
 
 
+@app.route('/api/race/lap-predictions', methods=['GET'])
+def get_lap_predictions():
+    """
+    Get real ML model win-probability predictions for every lap of a race.
+    Runs ContinuousModelLearner incrementally (one lap at a time) so that
+    predictions improve exactly as they do during a live simulation.
+
+    Query params:
+    - race: race number (1-22)
+
+    Returns:
+    {
+      "status": "success",
+      "race": 21,
+      "total_laps": 58,
+      "predictions_by_lap": {
+        "1": [{"driver_code": "VER", "driver_name": "...", "team": "...",
+                "confidence": 72.3, "predicted_position": 1}, ...],
+        "2": [...],
+        ...
+      }
+    }
+    Results are cached to cache/race_XX_predictions.json after first computation.
+    """
+    try:
+        race_num = int(request.args.get('race', 21))
+        cache_dir_path = 'cache'
+        cache_file = os.path.join(cache_dir_path, f'race_{race_num:02d}_predictions.json')
+
+        # ── Serve from cache if available ──────────────────────────────────────
+        if os.path.exists(cache_file):
+            try:
+                print(f"[PRED API] Loading cached predictions from {cache_file}")
+                with open(cache_file, 'r', encoding='utf-8') as f:
+                    return jsonify(json.load(f)), 200
+            except Exception as cache_err:
+                print(f"[PRED API] Cache read failed ({cache_err}), recomputing…")
+
+        # ── Load session without telemetry (much faster) ──────────────────────
+        # Do NOT use FastF1DataFetcher.fetch_race() here — that calls
+        # session.load() which downloads full telemetry for all drivers.
+        # For the ML model we only need lap/tire data, so skip telemetry entirely.
+        print(f"[PRED API] Loading race {race_num} (laps only, no telemetry)...")
+        race_session = fastf1.get_session(2024, race_num, 'R')
+        race_session.load(laps=True, telemetry=False, weather=False, messages=False)
+
+        # Build driver number -> 3-letter code map
+        driver_code_map = {}
+        try:
+            for _, dr in race_session.results.iterrows():
+                num = dr.get('DriverNumber')
+                abbrev = str(dr.get('Abbreviation', ''))
+                if num is not None and abbrev and abbrev != 'nan':
+                    try:
+                        driver_code_map[int(num)] = abbrev
+                    except (TypeError, ValueError):
+                        pass
+        except Exception:
+            pass
+
+        # ── Build qualifying grid for grid_position feature ───────────────────
+        qualifying_grid = {}
+        try:
+            qual = fastf1.get_session(2024, race_num, 'Q')
+            qual.load(telemetry=False, weather=False)
+            if qual.results is not None:
+                for grid_pos, (_, row) in enumerate(qual.results.iterrows(), 1):
+                    code = str(row.get('Abbreviation', ''))
+                    if code and code != 'nan':
+                        qualifying_grid[code] = grid_pos
+        except Exception as qual_err:
+            print(f"[PRED API] Qualifying grid load failed: {qual_err} — using fallback P15")
+
+        # ── Fast lap extraction: no telemetry needed for the ML model ─────────
+        session_laps = race_session.laps
+        if session_laps is None or len(session_laps) == 0:
+            raise Exception("No lap data in FastF1 session")
+
+        laps_by_number = {}
+        for _, row in session_laps.iterrows():
+            lap_num_raw = row.get('LapNumber')
+            position_raw = row.get('Position')
+
+            try:
+                lap_num = int(float(lap_num_raw))
+                position = int(float(position_raw))
+                driver_num_int = int(float(row.get('DriverNumber', 0)))
+            except (TypeError, ValueError):
+                continue
+            if lap_num <= 0 or position <= 0 or driver_num_int <= 0:
+                continue
+
+            driver_num_str = str(driver_num_int)
+            code = driver_code_map.get(driver_num_int, f'D{driver_num_str}')
+
+            lap_time_raw = row.get('LapTime')
+            if hasattr(lap_time_raw, 'total_seconds'):
+                lap_time_s = float(lap_time_raw.total_seconds())
+            else:
+                try:
+                    lap_time_s = float(lap_time_raw)
+                except (TypeError, ValueError):
+                    lap_time_s = 90.0
+            if not (50 < lap_time_s < 300):
+                lap_time_s = 90.0
+
+            tire_age_raw = row.get('TyreLife')
+            try:
+                tire_age = int(float(tire_age_raw)) if tire_age_raw is not None else 1
+            except (TypeError, ValueError):
+                tire_age = 1
+
+            compound = str(row.get('Compound', 'MEDIUM') or 'MEDIUM').upper()
+            if compound in ('', 'NAN', 'UNKNOWN', 'NONE'):
+                compound = 'MEDIUM'
+
+            has_pit = bool(
+                (row.get('PitInTime') is not None and str(row.get('PitInTime')) not in ('NaT', 'nan', 'None', '')) or
+                (row.get('PitOutTime') is not None and str(row.get('PitOutTime')) not in ('NaT', 'nan', 'None', ''))
+            )
+
+            laps_by_number.setdefault(lap_num, []).append({
+                'driver': code,
+                'lap_number': lap_num,
+                'position': position,
+                'lap_time': lap_time_s,
+                'tire_compound': compound,
+                'tire_age': max(1, tire_age),
+                'is_pit_lap': has_pit,
+            })
+
+        sorted_lap_nums = sorted(laps_by_number.keys())
+        total_laps = max(sorted_lap_nums) if sorted_lap_nums else 58
+
+        # ── Static driver metadata ────────────────────────────────────────────
+        PRED_DRIVER_NAMES = {
+            'VER': 'Max Verstappen',    'PER': 'Sergio Perez',
+            'LEC': 'Charles Leclerc',   'SAI': 'Carlos Sainz',
+            'HAM': 'Lewis Hamilton',    'RUS': 'George Russell',
+            'NOR': 'Lando Norris',      'PIA': 'Oscar Piastri',
+            'ALO': 'Fernando Alonso',   'STR': 'Lance Stroll',
+            'GAS': 'Pierre Gasly',      'OCO': 'Esteban Ocon',
+            'HUL': 'Nico Hulkenberg',   'MAG': 'Kevin Magnussen',
+            'TSU': 'Yuki Tsunoda',      'RIC': 'Daniel Ricciardo',
+            'ALB': 'Alexander Albon',   'SAR': 'Logan Sargeant',
+            'BOT': 'Valtteri Bottas',   'ZHO': 'Zhou Guanyu',
+        }
+        PRED_DRIVER_TEAMS = {
+            'VER': 'Red Bull Racing',   'PER': 'Red Bull Racing',
+            'LEC': 'Ferrari',           'SAI': 'Ferrari',
+            'HAM': 'Mercedes',          'RUS': 'Mercedes',
+            'NOR': 'McLaren',           'PIA': 'McLaren',
+            'ALO': 'Aston Martin',      'STR': 'Aston Martin',
+            'GAS': 'Alpine',            'OCO': 'Alpine',
+            'HUL': 'Haas F1 Team',      'MAG': 'Haas F1 Team',
+            'TSU': 'RB',                'RIC': 'RB',
+            'ALB': 'Williams',          'SAR': 'Williams',
+            'BOT': 'Kick Sauber',       'ZHO': 'Kick Sauber',
+        }
+
+        # ── Run ContinuousModelLearner lap-by-lap ─────────────────────────────
+        model = ContinuousModelLearner(total_race_laps=total_laps)
+        predictions_by_lap = {}
+        driver_pit_counts = {}   # track cumulative pit stops from is_pit_lap flag
+
+        for lap_num in sorted_lap_nums:
+            lap_records = laps_by_number[lap_num]
+
+            # Build per-driver dicts for model input
+            lap_drivers = []
+            for rec in lap_records:
+                code = rec.get('driver', 'UNK')
+                # Accumulate pit stops whenever the lap has a pit event
+                if rec.get('is_pit_lap', False):
+                    driver_pit_counts[code] = driver_pit_counts.get(code, 0) + 1
+
+                lap_time = rec.get('lap_time', 90.0)
+                try:
+                    lap_time = float(lap_time) if lap_time else 90.0
+                except (TypeError, ValueError):
+                    lap_time = 90.0
+
+                tire_age = rec.get('tire_age', 1)
+                try:
+                    tire_age = int(float(tire_age)) if tire_age else 1
+                except (TypeError, ValueError):
+                    tire_age = 1
+
+                lap_drivers.append({
+                    'driver': code,
+                    'position': int(rec.get('position', 20)),
+                    'lap_time': lap_time,
+                    'tire_compound': str(rec.get('tire_compound', 'MEDIUM')).upper(),
+                    'tire_age': max(1, tire_age),
+                    'pit_stops': driver_pit_counts.get(code, 0),
+                    'grid_position': qualifying_grid.get(code, 15),
+                    'points_constructor': 100.0,
+                    'driver_age': 28,
+                    'current_lap': lap_num,
+                })
+
+            if not lap_drivers:
+                continue
+
+            # Incremental model training
+            model.add_race_data(lap_num, lap_drivers)
+            model.update_model(lap_num)
+
+            # Predict for this lap
+            preds_dict = model.predict_lap(lap_drivers)
+
+            lap_preds = []
+            for code, pred_tuple in preds_dict.items():
+                pred_pos, confidence = (
+                    pred_tuple if isinstance(pred_tuple, tuple) else (15, 50.0)
+                )
+                lap_preds.append({
+                    'driver_code': code,
+                    'driver_name': PRED_DRIVER_NAMES.get(code, code),
+                    'team': PRED_DRIVER_TEAMS.get(code, 'Unknown'),
+                    'confidence': round(float(confidence), 1),
+                    'predicted_position': int(round(float(pred_pos))),
+                })
+
+            lap_preds.sort(key=lambda x: x['confidence'], reverse=True)
+            predictions_by_lap[str(lap_num)] = lap_preds
+
+        result = {
+            'status': 'success',
+            'race': race_num,
+            'total_laps': total_laps,
+            'predictions_by_lap': predictions_by_lap,
+        }
+
+        # ── Cache to disk ─────────────────────────────────────────────────────
+        try:
+            os.makedirs(cache_dir_path, exist_ok=True)
+            with open(cache_file, 'w', encoding='utf-8') as f:
+                json.dump(result, f)
+            print(f"[PRED API] Predictions cached to {cache_file}")
+        except Exception as cache_write_err:
+            print(f"[PRED API] Cache write failed: {cache_write_err}")
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        print(f"[PRED API] ERROR: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e), 'status': 'error'}), 400
+
+
 def _generate_procedural_track():
     """Generate a realistic F1 track circuit with straights and curves
     
