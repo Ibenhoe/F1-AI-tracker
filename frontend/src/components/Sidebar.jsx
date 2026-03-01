@@ -1,3 +1,5 @@
+// src/components/Sidebar.jsx
+import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { BarChart3, LineChart, Play, BookOpen, FileText } from "lucide-react";
 
@@ -82,12 +84,32 @@ const DOCS_SECTIONS = [
 ];
 
 function scrollToId(id) {
-  document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 export default function Sidebar() {
   const { pathname } = useLocation();
   const onDocs = pathname === "/docs";
+
+  // Scroll-spy active subsection (driven by Docs page via window event)
+  const [activeDocsId, setActiveDocsId] = useState("overview");
+
+  useEffect(() => {
+    if (!onDocs) return;
+
+    const handler = (e) => {
+      const id = e?.detail?.id;
+      if (typeof id === "string" && id.length) setActiveDocsId(id);
+    };
+
+    window.addEventListener("docs:active-section", handler);
+    return () => window.removeEventListener("docs:active-section", handler);
+  }, [onDocs]);
+
+  function scrollToIdAndSetActive(id) {
+    scrollToId(id);
+    setActiveDocsId(id); // immediate feedback on click
+  }
 
   return (
     <div className="flex h-full flex-col px-3 py-5">
@@ -102,7 +124,15 @@ export default function Sidebar() {
       </div>
 
       {/* Nav */}
-      <div className="mt-4 space-y-3">
+      <div
+        className={[
+          "mt-4 space-y-3",
+          "flex-1 min-h-0 overflow-y-auto",
+          "[scrollbar-width:none]", // Firefox
+          "[-ms-overflow-style:none]", // IE/Edge legacy
+          "[&::-webkit-scrollbar]:hidden", // Chrome/Safari
+        ].join(" ")}
+      >
         <Section title="General">
           <NavItem to="/" icon={BarChart3} label="Dashboard" />
         </Section>
@@ -118,25 +148,42 @@ export default function Sidebar() {
 
         <Section title="Docs">
           <NavItem to="/docs" icon={FileText} label="Docs" />
+
           {onDocs && (
             <div className="mt-2">
-              {/* Indented group */}
               <div className="mt-2 ml-3 pl-3 border-l border-neutral-200 dark:border-neutral-800 space-y-1">
-                {DOCS_SECTIONS.map((s) => (
-                  <button
-                    key={s.id}
-                    onClick={() => scrollToId(s.id)}
-                    className={[
-                      "w-full text-left rounded-xl px-3 py-1.5",
-                      "text-[13px] transition-colors",
-                      "text-neutral-700 hover:bg-black/5",
-                      "dark:text-neutral-300 dark:hover:bg-white/[0.04]",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
-                    ].join(" ")}
-                  >
-                    <span className="truncate">{s.title}</span>
-                  </button>
-                ))}
+                {DOCS_SECTIONS.map((s) => {
+                  const isActive = activeDocsId === s.id;
+
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => scrollToIdAndSetActive(s.id)}
+                      className={[
+                        "w-full text-left rounded-xl px-3 py-1.5",
+                        "text-[13px] transition-colors",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
+
+                        // base
+                        "text-neutral-700 hover:bg-black/5",
+                        "dark:text-neutral-300 dark:hover:bg-white/[0.04]",
+
+                        // active subsection highlight
+                        isActive
+                          ? [
+                            "bg-black/5 text-neutral-900",
+                            "dark:bg-white/[0.06] dark:text-neutral-50",
+                            "ring-1 ring-inset ring-black/5 dark:ring-white/10",
+                          ].join(" ")
+                          : "",
+                      ].join(" ")}
+                      aria-current={isActive ? "true" : undefined}
+                      title={s.title}
+                    >
+                      <span className="truncate">{s.title}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}

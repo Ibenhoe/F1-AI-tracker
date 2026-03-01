@@ -23,7 +23,7 @@ export default function AppLayout() {
             // subtle divider (less harsh than border-r)
             "ring-1 ring-inset ring-neutral-200/70 dark:ring-white/10",
             // optional: if sidebar ever becomes taller than viewport, it can scroll internally
-            "overflow-y-auto",
+            "overflow-hidden flex flex-col",
           ].join(" ")}
         >
           <Sidebar />

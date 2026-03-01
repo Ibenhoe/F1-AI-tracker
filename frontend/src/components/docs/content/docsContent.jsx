@@ -4,7 +4,6 @@ import { Section, H3, P, Table, CodeBlock, Callout, InlineCode } from "../index"
 export default function DocsContent() {
   return (
     <div className="space-y-5">
-    <>
       {/* ── OVERVIEW ─────────────────────────────────────── */}
       <Section id="overview" title="Project Overview">
         <P>
@@ -543,7 +542,6 @@ npm run dev
           <span className="font-mono">processed_f1_training_data.csv</span>.
         </Callout>
       </Section>
-    </>
     </div>
   );
 }
