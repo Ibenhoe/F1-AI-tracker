@@ -149,7 +149,6 @@ export default function RaceSelector({
     typeof selectedYear === "number" &&
     typeof onYearChange === "function";
 
-  // Determine visible rows safely
   const VISIBLE =
     typeof visibleRows === "number" && Number.isFinite(visibleRows)
       ? Math.max(3, Math.min(9, Math.round(visibleRows)))
@@ -157,20 +156,16 @@ export default function RaceSelector({
         ? 6
         : 5;
 
-  const SELECT_SLOT = Math.floor((VISIBLE - 1) / 2); // 5->2, 6->2
+  const SELECT_SLOT = Math.floor((VISIBLE - 1) / 2);
 
   const baseList = useMemo(() => {
-    // If items provided (Wiki), trust them
     if (Array.isArray(items) && items.length > 0) {
       return items.map((it, idx) => ({
-        // keep id as string/number
         id: it.id,
         name: it.name ?? it.label ?? `Item ${idx + 1}`,
         meta: it.meta ?? "",
       }));
     }
-
-    // Fallback (Dashboard/Pre-race): fixed races 1..24
     return Object.entries(RACES).map(([id, name]) => ({ id: Number(id), name }));
   }, [items]);
 
@@ -187,7 +182,6 @@ export default function RaceSelector({
     return out;
   }, [baseList]);
 
-  // Selected ID as string (works for both numeric dashboard IDs and wiki raceIds)
   const selectedId = selectedRace == null ? "" : String(selectedRace);
 
   // Debounce to avoid rapid API calls while dragging
@@ -211,15 +205,6 @@ export default function RaceSelector({
     }, 350);
   };
 
-  // offset in px
-  const [offsetPx, _setOffsetPx] = useState(0);
-  const offsetRef = useRef(0);
-
-  const setOffsetPx = (next) => {
-    offsetRef.current = next;
-    _setOffsetPx(next);
-  };
-
   const padTop = SELECT_SLOT * ITEM_H;
 
   // infinite normalization (no jumps)
@@ -227,6 +212,7 @@ export default function RaceSelector({
   const centerLoopStartPx = oneLoopPx;
 
   const normalizeOffset = (offPx) => {
+    if (oneLoopPx <= 0) return 0;
     let x = offPx - centerLoopStartPx;
     x = ((x % oneLoopPx) + oneLoopPx) % oneLoopPx;
     return centerLoopStartPx + x;
@@ -234,6 +220,24 @@ export default function RaceSelector({
 
   const clampIndex = (idx) => Math.max(0, Math.min(loopList.length - 1, idx));
   const idxFromOffset = (offPx) => clampIndex(Math.round(offPx / ITEM_H));
+
+  const getTargetOffsetForSelected = () => {
+    const baseIdx = baseList.findIndex((r) => String(r.id) === String(selectedRace));
+    if (baseIdx < 0) return normalizeOffset(centerLoopStartPx);
+    return normalizeOffset(centerLoopStartPx + baseIdx * ITEM_H);
+  };
+
+  // offset in px (initialize at correct position to avoid first render jump)
+  const [offsetPx, _setOffsetPx] = useState(() => getTargetOffsetForSelected());
+  const offsetRef = useRef(offsetPx);
+
+  // suppress transition for 1 frame when syncing from parent
+  const suppressAnimRef = useRef(true);
+
+  const setOffsetPx = (next) => {
+    offsetRef.current = next;
+    _setOffsetPx(next);
+  };
 
   const snapToNearest = (offPx) => {
     const idx = idxFromOffset(offPx);
@@ -248,15 +252,31 @@ export default function RaceSelector({
     if (String(id) !== String(selectedRace)) emit(id);
   };
 
-  // sync from parent to middle loop
+  // sync from parent to middle loop (NO animation)
   useEffect(() => {
+    if (N <= 0) return;
+
     const baseIdx = baseList.findIndex((r) => String(r.id) === String(selectedRace));
     if (baseIdx < 0) return;
 
-    const target = centerLoopStartPx + baseIdx * ITEM_H;
+    const target = normalizeOffset(centerLoopStartPx + baseIdx * ITEM_H);
+
+    // suppress animation for one paint so it doesn't "roll"
+    suppressAnimRef.current = true;
     setOffsetPx(target);
+    requestAnimationFrame(() => {
+      suppressAnimRef.current = false;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId, baseList]);
+
+  useEffect(() => {
+    // after initial paint, allow animations normally
+    const t = requestAnimationFrame(() => {
+      suppressAnimRef.current = false;
+    });
+    return () => cancelAnimationFrame(t);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -418,13 +438,13 @@ export default function RaceSelector({
             className="will-change-transform"
             style={{
               transform: `translateY(${padTop - offsetPx}px)`,
-              transition: isDraggingRef.current
-                ? "none"
-                : "transform 160ms cubic-bezier(.2,.8,.2,1)",
+              transition:
+                isDraggingRef.current || suppressAnimRef.current
+                  ? "none"
+                  : "transform 160ms cubic-bezier(.2,.8,.2,1)",
             }}
           >
             {loopList.map((_, i) => {
-              // We use the loop index to pick the correct baseList row (works for any IDs)
               const baseIdx = normalizeIndex(i);
               const row = baseList[baseIdx];
 
@@ -466,7 +486,6 @@ export default function RaceSelector({
                     }
                   }}
                 >
-                  {/* Left index: for dashboard/prerace this still shows 01..24, for wiki it's position in list */}
                   <span className="w-10 text-right tabular-nums">
                     {String(baseIdx + 1).padStart(2, "0")}
                   </span>
