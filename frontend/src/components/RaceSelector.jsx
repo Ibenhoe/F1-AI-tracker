@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Check, Play, Pause } from "lucide-react";
+import { Loader2, Check, Play, Pause, ChevronLeft, ChevronRight } from "lucide-react";
 
 const RACES = {
   1: "Bahrain",
@@ -110,6 +110,119 @@ function SpeedPill({ value, onChange, disabled }) {
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function YearStepper({ value, options, onChange, disabled }) {
+  const years = Array.isArray(options) ? [...options] : [];
+  years.sort((a, b) => Number(b) - Number(a)); // DESC: 2026 ... 1950
+
+  const current = Number(value);
+  const idx = years.findIndex((y) => Number(y) === current);
+
+  // In DESC order:
+  // left = newer (idx-1), right = older (idx+1)
+  const newer = idx > 0 ? years[idx - 1] : null;
+  const older = idx >= 0 && idx < years.length - 1 ? years[idx + 1] : null;
+
+  const pillBase = [
+    "h-10 rounded-2xl px-4",
+    "inline-flex items-center justify-center",
+    "text-sm font-semibold tabular-nums",
+    "ring-1 ring-black/5 dark:ring-white/10",
+  ].join(" ");
+
+  return (
+    <div
+      className={[
+        "w-full",
+        "flex items-center gap-2",
+        "rounded-2xl p-1",
+        "bg-transparent",
+        "ring-1 ring-black/5 dark:ring-white/10",
+        disabled ? "opacity-60" : "",
+      ].join(" ")}
+      aria-label="Season year"
+      role="group"
+    >
+      {/* Left arrow = newer year */}
+      <button
+        type="button"
+        disabled={disabled || newer == null}
+        onClick={() => newer != null && onChange?.(Number(newer))}
+        className={[
+          "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
+          "transition-colors duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
+          disabled || newer == null
+            ? "opacity-40 cursor-not-allowed"
+            : "hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
+        ].join(" ")}
+        title="Newer year"
+        aria-label="Newer year"
+      >
+        <ChevronLeft size={18} />
+      </button>
+
+      {/* Prev (newer) year label */}
+      <div
+        className={[
+          pillBase,
+          "flex-1",
+          "bg-transparent",
+          "text-neutral-500 dark:text-neutral-400",
+        ].join(" ")}
+        title={newer == null ? "" : String(newer)}
+        aria-hidden={newer == null ? "true" : "false"}
+      >
+        {newer ?? "—"}
+      </div>
+
+      {/* Current year (accent) */}
+      <div
+        className={[
+          pillBase,
+          "min-w-[92px]",
+          "bg-[rgb(var(--accent))] text-[rgb(var(--accent-fg))]",
+        ].join(" ")}
+        aria-live="polite"
+      >
+        {current}
+      </div>
+
+      {/* Next (older) year label */}
+      <div
+        className={[
+          pillBase,
+          "flex-1",
+          "bg-transparent",
+          "text-neutral-500 dark:text-neutral-400",
+        ].join(" ")}
+        title={older == null ? "" : String(older)}
+        aria-hidden={older == null ? "true" : "false"}
+      >
+        {older ?? "—"}
+      </div>
+
+      {/* Right arrow = older year */}
+      <button
+        type="button"
+        disabled={disabled || older == null}
+        onClick={() => older != null && onChange?.(Number(older))}
+        className={[
+          "inline-flex h-10 w-10 items-center justify-center rounded-2xl",
+          "transition-colors duration-150",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))]",
+          disabled || older == null
+            ? "opacity-40 cursor-not-allowed"
+            : "hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
+        ].join(" ")}
+        title="Older year"
+        aria-label="Older year"
+      >
+        <ChevronRight size={18} />
+      </button>
     </div>
   );
 }
@@ -511,27 +624,13 @@ export default function RaceSelector({
         </div>
 
         {showYearSelector ? (
-          <div className="mt-2">
-            <select
+          <div className="mt-3">
+            <YearStepper
               value={selectedYear}
-              onChange={(e) => onYearChange(Number(e.target.value))}
+              options={years}
+              onChange={onYearChange}
               disabled={disabled || yearDisabled}
-              className={[
-                "mt-2 w-full",
-                "rounded-2xl px-4 py-2.5 text-sm font-semibold",
-                "bg-transparent",
-                "ring-1 ring-black/5 dark:ring-white/10",
-                "text-neutral-900 dark:text-neutral-50",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2 focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950",
-                "disabled:opacity-50 disabled:cursor-not-allowed",
-              ].join(" ")}
-            >
-              {years.map((y) => (
-                <option key={y} value={y} className="bg-white dark:bg-neutral-950">
-                  {y}
-                </option>
-              ))}
-            </select>
+            />
           </div>
         ) : null}
 
