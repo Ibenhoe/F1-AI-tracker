@@ -1,5 +1,6 @@
+// src/components/dashboard/panels/NotificationsPanel.jsx
 import { AlertTriangle, CheckCircle2, Info, XCircle } from "lucide-react";
-import Card from "./ui/Card";
+import Card from "../../ui/Card";
 
 function meta(type, colorCode) {
   const effectiveType = (colorCode || type || "").toString().toLowerCase();
@@ -55,29 +56,28 @@ export default function NotificationsPanel({ notifications }) {
   return (
     <div className="h-full min-h-0 overflow-auto">
       <Card className="divide-y divide-black/5 dark:divide-white/10" clip bordered>
-        {list.map((n) => {
-          const m = meta(n.type, n.color_code);
+        {list.map((n, idx) => {
+          const m = meta(n?.type, n?.color_code);
           const Icon = m.Icon;
+
+          // Prefer stable id; fallback to content-derived key
+          const key =
+            n?.id ??
+            `${n?.lapNumber ?? "x"}-${String(n?.message ?? "msg")}-${idx}`;
+
+          const isDefaultRail = m.rail === "rgba(0,0,0,0.14)";
+          const railStyle = isDefaultRail
+            ? undefined
+            : { backgroundColor: m.rail };
 
           return (
             <div
-              key={n.id}
+              key={key}
               className="relative px-4 py-3 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
               style={{ minHeight: 74 }}
             >
               {/* Left rail */}
-              <div
-                className="absolute left-px top-0 h-full w-[3px] opacity-70"
-                style={{
-                  backgroundColor:
-                    m.rail === "rgba(0,0,0,0.14)"
-                      ? undefined
-                      : m.rail,
-                }}
-                aria-hidden="true"
-              />
-
-              {m.rail === "rgba(0,0,0,0.14)" ? (
+              {isDefaultRail ? (
                 <>
                   <div
                     className="absolute left-px top-0 h-full w-[3px] opacity-70 dark:hidden"
@@ -90,19 +90,30 @@ export default function NotificationsPanel({ notifications }) {
                     aria-hidden="true"
                   />
                 </>
-              ) : null}
+              ) : (
+                <div
+                  className="absolute left-px top-0 h-full w-[3px] opacity-70"
+                  style={railStyle}
+                  aria-hidden="true"
+                />
+              )}
 
               <div className="flex items-start gap-3">
-                <Icon size={18} className={["mt-1 shrink-0", m.icon].join(" ")} />
+                <Icon
+                  size={18}
+                  className={["mt-1 shrink-0", m.icon].join(" ")}
+                  aria-hidden="true"
+                />
 
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-medium leading-snug text-neutral-900 dark:text-neutral-50">
-                    {n.message}
+                    {n?.message ?? "—"}
                   </div>
 
                   <div className="mt-2 flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
-                    <span className="tabular-nums">{n.time}</span>
-                    {typeof n.lapNumber === "number" ? (
+                    <span className="tabular-nums">{n?.time ?? "—"}</span>
+
+                    {typeof n?.lapNumber === "number" ? (
                       <>
                         <span className="text-neutral-300 dark:text-white/20">•</span>
                         <span className="tabular-nums">Lap {n.lapNumber}</span>
@@ -115,6 +126,6 @@ export default function NotificationsPanel({ notifications }) {
           );
         })}
       </Card>
-    </div >
+    </div>
   );
 }

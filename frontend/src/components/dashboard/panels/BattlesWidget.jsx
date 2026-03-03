@@ -1,5 +1,6 @@
-import { getTeamColor } from "../utils/teamColors";
-import Card from "./ui/Card";
+// src/components/dashboard/panels/BattlesWidget.jsx
+import { getTeamColor } from "../../../utils/teamColors";
+import Card from "../../ui/Card";
 
 function clamp(n, a, b) {
   const x = Number(n);
@@ -8,9 +9,14 @@ function clamp(n, a, b) {
 }
 
 function parseGap(gapStr) {
-  if (!gapStr) return Infinity;
-  const s = String(gapStr).replace("+", "").replace("s", "").trim();
-  const n = parseFloat(s);
+  if (gapStr == null) return Infinity;
+
+  const s = String(gapStr).trim();
+  if (!s || s === "—") return Infinity;
+  if (s.toLowerCase() === "leader") return 0;
+
+  const cleaned = s.replace("+", "").replace(/s$/i, "");
+  const n = Number.parseFloat(cleaned);
   return Number.isFinite(n) ? n : Infinity;
 }
 
@@ -39,8 +45,15 @@ function GapBar({ gap }) {
   );
 }
 
+function toPos(v, fallback = 9999) {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export default function BattlesWidget({ drivers = [] }) {
-  if (!drivers || drivers.length < 2) {
+  const list = Array.isArray(drivers) ? drivers : [];
+
+  if (list.length < 2) {
     return (
       <div className="flex h-full items-center justify-center">
         <p className="text-sm text-neutral-500 dark:text-neutral-400">
@@ -50,19 +63,24 @@ export default function BattlesWidget({ drivers = [] }) {
     );
   }
 
-  const sorted = [...drivers].sort((a, b) => a.position - b.position);
+  const sorted = [...list].sort((a, b) => toPos(a.position) - toPos(b.position));
 
   const battles = [];
   for (let i = 0; i < sorted.length - 1; i++) {
     const ahead = sorted[i];
     const behind = sorted[i + 1];
 
-    const aheadGap = parseGap(ahead.gap);
-    const behindGap = parseGap(behind.gap);
+    const aheadGap = parseGap(ahead?.gap);
+    const behindGap = parseGap(behind?.gap);
+
     if (!Number.isFinite(aheadGap) || !Number.isFinite(behindGap)) continue;
 
-    const between = behind.position === 1 ? 0 : behindGap - aheadGap;
-    if (between >= 0 && between < 1.0) battles.push({ ahead, behind, between });
+    const between = behindGap - aheadGap;
+
+    // Only show close battles (0..1s)
+    if (between >= 0 && between < 1.0) {
+      battles.push({ ahead, behind, between });
+    }
   }
 
   if (battles.length === 0) {
@@ -77,26 +95,28 @@ export default function BattlesWidget({ drivers = [] }) {
 
   return (
     <div className="h-full min-h-0 overflow-auto">
-      {/* Same surface language as Notifications */}
       <Card className="divide-y divide-black/5 dark:divide-white/10" clip bordered>
-        {battles.map((b) => {
+        {battles.map((b, idx) => {
           const tone = battleTone(b.between);
 
-          const behindCode = b.behind.driver_code || "—";
-          const aheadCode = b.ahead.driver_code || "—";
+          const behindCode = b.behind?.driver_code || "—";
+          const aheadCode = b.ahead?.driver_code || "—";
 
-          const behindTeam = b.behind.team || "";
-          const aheadTeam = b.ahead.team || "";
+          const behindTeam = b.behind?.team || "";
+          const aheadTeam = b.ahead?.team || "";
 
-          // Subtle team hint (no hardcoded mapping; pulled from utils)
           const railColor = behindTeam ? getTeamColor(behindTeam) : null;
+
+          const key =
+            (b.ahead?.driver_id && b.behind?.driver_id)
+              ? `${b.ahead.driver_id}-${b.behind.driver_id}`
+              : `${aheadCode}-${behindCode}-${idx}`;
 
           return (
             <div
-              key={`${b.ahead.driver_code}-${b.behind.driver_code}`}
+              key={key}
               className="relative px-4 py-3 transition-colors hover:bg-black/[0.02] dark:hover:bg-white/[0.03]"
             >
-              {/* Optional ultra-subtle rail */}
               {railColor ? (
                 <div
                   className="absolute left-px top-0 h-full w-[3px] opacity-70"
@@ -105,11 +125,11 @@ export default function BattlesWidget({ drivers = [] }) {
                 />
               ) : null}
 
-              {/* Top row */}
               <div className="flex items-center gap-3">
                 <div className="min-w-[108px]">
                   <div className="text-sm font-medium tabular-nums text-neutral-900 dark:text-neutral-50">
-                    P{b.behind.position} <span className="tracking-wide">{behindCode}</span>
+                    P{toPos(b.behind?.position, 0)}{" "}
+                    <span className="tracking-wide">{behindCode}</span>
                   </div>
                 </div>
 
@@ -129,14 +149,16 @@ export default function BattlesWidget({ drivers = [] }) {
                 </div>
               </div>
 
-              {/* Subline */}
               <div className="mt-2 text-xs text-neutral-500 dark:text-neutral-400">
                 Chasing{" "}
                 <span className="font-medium text-neutral-900 dark:text-neutral-200">
-                  P{b.ahead.position} {aheadCode}
+                  P{toPos(b.ahead?.position, 0)} {aheadCode}
                 </span>
                 {aheadTeam ? (
-                  <span className="text-neutral-400 dark:text-neutral-500"> ({aheadTeam})</span>
+                  <span className="text-neutral-400 dark:text-neutral-500">
+                    {" "}
+                    ({aheadTeam})
+                  </span>
                 ) : null}
               </div>
             </div>

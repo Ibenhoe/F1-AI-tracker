@@ -13,7 +13,7 @@ import {
   useWikiSessionData,
 } from "../components/wiki";
 
-import RaceSelector from "../components/RaceSelector";
+import RaceSelector from "../components/dashboard/RaceSelector";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 

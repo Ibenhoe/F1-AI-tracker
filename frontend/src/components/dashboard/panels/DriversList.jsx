@@ -1,23 +1,32 @@
+// src/components/dashboard/panels/DriversList.jsx
 import { ArrowDown, ArrowUp, Minus } from "lucide-react";
-import TireBadge from "../components/ui/TireBadge";
-import { getTeamColor } from "../utils/teamColors";
-import Card from "./ui/Card";
-
+import TireBadge from "../../ui/TireBadge";
+import { getTeamColor } from "../../../utils/teamColors";
+import Card from "../../ui/Card";
 
 function PosDelta({ value }) {
   const v = Number(value ?? 0);
 
   if (v > 0) {
     return (
-      <span className="inline-flex items-center justify-end gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums">
-        <ArrowUp size={14} />+{v}
+      <span
+        className="inline-flex items-center justify-end gap-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums"
+        aria-label={`Gained ${v} position${v === 1 ? "" : "s"}`}
+        title={`+${v}`}
+      >
+        <ArrowUp size={14} />
+        +{v}
       </span>
     );
   }
 
   if (v < 0) {
     return (
-      <span className="inline-flex items-center justify-end gap-1 text-xs font-semibold text-red-600 dark:text-red-400 tabular-nums">
+      <span
+        className="inline-flex items-center justify-end gap-1 text-xs font-semibold text-red-600 dark:text-red-400 tabular-nums"
+        aria-label={`Lost ${Math.abs(v)} position${Math.abs(v) === 1 ? "" : "s"}`}
+        title={String(v)}
+      >
         <ArrowDown size={14} />
         {v}
       </span>
@@ -25,7 +34,11 @@ function PosDelta({ value }) {
   }
 
   return (
-    <span className="inline-flex items-center justify-end gap-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400 tabular-nums">
+    <span
+      className="inline-flex items-center justify-end gap-1 text-xs font-semibold text-neutral-500 dark:text-neutral-400 tabular-nums"
+      aria-label="No position change"
+      title="0"
+    >
       <Minus size={14} />0
     </span>
   );
@@ -36,17 +49,28 @@ function formatGap(raw, isLeader) {
   if (raw == null) return "—";
 
   const str = String(raw).trim();
-  if (!str || str === "—" || str.toLowerCase() === "nan") return "—";
+  if (!str || str === "—") return "—";
 
-  // Accept inputs like "+1.2", "1.234", "1.2s", "+1.2s"
+  const lowered = str.toLowerCase();
+  if (lowered === "nan") return "—";
+
+  // Keep non-time tokens as-is (backend sometimes returns these)
+  const passthroughTokens = ["dnf", "pit", "lap", "out", "ret", "retired"];
+  if (passthroughTokens.some((t) => lowered.includes(t))) return str;
+
+  // Accept: "+1.2", "1.234", "1.2s", "+1.2s"
   const cleaned = str.replace(/s$/i, "").replace("+", "");
   const num = Number.parseFloat(cleaned);
 
-  if (!Number.isFinite(num)) return str; // fallback to whatever backend gives
+  if (!Number.isFinite(num)) return str;
 
-  // If 0 for non-leader, still show 0.0s (but keep it subtle)
   const sign = num > 0 ? "+" : "";
   return `${sign}${num.toFixed(1)}s`;
+}
+
+function safeInt(n, fallback = 0) {
+  const x = Number(n);
+  return Number.isFinite(x) ? x : fallback;
 }
 
 export default function DriversList({ drivers }) {
@@ -79,24 +103,26 @@ export default function DriversList({ drivers }) {
       <div className="divide-y divide-black/5 dark:divide-white/10">
         {list.length > 0 ? (
           list.map((driver, idx) => {
-            const name = driver.driver_name || driver.driver_code || "Unknown";
-            const team = driver.team || "—";
+            const code = driver?.driver_code ? String(driver.driver_code) : "";
+            const name = driver?.driver_name || code || "Unknown";
+            const team = driver?.team || "—";
             const teamColor = getTeamColor(team);
 
-            const pos =
-              Number.isFinite(Number(driver.position)) && Number(driver.position) > 0
-                ? Number(driver.position)
-                : idx + 1;
+            const posRaw = safeInt(driver?.position, idx + 1);
+            const pos = posRaw > 0 ? posRaw : idx + 1;
 
             const isLeader = pos === 1 || idx === 0;
 
-            const gapDisplay = formatGap(driver.gap, isLeader);
+            const gapDisplay = formatGap(driver?.gap, isLeader);
+            const lapTime =
+              driver?.lap_time && driver.lap_time !== "—" ? driver.lap_time : "—";
 
-            const lapTime = driver.lap_time && driver.lap_time !== "—" ? driver.lap_time : "—";
+            const tireAge = safeInt(driver?.tire_age, 0);
+            const pitStops = safeInt(driver?.pit_stops, 0);
 
             return (
               <div
-                key={driver.driver_id ?? driver.driver_code ?? `${idx}-${name}`}
+                key={driver?.driver_id ?? code ?? `${team}-${name}-${idx}`}
                 className={[
                   "relative",
                   "grid min-w-0",
@@ -130,7 +156,7 @@ export default function DriversList({ drivers }) {
                     {team}
                   </div>
 
-                  {/* On mobile, show last lap under the driver for better density */}
+                  {/* Mobile: last lap under driver */}
                   <div className="mt-1 flex items-center justify-between gap-2 md:hidden">
                     <span className="text-[11px] font-medium text-neutral-400 dark:text-neutral-600">
                       Last lap
@@ -150,15 +176,18 @@ export default function DriversList({ drivers }) {
 
                 {/* Tires */}
                 <div className="flex items-center justify-end gap-2">
-                  <TireBadge compound={driver.tire_compound} size={24} />
+                  <span className="sr-only">
+                    Tire compound {driver?.tire_compound ?? "unknown"}, age {tireAge}
+                  </span>
+                  <TireBadge compound={driver?.tire_compound} size={24} />
                   <span className="text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
-                    {driver.tire_age ?? 0}
+                    {tireAge}
                   </span>
                 </div>
 
                 {/* Pits */}
                 <div className="text-right text-sm font-semibold tabular-nums text-neutral-900 dark:text-neutral-100">
-                  {driver.pit_stops ?? 0}
+                  {pitStops}
                 </div>
 
                 {/* Gap */}
@@ -168,9 +197,10 @@ export default function DriversList({ drivers }) {
                       isLeader
                         ? "text-amber-600 dark:text-amber-300"
                         : gapDisplay === "—"
-                          ? "text-neutral-400 dark:text-neutral-600"
-                          : "text-neutral-700 dark:text-neutral-300"
+                        ? "text-neutral-400 dark:text-neutral-600"
+                        : "text-neutral-700 dark:text-neutral-300"
                     }
+                    title={gapDisplay}
                   >
                     {gapDisplay}
                   </span>
@@ -178,7 +208,7 @@ export default function DriversList({ drivers }) {
 
                 {/* Δ Pos */}
                 <div className="text-right">
-                  <PosDelta value={driver.position_change} />
+                  <PosDelta value={driver?.position_change} />
                 </div>
               </div>
             );

@@ -1,7 +1,8 @@
+// src/components/dashboard/panels/PredictionsPanel.jsx
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Card from "./ui/Card";
-import { getTeamColor } from "../utils/teamColors";
+import Card from "../../ui/Card";
+import { getTeamColor } from "../../../utils/teamColors";
 
 function clamp01(n) {
   const x = Number(n);
@@ -46,17 +47,49 @@ function pickTeam(pred) {
   return DRIVER_TO_TEAM[code] || "";
 }
 
+function IconNavButton({ onClick, disabled, label, children }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={label}
+      title={label}
+      className={[
+        "inline-flex h-8 w-8 items-center justify-center rounded-xl",
+        "ring-1 ring-black/5 dark:ring-white/10",
+        "bg-transparent hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
+        "text-neutral-700 dark:text-neutral-200 transition-colors",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2",
+        "focus-visible:ring-offset-white dark:focus-visible:ring-offset-neutral-950",
+        "disabled:opacity-40 disabled:hover:bg-transparent",
+      ].join(" ")}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function PredictionsPanel({ predictions }) {
   const list = Array.isArray(predictions) ? predictions : [];
+
+  // Keep top-5 stable and memoized
   const top = useMemo(() => list.slice(0, 5), [list]);
 
   const visibleCount = 3;
   const [start, setStart] = useState(0);
   const maxStart = Math.max(0, top.length - visibleCount);
 
+  // Clamp when list shrinks/expands
   useEffect(() => {
     setStart((s) => Math.min(s, maxStart));
   }, [maxStart]);
+
+  // If the actual top list changes meaningfully, reset carousel to start.
+  // This avoids being "stuck" on page 2 after a new race/init.
+  useEffect(() => {
+    setStart(0);
+  }, [top.length]);
 
   const canPrev = start > 0;
   const canNext = start < maxStart;
@@ -78,61 +111,54 @@ export default function PredictionsPanel({ predictions }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-3">
+      {/* Carousel controls */}
       <div className="flex items-center justify-end px-1">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => canPrev && setStart((s) => s - 1)}
+          <IconNavButton
+            label="Previous predictions"
             disabled={!canPrev}
-            className={[
-              "inline-flex h-8 w-8 items-center justify-center rounded-xl",
-              "ring-1 ring-black/5 dark:ring-white/10",
-              "bg-transparent hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
-              "text-neutral-700 dark:text-neutral-200 transition-colors",
-              "disabled:opacity-40 disabled:hover:bg-transparent",
-            ].join(" ")}
-            aria-label="Previous predictions"
+            onClick={() => canPrev && setStart((s) => s - 1)}
           >
             <ChevronLeft size={16} />
-          </button>
+          </IconNavButton>
 
-          <button
-            type="button"
-            onClick={() => canNext && setStart((s) => s + 1)}
+          <IconNavButton
+            label="Next predictions"
             disabled={!canNext}
-            className={[
-              "inline-flex h-8 w-8 items-center justify-center rounded-xl",
-              "border border-neutral-200/70 bg-white/60 backdrop-blur",
-              "text-neutral-700 transition hover:bg-neutral-100/70",
-              "disabled:opacity-40 disabled:hover:bg-white/60",
-              "dark:border-white/10 dark:bg-neutral-950/30 dark:text-neutral-200 dark:hover:bg-white/5",
-            ].join(" ")}
-            aria-label="Next predictions"
+            onClick={() => canNext && setStart((s) => s + 1)}
           >
             <ChevronRight size={16} />
-          </button>
+          </IconNavButton>
         </div>
       </div>
 
+      {/* Cards */}
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {visible.map((pred, localIdx) => {
           const idx = start + localIdx;
 
-          const driver = pred.driver_name || pred.driver_code || "Unknown";
+          const driverCode = pred?.driver_code ? String(pred.driver_code) : "";
+          const driver = pred?.driver_name || driverCode || "Unknown";
+
           const team = pickTeam(pred);
           const teamColor = getTeamColor(team) || "rgba(0,0,0,0.12)";
 
-          const fromPos = toInt(pred.position ?? 0);
+          const fromPos = toInt(pred?.position ?? 0);
           const toPos = idx + 1;
-          const confidence = clamp01(pred.confidence ?? 0);
+          const confidence = clamp01(pred?.confidence ?? 0);
+          const pitStops = toInt(pred?.pit_stops ?? 0);
 
           return (
             <Card
-              key={`${pred.driver_code ?? driver}-${idx}`}
+              key={`${driverCode || driver}-${idx}-${team || "team"}`}
               className="relative p-5"
               clip
             >
-              <div className="absolute left-0 top-0 h-1 w-full" style={{ background: teamColor }} />
+              <div
+                className="absolute left-0 top-0 h-1 w-full"
+                style={{ background: teamColor }}
+                aria-hidden="true"
+              />
 
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -158,6 +184,8 @@ export default function PredictionsPanel({ predictions }) {
                     "bg-neutral-100 text-neutral-900 ring-1 ring-black/10",
                     "dark:bg-white/10 dark:text-neutral-50 dark:ring-white/10",
                   ].join(" ")}
+                  aria-label={`Predicted position ${idx + 1}`}
+                  title={`P${idx + 1}`}
                 >
                   P{idx + 1}
                 </div>
@@ -177,26 +205,28 @@ export default function PredictionsPanel({ predictions }) {
                   <div
                     className="h-full rounded-full"
                     style={{ width: `${confidence}%`, background: teamColor }}
+                    aria-hidden="true"
                   />
                 </div>
               </div>
 
               <div className="mt-4 flex items-center justify-between text-[11px] text-neutral-600 dark:text-neutral-400">
-                <span className="tabular-nums">
+                <span className="tabular-nums" title="From current position to predicted position">
                   Pos {fromPos} → {toPos}
                 </span>
-                <span className="tabular-nums">
-                  Pit {toInt(pred.pit_stops ?? 0)}
+                <span className="tabular-nums" title="Predicted pit stops">
+                  Pit {pitStops}
                 </span>
               </div>
             </Card>
           );
         })}
 
+        {/* Pad grid so the last row aligns nicely */}
         {visible.length < 3
           ? Array.from({ length: 3 - visible.length }).map((_, i) => (
-            <div key={`pad-${i}`} className="hidden lg:block" />
-          ))
+              <div key={`pad-${i}`} className="hidden lg:block" />
+            ))
           : null}
 
         {visible.length < 2 ? <div className="hidden sm:block lg:hidden" /> : null}
