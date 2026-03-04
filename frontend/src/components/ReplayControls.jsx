@@ -74,16 +74,10 @@ export default function ReplayControls({
   playbackSpeed,
   currentFrame,
   totalFrames,
-  showDRS,
-  showTelemetry,
-  focusMode,
   realTimeMode,
   onPlayPause,
   onSpeedChange,
   onFrameChange,
-  onDRSToggle,
-  onTelemetryToggle,
-  onFocusToggle,
   onRealTimeToggle,
 }) {
   const accent = "rgb(var(--accent))";
@@ -187,15 +181,6 @@ export default function ReplayControls({
           <div className="hidden sm:block h-5 w-px bg-black/5 dark:bg-white/10" />
 
           {/* Toggle pills */}
-          <TogglePill active={showDRS} onClick={onDRSToggle} title="Toggle DRS zones (D)">
-            DRS
-          </TogglePill>
-          <TogglePill active={showTelemetry} onClick={onTelemetryToggle} title="Toggle telemetry (T)">
-            TEL
-          </TogglePill>
-          <TogglePill active={focusMode} onClick={onFocusToggle} title="Focus mode + AI predictions (F)">
-            FOCUS
-          </TogglePill>
           <TogglePill active={realTimeMode} onClick={onRealTimeToggle} title="Sync replay to real race speed (S)">
             SYNC
           </TogglePill>

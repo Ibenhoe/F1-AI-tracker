@@ -65,9 +65,6 @@ export default function NormalView({
                         playbackSpeed={playbackSpeed}
                         currentFrame={frameIndex}
                         totalFrames={raceData?.frames?.length || 0}
-                        showDRS={showDRS}
-                        showTelemetry={showTelemetry}
-                        focusMode={focusMode}
                         realTimeMode={realTimeMode}
                         onPlayPause={() => {
                             if (realTimeMode) return;
@@ -83,9 +80,6 @@ export default function NormalView({
                                 };
                             }
                         }}
-                        onDRSToggle={() => setShowDRS(!showDRS)}
-                        onTelemetryToggle={() => setShowTelemetry(!showTelemetry)}
-                        onFocusToggle={() => setFocusMode(!focusMode)}
                         onRealTimeToggle={() => {
                             const nextRT = !realTimeMode;
                             if (nextRT && currentFrame) {

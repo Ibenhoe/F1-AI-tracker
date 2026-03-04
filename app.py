@@ -1571,6 +1571,20 @@ def _build_replay_frames(laps_data, race_info):
                 current_y = None
                 current_tel_speed = None
 
+                # ── Sanitize telemetry: remove consecutive duplicate positions ──
+                # FastF1 sometimes produces "frozen" runs of identical (x,y) with
+                # speed=0 due to sensor gaps or sparse data. Keeping only one copy
+                # of each unique position prevents drivers from appearing frozen on
+                # track for long stretches before teleporting to the next point.
+                if len(telemetry_points) > 2:
+                    sanitized = [telemetry_points[0]]
+                    for pt in telemetry_points[1:]:
+                        prev_pt = sanitized[-1]
+                        if pt.get('x') != prev_pt.get('x') or pt.get('y') != prev_pt.get('y'):
+                            sanitized.append(pt)
+                    if len(sanitized) >= 2:
+                        telemetry_points = sanitized
+
                 if len(telemetry_points) > 0:
                     tel_idx = int(t_driver * (len(telemetry_points) - 1))
                     tel_idx = max(0, min(len(telemetry_points) - 1, tel_idx))

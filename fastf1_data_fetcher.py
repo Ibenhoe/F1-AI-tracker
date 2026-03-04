@@ -343,7 +343,7 @@ class FastF1DataFetcher:
                                                 'x': float(row.get('X', np.nan)) if not pd.isna(row.get('X')) else None,
                                                 'y': float(row.get('Y', np.nan)) if not pd.isna(row.get('Y')) else None,
                                                 'speed': float(row.get('Speed', np.nan)) if not pd.isna(row.get('Speed')) else None,
-                                                'gear': int(row.get('Gear', np.nan)) if not pd.isna(row.get('Gear')) else None,
+                                                'gear': int(row.get('nGear', np.nan)) if not pd.isna(row.get('nGear')) else None,
                                                 'throttle': float(row.get('Throttle', np.nan)) if not pd.isna(row.get('Throttle')) else None,
                                                 'brake': float(row.get('Brake', np.nan)) if not pd.isna(row.get('Brake')) else None,
                                             }
