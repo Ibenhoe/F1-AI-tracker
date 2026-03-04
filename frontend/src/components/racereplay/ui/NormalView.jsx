@@ -85,9 +85,7 @@ export default function NormalView({
                         }}
                         onDRSToggle={() => setShowDRS(!showDRS)}
                         onTelemetryToggle={() => setShowTelemetry(!showTelemetry)}
-                        onFocusToggle={() => {
-                            // focusMode toggle happens in parent (RaceReplay.jsx / FocusOverlay)
-                        }}
+                        onFocusToggle={() => setFocusMode(!focusMode)}
                         onRealTimeToggle={() => {
                             const nextRT = !realTimeMode;
                             if (nextRT && currentFrame) {
