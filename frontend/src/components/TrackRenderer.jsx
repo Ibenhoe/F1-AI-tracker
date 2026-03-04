@@ -1,25 +1,100 @@
-import React, { useEffect, useRef, forwardRef } from 'react';
-import './TrackRenderer.css';
+import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
+import { getTeamColor } from "../utils/teamColors";
+import { normalizeDriver } from "../components/racereplay/utils/telemetry";
 
-/**
- * TrackRenderer Component
- * Canvas-based track visualization with real-time driver positions,
- * DRS zones, and telemetry overlays.
- */
+function isDarkTheme() {
+  if (typeof document === "undefined") return true;
+  return document.documentElement.classList.contains("dark");
+}
+
+function clamp(n, a, b) {
+  return Math.max(a, Math.min(b, n));
+}
+
+function withAlpha(color, alpha) {
+  const c = String(color || "").trim();
+  if (/^#([0-9a-f]{6})$/i.test(c)) {
+    const a = Math.round(clamp(alpha, 0, 1) * 255)
+      .toString(16)
+      .padStart(2, "0");
+    return `${c}${a}`;
+  }
+  const rgb = c.match(/^rgb\(\s*([^)]+)\s*\)$/i);
+  if (rgb) return `rgba(${rgb[1]}, ${alpha})`;
+  const rgba = c.match(/^rgba\(\s*([^)]+)\s*\)$/i);
+  if (rgba) {
+    const parts = rgba[1].split(",").map((p) => p.trim());
+    return `rgba(${parts.slice(0, 3).join(", ")}, ${alpha})`;
+  }
+  return c;
+}
+
+const DRIVER_TEAMS_FALLBACK = {
+  VER: "Red Bull Racing",
+  PER: "Red Bull Racing",
+  HAM: "Mercedes",
+  RUS: "Mercedes",
+  LEC: "Ferrari",
+  SAI: "Ferrari",
+  NOR: "McLaren",
+  PIA: "McLaren",
+  ALO: "Aston Martin",
+  STR: "Aston Martin",
+  GAS: "Alpine",
+  OCO: "Alpine",
+  TSU: "RB",
+  RIC: "RB",
+  LAW: "RB",
+  ALB: "Williams",
+  SAR: "Williams",
+  COL: "Williams",
+  HUL: "Haas F1 Team",
+  MAG: "Haas F1 Team",
+  BEA: "Haas F1 Team",
+  BOT: "Kick Sauber",
+  ZHO: "Kick Sauber",
+};
+
+function getDriverTeamName(code, driver) {
+  const hasConstructorKey = Object.prototype.hasOwnProperty.call(
+    driver || {},
+    "constructor"
+  );
+  const raw =
+    driver?.team ||
+    driver?.team_name ||
+    (hasConstructorKey ? driver?.constructor : null) ||
+    driver?.constructor_name;
+
+  if (raw && raw !== "Unknown") return raw;
+  return DRIVER_TEAMS_FALLBACK[code] || "";
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  const rr = Math.min(r, w / 2, h / 2);
+  ctx.beginPath();
+  ctx.moveTo(x + rr, y);
+  ctx.arcTo(x + w, y, x + w, y + h, rr);
+  ctx.arcTo(x + w, y + h, x, y + h, rr);
+  ctx.arcTo(x, y + h, x, y, rr);
+  ctx.arcTo(x, y, x + w, y, rr);
+  ctx.closePath();
+}
+
 const TrackRenderer = forwardRef(
   (
     {
       frames,
-      frameIndex,          // controlled externally (slider)
+      frameIndex,
       isPlaying = false,
       playbackSpeed = 1,
-      currentFrame,        // still accepted so nothing breaks if passed
+      currentFrame,
       trackData,
       drsZones,
       showDRS,
       selectedDriver,
       onDriverSelect,
-      onFrameChange,       // callback(index) so slider / lap counter stays in sync
+      onFrameChange,
       focusMode,
       rotation = 0,
       smoothedGaps = {},
@@ -28,151 +103,214 @@ const TrackRenderer = forwardRef(
   ) => {
     const canvasRef = useRef(null);
     const containerRef = useRef(null);
+
     const scaleRef = useRef(1);
     const offsetRef = useRef({ x: 0, y: 0 });
+    const sizeRef = useRef({ w: 1, h: 1, dpr: 1 });
 
-    // Internal float frame index so animation is smooth without React setState
-    const frameIdxRef         = useRef(frameIndex || 0);
-    const lastRafTimeRef      = useRef(null);
-    const lastNotifiedFrameRef = useRef(-1);  // throttle onFrameChange to ~10fps
+    useImperativeHandle(ref, () => canvasRef.current);
 
-    // Sync internal index when slider / external source changes frameIndex
+    const frameIdxRef = useRef(frameIndex || 0);
+    const lastRafTimeRef = useRef(null);
+    const lastNotifiedFrameRef = useRef(-1);
+
     useEffect(() => {
       frameIdxRef.current = frameIndex || 0;
       lastNotifiedFrameRef.current = Math.floor(frameIndex || 0);
     }, [frameIndex]);
 
-    // Mirror all NON-frame drawing props into a ref so the RAF loop can read them
     const drawPropsRef = useRef({});
     drawPropsRef.current = {
-      frames, trackData, drsZones, showDRS,
-      selectedDriver, onDriverSelect, focusMode,
-      rotation, smoothedGaps,
-      isPlaying, playbackSpeed, onFrameChange,
+      frames,
+      trackData,
+      drsZones,
+      showDRS,
+      selectedDriver,
+      onDriverSelect,
+      focusMode,
+      rotation,
+      smoothedGaps,
+      isPlaying,
+      playbackSpeed,
+      onFrameChange,
     };
 
-    // Resize canvas on mount / window resize
     useEffect(() => {
       const canvas = canvasRef.current;
-      if (!canvas || !containerRef.current) return;
-
       const container = containerRef.current;
+      if (!canvas || !container) return;
 
       const resizeCanvas = () => {
-        const ctx = canvas.getContext('2d');
         const rect = container.getBoundingClientRect();
-        const width = Math.max(600, rect.width * 0.95);
-        const height = Math.max(400, rect.height * 0.95);
+        const width = Math.max(1, rect.width);
+        const height = Math.max(1, rect.height);
 
-        canvas.width = width * window.devicePixelRatio;
-        canvas.height = height * window.devicePixelRatio;
-        ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(width * dpr);
+        canvas.height = Math.floor(height * dpr);
 
+        const ctx = canvas.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        sizeRef.current = { w: width, h: height, dpr };
         scaleRef.current = 1;
-        offsetRef.current = { x: 0, y: 0 };
+        offsetRef.current = { x: width / 2, y: height / 2 };
       };
 
       resizeCanvas();
-      window.addEventListener('resize', resizeCanvas);
-      return () => window.removeEventListener('resize', resizeCanvas);
+      window.addEventListener("resize", resizeCanvas);
+      return () => window.removeEventListener("resize", resizeCanvas);
     }, []);
 
-    // Single persistent RAF loop — owns animation timing, never re-registered
     useEffect(() => {
       let rafId;
 
       const loop = (rafTimestamp) => {
         const canvas = canvasRef.current;
-        const {
-          frames, trackData, drsZones, showDRS,
-          selectedDriver, onDriverSelect, focusMode,
-          rotation, smoothedGaps,
-          isPlaying, playbackSpeed, onFrameChange,
-        } = drawPropsRef.current;
+        const props = drawPropsRef.current;
 
-        // ── Advance frame index when playing ──────────────────────────────────
-        if (isPlaying && frames && frames.length > 0) {
+        const {
+          frames: fr,
+          trackData: td,
+          drsZones: dz,
+          showDRS: sDRS,
+          selectedDriver: sel,
+          onDriverSelect: onSel,
+          focusMode: fm,
+          rotation: rotDeg,
+          isPlaying: play,
+          playbackSpeed: speed,
+          onFrameChange: onFc,
+        } = props;
+
+        if (play && fr && fr.length > 0) {
           if (lastRafTimeRef.current !== null) {
             const rawDelta = (rafTimestamp - lastRafTimeRef.current) / 1000;
-            const delta = Math.min(rawDelta, 0.05); // clamp: ignore tab-hidden jumps
-            const advance = delta * 120 * playbackSpeed;  // 120 fps source
+            const delta = Math.min(rawDelta, 0.05);
+            const advance = delta * 120 * speed;
             frameIdxRef.current = frameIdxRef.current + advance;
-            const lastIdx = frames.length - 1;
-            if (frameIdxRef.current >= frames.length) {
+
+            const lastIdx = fr.length - 1;
+            if (frameIdxRef.current >= fr.length) {
               frameIdxRef.current = lastIdx;
-              // Signal end-of-race once (prevent rapid repeated calls)
-              if (onFrameChange && lastNotifiedFrameRef.current !== lastIdx) {
+              if (onFc && lastNotifiedFrameRef.current !== lastIdx) {
                 lastNotifiedFrameRef.current = lastIdx;
-                onFrameChange(lastIdx);
+                onFc(lastIdx);
               }
             } else {
-              // Notify parent ~10× per second so slider + lap counter stay in sync
               const intIdx = Math.floor(frameIdxRef.current);
-              if (onFrameChange && intIdx - lastNotifiedFrameRef.current >= 12) {
+              if (onFc && intIdx - lastNotifiedFrameRef.current >= 12) {
                 lastNotifiedFrameRef.current = intIdx;
-                onFrameChange(intIdx);
+                onFc(intIdx);
               }
             }
           }
           lastRafTimeRef.current = rafTimestamp;
         } else {
-          lastRafTimeRef.current = null; // reset so no jump on resume
+          lastRafTimeRef.current = null;
         }
 
-        // ── Draw ──────────────────────────────────────────────────────────────
-        const idx = Math.min(Math.floor(frameIdxRef.current), (frames?.length ?? 1) - 1);
-        const frame = frames?.[idx] ?? null;
+        const idx = Math.min(
+          Math.floor(frameIdxRef.current),
+          (fr?.length ?? 1) - 1
+        );
+        const frame = fr?.[idx] ?? null;
 
-        if (canvas && frame && trackData) {
-          const ctx = canvas.getContext('2d');
-          const width  = canvas.width  / window.devicePixelRatio;
-          const height = canvas.height / window.devicePixelRatio;
+        if (canvas && frame && td?.bounds) {
+          const ctx = canvas.getContext("2d");
+          const { w: width, h: height } = sizeRef.current;
 
-          ctx.fillStyle = '#0a0e27';
+          const dark = isDarkTheme();
+          const palette = dark
+            ? {
+              bg: "rgba(0,0,0,0.92)",
+              trackFill: "rgba(255,255,255,0.055)",
+              trackStrokeOuter: "rgba(255,255,255,0.22)",
+              trackStrokeInner: "rgba(255,255,255,0.18)",
+              center: "rgba(255,255,255,0.13)",
+              drsFill: "rgba(255,255,255,0.06)",
+              drsStroke: "rgba(255,255,255,0.18)",
+
+              markerText: "rgba(255,255,255,0.95)",
+              markerShadow: "rgba(0,0,0,0.55)",
+              labelFill: "rgba(0,0,0,0.62)",
+              labelText: "rgba(255,255,255,0.92)",
+
+              panelBg: "rgba(0,0,0,0.62)",
+              panelText: "rgba(255,255,255,0.92)",
+              panelMuted: "rgba(255,255,255,0.70)",
+            }
+            : {
+              bg: "rgba(255,255,255,0.96)",
+              trackFill: "rgba(0,0,0,0.045)",
+              trackStrokeOuter: "rgba(0,0,0,0.20)",
+              trackStrokeInner: "rgba(0,0,0,0.16)",
+              center: "rgba(0,0,0,0.10)",
+              drsFill: "rgba(0,0,0,0.035)",
+              drsStroke: "rgba(0,0,0,0.14)",
+
+              markerText: "rgba(255,255,255,0.98)",
+              markerShadow: "rgba(0,0,0,0.12)",
+              labelFill: "rgba(255,255,255,0.82)",
+              labelText: "rgba(0,0,0,0.82)",
+
+              panelBg: "rgba(255,255,255,0.82)",
+              panelText: "rgba(0,0,0,0.86)",
+              panelMuted: "rgba(0,0,0,0.55)",
+            };
+
+          ctx.fillStyle = palette.bg;
           ctx.fillRect(0, 0, width, height);
 
-          if (scaleRef.current === 1 && trackData.bounds) {
-            const bounds = trackData.bounds;
-            const trackWidth  = bounds.maxX - bounds.minX;
-            const trackHeight = bounds.maxY - bounds.minY;
-            let baseScale;
-            if (focusMode) {
-              baseScale = Math.min((width * 0.95) / trackWidth, (height * 0.95) / trackHeight);
-            } else {
-              baseScale = Math.min((width * 0.85) / trackWidth, (height * 0.85) / trackHeight) * 1.8;
-            }
-            scaleRef.current = baseScale;
-            offsetRef.current = { x: width / 2, y: height / 2 };
-          }
+          const bounds = td.bounds;
+          const trackW = Math.max(1e-6, bounds.maxX - bounds.minX);
+          const trackH = Math.max(1e-6, bounds.maxY - bounds.minY);
 
-          const rotationAngle = -(rotation * Math.PI / 180);
-          const bounds = trackData.bounds;
-          const trackCenterX = (bounds.minX + bounds.maxX) / 2;
-          const trackCenterY = (bounds.minY + bounds.maxY) / 2;
+          const rotationAngle = -(Number(rotDeg || 0) * Math.PI) / 180;
+          const cos = Math.abs(Math.cos(rotationAngle));
+          const sin = Math.abs(Math.sin(rotationAngle));
+          const rotatedW = trackW * cos + trackH * sin;
+          const rotatedH = trackW * sin + trackH * cos;
+
+          const pad = fm ? 0.06 : 0.09;
+          const usableW = width * (1 - pad * 2);
+          const usableH = height * (1 - pad * 2);
+
+          const baseScale = Math.min(usableW / rotatedW, usableH / rotatedH);
+          scaleRef.current = baseScale;
+
+          offsetRef.current = { x: width / 2, y: height / 2 };
+
+          const centerX = (bounds.minX + bounds.maxX) / 2;
+          const centerY = (bounds.minY + bounds.maxY) / 2;
 
           ctx.save();
           ctx.translate(offsetRef.current.x, offsetRef.current.y);
           ctx.rotate(rotationAngle);
-          ctx.translate(-trackCenterX * scaleRef.current, -trackCenterY * scaleRef.current);
+          ctx.scale(scaleRef.current, scaleRef.current);
+          ctx.translate(-centerX, -centerY);
 
-          drawTrack(ctx, trackData, scaleRef.current, { x: 0, y: 0 });
+          drawTrack(ctx, td, palette);
 
-          if (showDRS && drsZones) {
-            drawDRSZones(ctx, drsZones, scaleRef.current, { x: 0, y: 0 });
+          if (sDRS && dz) {
+            drawDRSZones(ctx, dz, palette);
           }
 
           drawDrivers(
-            ctx, frame, scaleRef.current, { x: 0, y: 0 },
-            selectedDriver, onDriverSelect, trackData, rotationAngle
+            ctx,
+            frame,
+            sel,
+            onSel,
+            td,
+            -rotationAngle,
+            palette,
+            scaleRef.current
           );
 
           ctx.restore();
 
-          if (selectedDriver && frame.drivers[selectedDriver]) {
-            drawDriverTelemetry(
-              ctx, selectedDriver, frame.drivers[selectedDriver],
-              width, height
-            );
+          if (sel && frame.drivers?.[sel]) {
+            drawDriverTelemetry(ctx, sel, frame.drivers[sel], width, height, palette);
           }
         }
 
@@ -181,472 +319,352 @@ const TrackRenderer = forwardRef(
 
       rafId = requestAnimationFrame(loop);
       return () => cancelAnimationFrame(rafId);
-    }, []); // ← runs once
+    }, []);
 
     const handleCanvasClick = (e) => {
       const canvas = canvasRef.current;
-      const { frames, trackData } = drawPropsRef.current;
-      const frame = frames?.[Math.floor(frameIdxRef.current)] ?? null;
-      if (!canvas || !frame || !trackData) return;
+      const { frames: fr, trackData: td, rotation: rotDeg } = drawPropsRef.current;
+      const frame = fr?.[Math.floor(frameIdxRef.current)] ?? null;
+      if (!canvas || !frame || !td?.bounds) return;
 
       const rect = canvas.getBoundingClientRect();
       const canvasX = e.clientX - rect.left;
       const canvasY = e.clientY - rect.top;
 
-      // Account for rotation when calculating click position
-      const rotationAngle = -Math.PI / 8; // Match the drawing rotation angle
-      const bounds = trackData.bounds;
-      const trackCenterX = (bounds.minX + bounds.maxX) / 2;
-      const trackCenterY = (bounds.minY + bounds.maxY) / 2;
+      const { w: width, h: height } = sizeRef.current;
 
-      // Reverse the transformations
-      const relX = canvasX - offsetRef.current.x;
-      const relY = canvasY - offsetRef.current.y;
-      const rotCos = Math.cos(-rotationAngle);
-      const rotSin = Math.sin(-rotationAngle);
-      const rotatedX = relX * rotCos - relY * rotSin;
-      const rotatedY = relX * rotSin + relY * rotCos;
-      
-      const x = rotatedX / scaleRef.current + trackCenterX;
-      const y = rotatedY / scaleRef.current + trackCenterY;
+      const bounds = td.bounds;
+      const centerX = (bounds.minX + bounds.maxX) / 2;
+      const centerY = (bounds.minY + bounds.maxY) / 2;
 
-      // Check if click is on any driver
-      const { onDriverSelect, selectedDriver } = drawPropsRef.current;
-      for (const [code, driver] of Object.entries(frame.drivers)) {
-        const dist = Math.hypot(driver.x - x, driver.y - y);
-        if (dist < 15) {
-          onDriverSelect(selectedDriver === code ? null : code);
+      const rotationAngle = -(Number(rotDeg || 0) * Math.PI) / 180;
+
+      const relX = canvasX - width / 2;
+      const relY = canvasY - height / 2;
+
+      const cos = Math.cos(-rotationAngle);
+      const sin = Math.sin(-rotationAngle);
+      const rx = relX * cos - relY * sin;
+      const ry = relX * sin + relY * cos;
+
+      const worldX = rx / scaleRef.current + centerX;
+      const worldY = ry / scaleRef.current + centerY;
+
+      const { onDriverSelect: onSel, selectedDriver: sel } = drawPropsRef.current;
+
+      const hitWorld = getHitRadiusWorld(scaleRef.current) * 1.35;
+
+      for (const [code, driver] of Object.entries(frame.drivers || {})) {
+        const dx = (driver?.x ?? 0) - worldX;
+        const dy = (driver?.y ?? 0) - worldY;
+        if (Math.hypot(dx, dy) < hitWorld) {
+          onSel?.(sel === code ? null : code);
           return;
         }
       }
     };
 
     return (
-      <div ref={containerRef} className="track-renderer">
+      <div
+        ref={containerRef}
+        className={[
+          "relative h-full w-full overflow-hidden rounded-2xl",
+          "bg-white dark:bg-neutral-950/40",
+          "ring-1 ring-black/5 dark:ring-white/10",
+        ].join(" ")}
+      >
         <canvas
           ref={canvasRef}
-          className="track-canvas"
+          className="block h-full w-full"
           onClick={handleCanvasClick}
-          style={{ cursor: 'pointer' }}
+          style={{ cursor: "pointer" }}
         />
       </div>
     );
   }
 );
 
-TrackRenderer.displayName = 'TrackRenderer';
+TrackRenderer.displayName = "TrackRenderer";
 
-/**
- * Draw the track (centerline, inner and outer boundaries)
- */
-function drawTrack(ctx, trackData, scale, offset) {
+function drawTrack(ctx, trackData, palette) {
   if (!trackData) return;
 
-  // Draw track SURFACE (fill between inner and outer boundaries)
-  if (trackData.innerBoundary && trackData.outerBoundary && 
-      trackData.innerBoundary.length > 0 && trackData.outerBoundary.length > 0) {
-    
-    // Create path for track fill
-    ctx.fillStyle = 'rgba(80, 80, 100, 0.4)';
+  const inner = trackData.innerBoundary || [];
+  const outer = trackData.outerBoundary || [];
+
+  if (inner.length > 2 && outer.length > 2) {
+    ctx.fillStyle = palette.trackFill;
     ctx.beginPath();
-    
-    // Outer boundary clockwise
-    const outerFirst = trackData.outerBoundary[0];
-    ctx.moveTo(outerFirst.x * scale + offset.x, outerFirst.y * scale + offset.y);
-    for (let i = 1; i < trackData.outerBoundary.length; i++) {
-      const point = trackData.outerBoundary[i];
-      if (point && typeof point.x !== 'undefined' && typeof point.y !== 'undefined') {
-        ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
-      }
-    }
-    
-    // Inner boundary counter-clockwise (reverse)
-    for (let i = trackData.innerBoundary.length - 1; i >= 0; i--) {
-      const point = trackData.innerBoundary[i];
-      if (point && typeof point.x !== 'undefined' && typeof point.y !== 'undefined') {
-        ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
-      }
-    }
-    
+    ctx.moveTo(outer[0].x, outer[0].y);
+    for (let i = 1; i < outer.length; i++) ctx.lineTo(outer[i].x, outer[i].y);
+    for (let i = inner.length - 1; i >= 0; i--) ctx.lineTo(inner[i].x, inner[i].y);
     ctx.closePath();
     ctx.fill();
   }
 
-  // Draw track boundaries - THICKER for better visibility
-  if (trackData.innerBoundary && trackData.innerBoundary.length > 0) {
-    ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 3;
+  if (outer.length > 1) {
+    ctx.strokeStyle = palette.trackStrokeOuter;
+    ctx.lineWidth = 2.4;
     ctx.beginPath();
-
-    const first = trackData.innerBoundary[0];
-    if (first && typeof first.x !== 'undefined' && typeof first.y !== 'undefined') {
-      ctx.moveTo(first.x * scale + offset.x, first.y * scale + offset.y);
-
-      for (let i = 1; i < trackData.innerBoundary.length; i++) {
-        const point = trackData.innerBoundary[i];
-        if (point && typeof point.x !== 'undefined' && typeof point.y !== 'undefined') {
-          ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
-        }
-      }
-      ctx.stroke();
-    }
-  }
-
-  if (trackData.outerBoundary && trackData.outerBoundary.length > 0) {
-    ctx.strokeStyle = '#666666';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-
-    const first = trackData.outerBoundary[0];
-    if (first && typeof first.x !== 'undefined' && typeof first.y !== 'undefined') {
-      ctx.moveTo(first.x * scale + offset.x, first.y * scale + offset.y);
-
-      for (let i = 1; i < trackData.outerBoundary.length; i++) {
-        const point = trackData.outerBoundary[i];
-        if (point && typeof point.x !== 'undefined' && typeof point.y !== 'undefined') {
-          ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
-        }
-      }
-      ctx.stroke();
-    }
+    ctx.moveTo(outer[0].x, outer[0].y);
+    for (let i = 1; i < outer.length; i++) ctx.lineTo(outer[i].x, outer[i].y);
     ctx.stroke();
   }
 
-  // Draw centerline
-  if (trackData.centerline) {
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([5, 5]);
+  if (inner.length > 1) {
+    ctx.strokeStyle = palette.trackStrokeInner;
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
+    ctx.moveTo(inner[0].x, inner[0].y);
+    for (let i = 1; i < inner.length; i++) ctx.lineTo(inner[i].x, inner[i].y);
+    ctx.stroke();
+  }
 
-    const first = trackData.centerline[0];
-    ctx.moveTo(first.x * scale + offset.x, first.y * scale + offset.y);
-
-    for (let i = 1; i < trackData.centerline.length; i++) {
-      const point = trackData.centerline[i];
-      ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
-    }
+  if (Array.isArray(trackData.centerline) && trackData.centerline.length > 1) {
+    const c = trackData.centerline;
+    ctx.strokeStyle = palette.center;
+    ctx.lineWidth = 1.2;
+    ctx.setLineDash([10, 10]);
+    ctx.beginPath();
+    ctx.moveTo(c[0].x, c[0].y);
+    for (let i = 1; i < c.length; i++) ctx.lineTo(c[i].x, c[i].y);
     ctx.stroke();
     ctx.setLineDash([]);
   }
-
-  // Draw finish line
-  if (trackData.finishLine) {
-    const start = trackData.finishLine.start;
-    const end = trackData.finishLine.end;
-
-    // Checkered pattern
-    const checkSize = 10;
-    const pattern = ctx.createPattern(
-      createCheckerPattern(checkSize),
-      'repeat'
-    );
-    ctx.fillStyle = pattern;
-
-    const x1 = start.x * scale + offset.x;
-    const y1 = start.y * scale + offset.y;
-    const x2 = end.x * scale + offset.x;
-    const y2 = end.y * scale + offset.y;
-
-    const dx = x2 - x1;
-    const dy = y2 - y1;
-    const len = Math.hypot(dx, dy);
-    const nx = -dy / len;
-    const ny = dx / len;
-
-    const width = 30;
-
-    ctx.beginPath();
-    ctx.moveTo(x1 + nx * width, y1 + ny * width);
-    ctx.lineTo(x2 + nx * width, y2 + ny * width);
-    ctx.lineTo(x2 - nx * width, y2 - ny * width);
-    ctx.lineTo(x1 - nx * width, y1 - ny * width);
-    ctx.closePath();
-    ctx.fill();
-  }
 }
 
-/**
- * Draw DRS zones on the track
- */
-function drawDRSZones(ctx, drsZones, scale, offset) {
-  if (!drsZones || drsZones.length === 0) return;
+function drawDRSZones(ctx, drsZones, palette) {
+  if (!Array.isArray(drsZones) || drsZones.length === 0) return;
 
-  ctx.fillStyle = 'rgba(76, 175, 80, 0.2)';
-  ctx.strokeStyle = 'rgba(76, 175, 80, 0.8)';
-  ctx.lineWidth = 2;
+  ctx.fillStyle = palette.drsFill;
+  ctx.strokeStyle = palette.drsStroke;
+  ctx.lineWidth = 1.3;
 
-  drsZones.forEach((zone) => {
-    if (!zone.points || zone.points.length < 2) return;
+  for (const zone of drsZones) {
+    const pts = zone?.points || [];
+    if (pts.length < 2) continue;
 
     ctx.beginPath();
-    const first = zone.points[0];
-    ctx.moveTo(first.x * scale + offset.x, first.y * scale + offset.y);
-
-    for (let i = 1; i < zone.points.length; i++) {
-      const point = zone.points[i];
-      ctx.lineTo(point.x * scale + offset.x, point.y * scale + offset.y);
-    }
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
     ctx.closePath();
     ctx.fill();
     ctx.stroke();
-  });
+  }
 }
 
-/**
- * Draw drivers on the track with colors and labels
- */
+function getBaseRadiusWorld(scale) {
+  const targetPx = 78;
+  const r = targetPx / Math.max(1e-6, scale);
+  return clamp(r, 54, 210);
+}
+
+function getHitRadiusWorld(scale) {
+  const targetPx = 102;
+  const r = targetPx / Math.max(1e-6, scale);
+  return clamp(r, 66, 270);
+}
+
 function drawDrivers(
   ctx,
   currentFrame,
-  scale,
-  offset,
   selectedDriver,
   onDriverSelect,
   trackData,
-  rotationAngle = 0
+  counterRotation,
+  palette,
+  scale
 ) {
-  const drivers = Object.entries(currentFrame.drivers || {});
-  
-  // Get track centerline for fallback positioning
+  const entries = Object.entries(currentFrame?.drivers || {});
+  if (entries.length === 0) return;
+
+  const dark = isDarkTheme();
   const centerline = trackData?.centerline || [];
 
-  // Sort drivers by position ASCENDING (P1 last, P18 first)
-  // This ensures P1 is drawn last and appears on top of other drivers
-  const sortedDrivers = drivers.sort((a, b) => {
-    const posA = a[1].position || 999;
-    const posB = b[1].position || 999;
-    return posB - posA;  // Reverse: P18 first, P1 last (drawn on top)
-  });
+  const sorted = entries
+    .map(([code, d]) => [code, d || {}])
+    .sort((a, b) => (b[1].position ?? 999) - (a[1].position ?? 999));
 
-  // Build position map: real telemetry x,y first, centerline fallback if missing
-  const driverPositions = new Map();
-
-  sortedDrivers.forEach(([code, driver]) => {
+  const positions = new Map();
+  for (const [code, driver] of sorted) {
     let x, y;
 
-    if (driver.x !== undefined && driver.y !== undefined &&
-        driver.x !== null && driver.y !== null &&
-        (driver.x !== 0 || driver.y !== 0)) {
-      // Real telemetry position
-      x = driver.x * scale + offset.x;
-      y = driver.y * scale + offset.y;
+    if (
+      driver.x !== undefined &&
+      driver.y !== undefined &&
+      driver.x !== null &&
+      driver.y !== null &&
+      (driver.x !== 0 || driver.y !== 0)
+    ) {
+      x = driver.x;
+      y = driver.y;
     } else if (centerline.length > 0 && driver.position != null) {
-      // Fallback: spread evenly along centerline by race position
-      const ratio = Math.max(0.05, Math.min(0.95, (driver.position - 1) / 18));
+      const ratio = Math.max(0.05, Math.min(0.95, (Number(driver.position) - 1) / 18));
       const idx = Math.round(ratio * (centerline.length - 1));
-      const pt  = centerline[Math.max(0, Math.min(centerline.length - 1, idx))];
+      const pt = centerline[Math.max(0, Math.min(centerline.length - 1, idx))];
       if (pt) {
-        x = pt.x * scale + offset.x;
-        y = pt.y * scale + offset.y;
+        x = pt.x;
+        y = pt.y;
       }
     }
 
-    if (x !== undefined && y !== undefined) {
-      driverPositions.set(code, { x, y });
-    }
-  });
+    if (x !== undefined && y !== undefined) positions.set(code, { x, y });
+  }
 
-  // Draw each driver using their REAL telemetry x,y (no gap-based override)
-  sortedDrivers.forEach(([code, driver]) => {
-    const pos = driverPositions.get(code);
-    if (!pos) return;  // Skip if no valid position
+  const rBase = getBaseRadiusWorld(scale);
+  const rSelected = rBase * 1.12;
 
-    const x = pos.x;
-    const y = pos.y;
+  for (const [code, driver] of sorted) {
+    const p = positions.get(code);
+    if (!p) continue;
+
+    const x = p.x;
+    const y = p.y;
 
     const isSelected = code === selectedDriver;
+    const pos = Math.round(driver.position ?? 0);
 
-    // Driver circle
-    const radius = isSelected ? 20 : 16;
-    const color = getTeamColor(code);
+    const teamName = getDriverTeamName(code, driver);
+    const teamColor = getTeamColor(teamName) || "rgb(var(--accent))";
 
-    // Shadow/glow effect - Selected drivers get blue glow
-    if (isSelected) {
-      ctx.shadowColor = 'rgba(0, 150, 255, 0.9)';
-      ctx.shadowBlur = 25;
-    } else {
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
-      ctx.shadowBlur = 12;
-    }
+    const r = isSelected ? rSelected : rBase;
+
+    const ring = dark ? "rgba(255,255,255,0.92)" : "rgba(0,0,0,0.16)";
+    const ringSelected = dark ? "rgba(255,255,255,0.96)" : "rgba(0,0,0,0.22)";
+
+    ctx.save();
     ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+    ctx.shadowOffsetY = 2;
+    ctx.shadowBlur = isSelected ? 16 : 12;
+    ctx.shadowColor = palette.markerShadow;
 
-    // Draw circle
-    ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = withAlpha(teamColor, dark ? 0.92 : 0.88);
     ctx.fill();
 
-    // Draw border
-    if (isSelected) {
-      ctx.strokeStyle = '#00d4ff';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-    } else {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-    }
+    ctx.shadowColor = "transparent";
 
-    // Draw position number (counter-rotated so it stays horizontal)
-    ctx.shadowColor = 'transparent';
-    const fontSize = isSelected ? 14 : 12;
-    const displayPosition = Math.round(driver.position);
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(-rotationAngle);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold ${fontSize}px Arial`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(displayPosition), 0, 0);
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.strokeStyle = isSelected ? ringSelected : ring;
+    ctx.lineWidth = Math.max(1.6, 2.2 / Math.max(1e-6, scale));
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.arc(x, y, r - Math.max(1.2, 1.6 / Math.max(1e-6, scale)), 0, Math.PI * 2);
+    ctx.strokeStyle = withAlpha("#000000", dark ? 0.10 : 0.06);
+    ctx.lineWidth = Math.max(0.9, 1.2 / Math.max(1e-6, scale));
+    ctx.stroke();
+
     ctx.restore();
 
-    // Driver code label with background (counter-rotated)
-    const labelOffset = radius + 10;
-    ctx.font = 'bold 11px Arial';
     ctx.save();
     ctx.translate(x, y);
-    ctx.rotate(-rotationAngle);
-    const codeTextWidth = ctx.measureText(code).width;
-    const labelPadding = 4;
-    const bgX = -codeTextWidth / 2 - labelPadding;
-    const bgY = labelOffset - 8;
-    if (isSelected) {
-      ctx.fillStyle = 'rgba(0, 100, 200, 0.85)';
-    } else {
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-    }
-    ctx.fillRect(bgX, bgY, codeTextWidth + labelPadding * 2, 16);
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(code, 0, labelOffset);
+    ctx.rotate(counterRotation);
+    ctx.fillStyle = palette.markerText;
+
+    const fontSize = clamp(r * 8.10, 108, 198); // 3x
+    ctx.font = `900 ${fontSize}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(String(pos), 0, 0);
     ctx.restore();
-  });
+
+    const showLabel = true;
+    if (showLabel) {
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(counterRotation);
+
+      const label = code;
+      const labelFont = clamp(r * 3.96, 99, 126);
+      ctx.font = `800 ${labelFont}px system-ui, -apple-system, Segoe UI, Roboto, Arial`;
+      const w = ctx.measureText(label).width;
+      const padX = clamp(r * 1.26, 30, 42);
+      const boxW = w + padX * 2;
+      const boxH = clamp(r * 2.85, 72, 90);
+      const bx = -boxW / 2;
+      const by = r + clamp(r * 1.35, 42, 66);
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 2;
+      ctx.shadowColor = "rgba(0,0,0,0.16)";
+
+      ctx.fillStyle = palette.labelText;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label, 0, by + boxH / 2);
+      ctx.restore();
+    }
+  }
 }
 
-/**
- * Draw detailed telemetry for selected driver
- */
-function drawDriverTelemetry(
-  ctx,
-  code,
-  driver,
-  width,
-  height
-) {
-  const panelWidth = 280;
-  const panelHeight = 200;
-  const padding = 15;
-  const x = width - panelWidth - 20;
-  const y = 20;
+function drawDriverTelemetry(ctx, code, driver, width, height, palette) {
+  const t = normalizeDriver(driver);
 
-  // Background panel
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.85)';
-  ctx.fillRect(x, y, panelWidth, panelHeight);
+  const pad = 14;
+  const panelW = 300;
+  const panelH = 212;
 
-  // Border
-  ctx.strokeStyle = getTeamColor(code);
+  const x = width - panelW - 16;
+  const y = 16;
+
+  const teamName = getDriverTeamName(code, driver);
+  const teamColor = getTeamColor(teamName) || "rgb(var(--accent))";
+
+  ctx.save();
+  ctx.shadowOffsetX = 0;
+  ctx.shadowOffsetY = 10;
+  ctx.shadowColor = "rgba(0,0,0,0.18)";
+
+  roundRect(ctx, x, y, panelW, panelH, 16);
+  ctx.fillStyle = palette.panelBg;
+  ctx.fill();
+
+  ctx.shadowColor = "transparent";
+
+  ctx.beginPath();
+  ctx.moveTo(x + 16, y + 44);
+  ctx.lineTo(x + panelW - 16, y + 44);
+  ctx.strokeStyle = withAlpha(teamColor, 0.22);
   ctx.lineWidth = 2;
-  ctx.strokeRect(x, y, panelWidth, panelHeight);
+  ctx.stroke();
 
-  // Header
-  ctx.fillStyle = getTeamColor(code);
-  ctx.fillRect(x, y, panelWidth, 30);
+  ctx.fillStyle = withAlpha(teamColor, 0.95);
+  ctx.font = "800 14px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText(code, x + pad, y + 22);
 
-  ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 14px Arial';
-  ctx.textAlign = 'left';
-  ctx.fillText(code, x + padding, y + 20);
-
-  // Telemetry data
-  let lineY = y + 50;
-  const lineHeight = 20;
-
-  const telemetryData = [
-    ['Position:', `P${Math.round(driver.position)}`],
-    ['Speed:', `${(driver.speed || 0).toFixed(1)} km/h`],
-    ['Gear:', String(driver.gear || '-')],
-    ['Throttle:', `${(driver.throttle || 0).toFixed(0)}%`],
-    ['Brake:', `${(driver.brake || 0).toFixed(0)}%`],
-    ['Tire:', driver.tire_compound || '-'],
-    ['Tire Age:', `${driver.tire_age || 0} laps`],
-    ['DRS:', driver.drs ? '✓ ACTIVE' : '✗ OFF'],
-    ['Gap:', driver.gap || '-'],
+  const items = [
+    ["Position", `P${t.position}`],
+    ["Speed", `${t.speedKmh.toFixed(1)} km/h`],
+    ["Gear", String(t.gear)],
+    ["Throttle", `${t.throttlePct.toFixed(0)}%`],
+    ["Brake", `${t.brakePct.toFixed(0)}%`],
+    ["Tire", String(t.tireCompound)],
+    ["Tire age", `${t.tireAge} laps`],
+    ["DRS", t.drsOn ? "On" : "Off"],
+    ["Gap", String(t.gap)],
   ];
 
-  ctx.fillStyle = '#cccccc';
-  ctx.font = '11px Courier New';
-  ctx.textAlign = 'left';
+  let lineY = y + 62;
+  const lineH = 18;
 
-  telemetryData.forEach(([label, value]) => {
-    ctx.fillText(label, x + padding, lineY);
-    ctx.fillStyle = '#ffff00';
-    ctx.fillText(value, x + panelWidth - padding - 80, lineY);
-    ctx.fillStyle = '#cccccc';
-    lineY += lineHeight;
-  });
-}
+  ctx.font = "600 12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+  for (const [k, v] of items) {
+    ctx.fillStyle = palette.panelMuted;
+    ctx.textAlign = "left";
+    ctx.fillText(`${k}:`, x + pad, lineY);
 
-/**
- * Get team color for driver code
- */
-function getTeamColor(code) {
-  const teamColors = {
-    // Red Bull
-    VER: '#0600ef',
-    PER: '#0600ef',
-    // Mercedes
-    HAM: '#00d2be',
-    RUS: '#00d2be',
-    // Ferrari
-    LEC: '#dc0000',
-    SAI: '#dc0000',
-    // McLaren
-    NOR: '#ff8700',
-    PIA: '#ff8700',
-    // Alpine
-    OCO: '#0082fa',
-    GAS: '#0082fa',
-    // Aston Martin
-    ALO: '#006c3c',
-    STR: '#006c3c',
-    // Haas
-    MAG: '#ffffff',
-    HUL: '#ffffff',
-    // Alfa Romeo / Sauber
-    BOT: '#900000',
-    ZHO: '#900000',
-    // Williams
-    ALB: '#005aff',
-    SAR: '#005aff',
-    // Racing Bulls
-    RIC: '#4e4e4e',
-    TSU: '#4e4e4e',
-  };
+    ctx.fillStyle = palette.panelText;
+    ctx.textAlign = "right";
+    ctx.fillText(v, x + panelW - pad, lineY);
 
-  return teamColors[code] || '#999999';
-}
+    lineY += lineH;
+  }
 
-/**
- * Create checkered pattern for finish line
- */
-function createCheckerPattern(size) {
-  const canvas = document.createElement('canvas');
-  canvas.width = size * 2;
-  canvas.height = size * 2;
-
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, size * 2, size * 2);
-
-  ctx.fillStyle = '#000000';
-  ctx.fillRect(0, 0, size, size);
-  ctx.fillRect(size, size, size, size);
-
-  return canvas;
+  ctx.restore();
 }
 
 export default TrackRenderer;
