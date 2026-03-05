@@ -533,29 +533,35 @@ function drawDrivers(
     const ringSelected = dark ? "rgba(255,255,255,0.96)" : "rgba(0,0,0,0.22)";
 
     ctx.save();
+
+    // soft, iOS-like depth (no harsh outline)
     ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 2;
-    ctx.shadowBlur = isSelected ? 16 : 12;
+    ctx.shadowOffsetY = 6 / Math.max(1, scale);
+    ctx.shadowBlur = (isSelected ? 18 : 14) / Math.max(1, scale);
     ctx.shadowColor = palette.markerShadow;
 
+    // main marker
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.fillStyle = withAlpha(teamColor, dark ? 0.92 : 0.88);
+    ctx.fillStyle = withAlpha(teamColor, dark ? 0.94 : 0.90);
     ctx.fill();
 
     ctx.shadowColor = "transparent";
 
-    ctx.beginPath();
-    ctx.arc(x, y, r, 0, Math.PI * 2);
-    ctx.strokeStyle = isSelected ? ringSelected : ring;
-    ctx.lineWidth = Math.max(1.6, 2.2 / Math.max(1e-6, scale));
-    ctx.stroke();
+    if (isSelected) {
+      ctx.save();
+      ctx.shadowOffsetX = 0;
+      ctx.shadowOffsetY = 0;
+      ctx.shadowBlur = 26 / Math.max(1, scale);
+      ctx.shadowColor = withAlpha(teamColor, dark ? 0.55 : 0.35);
 
-    ctx.beginPath();
-    ctx.arc(x, y, r - Math.max(1.2, 1.6 / Math.max(1e-6, scale)), 0, Math.PI * 2);
-    ctx.strokeStyle = withAlpha("#000000", dark ? 0.10 : 0.06);
-    ctx.lineWidth = Math.max(0.9, 1.2 / Math.max(1e-6, scale));
-    ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(x, y, r + 2.2 / Math.max(1, scale), 0, Math.PI * 2);
+      ctx.strokeStyle = withAlpha(teamColor, dark ? 0.85 : 0.65);
+      ctx.lineWidth = 2.2 / Math.max(1, scale);
+      ctx.stroke();
+      ctx.restore();
+    }
 
     ctx.restore();
 
