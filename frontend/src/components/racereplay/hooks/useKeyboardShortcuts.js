@@ -1,72 +1,127 @@
-// src/components/racereplay/hooks/useRaceEvents.js
-import { useEffect, useRef, useState } from "react";
+// src/components/racereplay/hooks/useKeyboardShortcuts.js
+import { useEffect } from "react";
 
-export default function useRaceEvents({ currentFrame, frameIdx }) {
-  const [raceEvents, setRaceEvents] = useState([]);
+const SPEEDS = [0.25, 0.5, 1, 2, 4, 8];
+const SEEK_FRAMES = 10;
 
-  const lastPitStopStateRef = useRef({});
-  const smoothedGapsRef = useRef({});
-  const lastProcessedFrameRef = useRef(0);
-
+export default function useKeyboardShortcuts({
+  raceData,
+  currentFrame,
+  isPlaying,
+  setIsPlaying,
+  setFrameIndex,
+  showDRS,
+  setShowDRS,
+  showTelemetry,
+  setShowTelemetry,
+  focusMode,
+  setFocusMode,
+  realTimeMode,
+  setRealTimeMode,
+  setPlaybackSpeed,
+  syncStartRef,
+}) {
   useEffect(() => {
-    if (!currentFrame || !currentFrame.drivers) return;
+    const handleKey = (e) => {
+      // Don't fire shortcuts when typing in an input / textarea
+      const tag = document.activeElement?.tagName?.toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-    const jumpSize = Math.abs(frameIdx - lastProcessedFrameRef.current);
-    if (jumpSize > 5) {
-      setRaceEvents([]);
-      lastPitStopStateRef.current = {};
-    }
-    lastProcessedFrameRef.current = frameIdx;
+      switch (e.code) {
+        case "Space":
+          e.preventDefault();
+          if (!realTimeMode) setIsPlaying((p) => !p);
+          break;
 
-    const newEvents = [];
+        case "ArrowLeft":
+          e.preventDefault();
+          setFrameIndex((i) => Math.max(0, i - SEEK_FRAMES));
+          break;
 
-    Object.entries(currentFrame.drivers).forEach(([code, driver]) => {
-      const lastState = lastPitStopStateRef.current[code] || { pit_stops: 0, status: "Running" };
+        case "ArrowRight":
+          e.preventDefault();
+          setFrameIndex((i) => {
+            const max = raceData ? raceData.frames.length - 1 : 0;
+            return Math.min(max, i + SEEK_FRAMES);
+          });
+          break;
 
-      if (driver.pit_stops > lastState.pit_stops) {
-        newEvents.push({
-          id: `${currentFrame.lap}-${code}-pit`,
-          type: "pit_stop",
-          message: `${code} pitted (Stop ${driver.pit_stops})`,
-          lap: currentFrame.lap,
-          driverCode: code,
-          driverName: driver.driver_name || code,
-          timestamp: new Date().toLocaleTimeString(),
-        });
+        case "Equal":   // '+' (unshifted = key)
+        case "NumpadAdd":
+          e.preventDefault();
+          setPlaybackSpeed((s) => {
+            const idx = SPEEDS.indexOf(s);
+            return idx < SPEEDS.length - 1 ? SPEEDS[idx + 1] : s;
+          });
+          break;
+
+        case "Minus":   // '-'
+        case "NumpadSubtract":
+          e.preventDefault();
+          setPlaybackSpeed((s) => {
+            const idx = SPEEDS.indexOf(s);
+            return idx > 0 ? SPEEDS[idx - 1] : s;
+          });
+          break;
+
+        case "KeyD":
+          e.preventDefault();
+          setShowDRS((v) => !v);
+          break;
+
+        case "KeyT":
+          e.preventDefault();
+          setShowTelemetry((v) => !v);
+          break;
+
+        case "KeyF":
+          e.preventDefault();
+          setFocusMode((v) => !v);
+          break;
+
+        case "KeyS":
+          e.preventDefault();
+          if (!realTimeMode && currentFrame) {
+            syncStartRef.current = {
+              wallMs: performance.now(),
+              raceTime: currentFrame.raceTime || 0,
+            };
+            setIsPlaying(false);
+          } else {
+            syncStartRef.current = null;
+          }
+          setRealTimeMode((v) => !v);
+          break;
+
+        case "KeyR":
+          e.preventDefault();
+          setFrameIndex(0);
+          setIsPlaying(false);
+          if (realTimeMode) {
+            setRealTimeMode(false);
+            syncStartRef.current = null;
+          }
+          break;
+
+        default:
+          break;
       }
+    };
 
-      if (driver.status === "OUT" && lastState.status !== "OUT") {
-        newEvents.push({
-          id: `${currentFrame.lap}-${code}-ret`,
-          type: "retirement",
-          message: `${code} retired`,
-          lap: currentFrame.lap,
-          driverCode: code,
-          driverName: driver.driver_name || code,
-          timestamp: new Date().toLocaleTimeString(),
-        });
-      }
-
-      // smoothed gaps (used by TrackRenderer)
-      const currentGapStr = driver.gap || "+0.000";
-      const currentGap = parseFloat(currentGapStr.replace("+", "")) || 0;
-      const prevSmooth = smoothedGapsRef.current[code] || currentGap;
-
-      let smoothedGap = currentGap;
-      if (Math.abs(currentGap - prevSmooth) > 2.0) smoothedGap = prevSmooth + (currentGap - prevSmooth) * 0.1;
-
-      smoothedGapsRef.current[code] = smoothedGap;
-
-      lastPitStopStateRef.current[code] = {
-        pit_stops: driver.pit_stops,
-        status: driver.status,
-      };
-    });
-
-    if (newEvents.length > 0) {
-      setRaceEvents((prev) => [...newEvents, ...prev].slice(0, 10));
-    }
-  }, [currentFrame, frameIdx]);
-
-  return { raceEvents, smoothedGapsRef };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [
+    raceData,
+    currentFrame,
+    isPlaying,
+    realTimeMode,
+    setIsPlaying,
+    setFrameIndex,
+    setShowDRS,
+    setShowTelemetry,
+    setFocusMode,
+    setRealTimeMode,
+    setPlaybackSpeed,
+    syncStartRef,
+  ]);
 }

@@ -1,5 +1,5 @@
 // src/components/racereplay/ui/PredictionsPanel.jsx
-import React, { useMemo } from "react";
+import React from "react";
 import Card from "../../ui/Card";
 import Badge from "../../ui/Badge";
 import { getTeamColor } from "../../../utils/teamColors";
@@ -13,15 +13,9 @@ function clamp01(n) {
 export default function PredictionsPanel({
   displayPredictions = [],
   predictionsLoading,
-  lapPredictions,
   currentLap,
   totalLaps,
 }) {
-  const metaLabel = useMemo(() => {
-    const isML = lapPredictions && !predictionsLoading;
-    return isML ? "Real ML model" : "Heuristic";
-  }, [lapPredictions, predictionsLoading]);
-
   return (
     <Card
       className={[
@@ -40,13 +34,9 @@ export default function PredictionsPanel({
               AI Win Prediction
             </p>
             <p className="mt-1 text-[11px] text-neutral-500 dark:text-neutral-400">
-              {metaLabel} · Lap{" "}
-              <span className="tabular-nums">{currentLap}</span>
+              Lap <span className="tabular-nums">{currentLap}</span>
               {totalLaps ? (
-                <>
-                  {" "}
-                  / <span className="tabular-nums">{totalLaps}</span>
-                </>
+                <> / <span className="tabular-nums">{totalLaps}</span></>
               ) : null}
             </p>
           </div>

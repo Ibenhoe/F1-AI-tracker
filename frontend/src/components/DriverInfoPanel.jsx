@@ -131,15 +131,6 @@ const DriverInfoPanel = ({ driver, driverData, frame, showTelemetry }) => {
               </span>
             </div>
 
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-500 dark:text-neutral-400">
-                Gear
-              </span>
-              <span className="text-sm font-bold tabular-nums text-neutral-900 dark:text-neutral-100">
-                {t.gear ?? "—"}
-              </span>
-            </div>
-
             <TelBar label="Throttle" value={t.throttlePct} color="#22c55e" />
             <TelBar label="Brake" value={t.brakePct} color="#ef4444" />
 

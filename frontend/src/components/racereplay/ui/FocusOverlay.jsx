@@ -83,8 +83,10 @@ export default function FocusOverlay({
         <Card
           className={[
             "absolute left-4 top-4 z-20",
-            "w-56",
+            "w-72",
             "p-3",
+            "max-h-[calc(100vh-180px)]",
+            "flex flex-col",
             "bg-white/80 dark:bg-neutral-950/50",
             "ring-1 ring-black/5 dark:ring-white/10",
             "backdrop-blur-xl",
@@ -92,7 +94,7 @@ export default function FocusOverlay({
           clip
         >
           <div
-            className="max-h-[calc(100vh-160px)] overflow-y-auto"
+            className="min-h-0 flex-1 overflow-y-auto scrollbar-hide"
             style={{ WebkitOverflowScrolling: "touch" }}
           >
             <ReplayLeaderboard
@@ -152,9 +154,6 @@ export default function FocusOverlay({
           playbackSpeed={playbackSpeed}
           currentFrame={frameIndex}
           totalFrames={raceData?.frames?.length || 0}
-          showDRS={showDRS}
-          showTelemetry={showTelemetry}
-          focusMode={focusMode}
           realTimeMode={realTimeMode}
           onPlayPause={() => {
             if (realTimeMode) return;
@@ -170,9 +169,6 @@ export default function FocusOverlay({
               };
             }
           }}
-          onDRSToggle={() => setShowDRS(!showDRS)}
-          onTelemetryToggle={() => setShowTelemetry(!showTelemetry)}
-          onFocusToggle={() => setFocusMode(!focusMode)}
           onRealTimeToggle={() => {
             const nextRT = !realTimeMode;
             if (nextRT && currentFrame) {

@@ -4,67 +4,98 @@ import { useEffect, useRef, useState } from "react";
 export default function useRaceEvents({ currentFrame, frameIdx }) {
   const [raceEvents, setRaceEvents] = useState([]);
 
-  const lastPitStopStateRef = useRef({});
+  // Per-driver state tracked at lap granularity
+  // { [code]: { tire_age, tire_compound, status, pitCount } }
+  const driverLapStateRef = useRef({});
   const smoothedGapsRef = useRef({});
+  const lastProcessedLapRef = useRef(null);
   const lastProcessedFrameRef = useRef(0);
 
   useEffect(() => {
     if (!currentFrame || !currentFrame.drivers) return;
 
+    const currentLap = currentFrame.lap;
+
+    // ── Reset on large seek jumps (user scrubbed the timeline) ──────────────
     const jumpSize = Math.abs(frameIdx - lastProcessedFrameRef.current);
-    if (jumpSize > 5) {
+    if (jumpSize > 30) {
       setRaceEvents([]);
-      lastPitStopStateRef.current = {};
+      driverLapStateRef.current = {};
+      lastProcessedLapRef.current = null;
     }
     lastProcessedFrameRef.current = frameIdx;
+
+    // ── Always update smoothed gaps (every frame) ────────────────────────────
+    Object.entries(currentFrame.drivers).forEach(([code, driver]) => {
+      const currentGapStr = driver.gap || "+0.000";
+      const currentGap = parseFloat(currentGapStr.replace("+", "")) || 0;
+      const prevSmooth = smoothedGapsRef.current[code] ?? currentGap;
+      smoothedGapsRef.current[code] =
+        Math.abs(currentGap - prevSmooth) > 2.0
+          ? prevSmooth + (currentGap - prevSmooth) * 0.1
+          : currentGap;
+    });
+
+    // ── Only fire events once per lap change ────────────────────────────────
+    if (currentLap === lastProcessedLapRef.current) return;
+    lastProcessedLapRef.current = currentLap;
 
     const newEvents = [];
 
     Object.entries(currentFrame.drivers).forEach(([code, driver]) => {
-      const lastState = lastPitStopStateRef.current[code] || { pit_stops: 0, status: "Running" };
+      const prev = driverLapStateRef.current[code];
 
-      if (driver.pit_stops > lastState.pit_stops) {
-        newEvents.push({
-          id: `${currentFrame.lap}-${code}-pit`,
-          type: "pit_stop",
-          message: `${code} pitted (Stop ${driver.pit_stops})`,
-          lap: currentFrame.lap,
-          driverCode: code,
-          driverName: driver.driver_name || code,
-          timestamp: new Date().toLocaleTimeString(),
-        });
+      if (prev) {
+        // ── Pit stop detection ───────────────────────────────────────────────
+        // pit_stops field is often 0 in cached data, so detect via tire_age:
+        // a pit stop resets tire_age — it drops instead of incrementing by 1.
+        const tireAgeDropped = driver.tire_age < prev.tire_age;
+        const compoundChanged = driver.tire_compound !== prev.tire_compound;
+        const pitStopsIncreased = (driver.pit_stops ?? 0) > (prev.pitCount ?? 0);
+
+        if (pitStopsIncreased || tireAgeDropped || compoundChanged) {
+          const stopNum = (prev.pitCount ?? 0) + 1;
+          newEvents.push({
+            id: `${currentLap}-${code}-pit`,
+            type: "pit_stop",
+            message: `${code} pitted (Stop ${stopNum})`,
+            lap: currentLap,
+            driverCode: code,
+            driverName: driver.driver_name || code,
+          });
+          driverLapStateRef.current[code] = {
+            tire_age: driver.tire_age,
+            tire_compound: driver.tire_compound,
+            status: driver.status,
+            pitCount: stopNum,
+          };
+          return; // skip status check this lap
+        }
+
+        // ── Retirement detection ─────────────────────────────────────────────
+        if (driver.status === "OUT" && prev.status !== "OUT") {
+          newEvents.push({
+            id: `${currentLap}-${code}-ret`,
+            type: "retirement",
+            message: `${code} retired`,
+            lap: currentLap,
+            driverCode: code,
+            driverName: driver.driver_name || code,
+          });
+        }
       }
 
-      if (driver.status === "OUT" && lastState.status !== "OUT") {
-        newEvents.push({
-          id: `${currentFrame.lap}-${code}-ret`,
-          type: "retirement",
-          message: `${code} retired`,
-          lap: currentFrame.lap,
-          driverCode: code,
-          driverName: driver.driver_name || code,
-          timestamp: new Date().toLocaleTimeString(),
-        });
-      }
-
-      // smoothed gaps (used by TrackRenderer)
-      const currentGapStr = driver.gap || "+0.000";
-      const currentGap = parseFloat(currentGapStr.replace("+", "")) || 0;
-      const prevSmooth = smoothedGapsRef.current[code] || currentGap;
-
-      let smoothedGap = currentGap;
-      if (Math.abs(currentGap - prevSmooth) > 2.0) smoothedGap = prevSmooth + (currentGap - prevSmooth) * 0.1;
-
-      smoothedGapsRef.current[code] = smoothedGap;
-
-      lastPitStopStateRef.current[code] = {
-        pit_stops: driver.pit_stops,
+      // Update state for this driver
+      driverLapStateRef.current[code] = {
+        tire_age: driver.tire_age,
+        tire_compound: driver.tire_compound,
         status: driver.status,
+        pitCount: prev?.pitCount ?? 0,
       };
     });
 
     if (newEvents.length > 0) {
-      setRaceEvents((prev) => [...newEvents, ...prev].slice(0, 10));
+      setRaceEvents((prev) => [...newEvents, ...prev].slice(0, 20));
     }
   }, [currentFrame, frameIdx]);
 

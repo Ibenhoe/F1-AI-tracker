@@ -645,7 +645,6 @@ function drawDriverTelemetry(ctx, code, driver, width, height, palette) {
   const items = [
     ["Position", `P${t.position}`],
     ["Speed", `${t.speedKmh.toFixed(1)} km/h`],
-    ["Gear", String(t.gear)],
     ["Throttle", `${t.throttlePct.toFixed(0)}%`],
     ["Brake", `${t.brakePct.toFixed(0)}%`],
     ["Tire", String(t.tireCompound)],

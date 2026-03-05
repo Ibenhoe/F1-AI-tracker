@@ -65,9 +65,6 @@ export default function NormalView({
                         playbackSpeed={playbackSpeed}
                         currentFrame={frameIndex}
                         totalFrames={raceData?.frames?.length || 0}
-                        showDRS={showDRS}
-                        showTelemetry={showTelemetry}
-                        focusMode={focusMode}
                         realTimeMode={realTimeMode}
                         onPlayPause={() => {
                             if (realTimeMode) return;
@@ -82,11 +79,6 @@ export default function NormalView({
                                     raceTime: raceData.frames[idx].raceTime || 0,
                                 };
                             }
-                        }}
-                        onDRSToggle={() => setShowDRS(!showDRS)}
-                        onTelemetryToggle={() => setShowTelemetry(!showTelemetry)}
-                        onFocusToggle={() => {
-                            // focusMode toggle happens in parent (RaceReplay.jsx / FocusOverlay)
                         }}
                         onRealTimeToggle={() => {
                             const nextRT = !realTimeMode;

@@ -42,6 +42,15 @@ function MiniTag({ children }) {
 
 function EventRow({ event }) {
   const isPit = event.type === "pit_stop";
+  const isRet = event.type === "retirement";
+
+  const railColor = isPit
+    ? "rgba(var(--accent), 0.70)"
+    : isRet
+      ? "rgb(239 68 68 / 0.80)"
+      : "rgba(var(--accent), 0.35)";
+
+  const tag = isPit ? "PIT" : isRet ? "RET" : "FLAG";
 
   return (
     <div
@@ -55,11 +64,7 @@ function EventRow({ event }) {
       {/* accent rail */}
       <div
         className="absolute left-0 top-0 h-full w-1 opacity-90"
-        style={{
-          background: isPit
-            ? "rgba(var(--accent), 0.70)"
-            : "rgba(var(--accent), 0.35)",
-        }}
+        style={{ background: railColor }}
         aria-hidden="true"
       />
 
@@ -68,7 +73,7 @@ function EventRow({ event }) {
           <p className="min-w-0 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
             {event.message}
           </p>
-          <MiniTag>{isPit ? "PIT" : "FLAG"}</MiniTag>
+          <MiniTag>{tag}</MiniTag>
         </div>
 
         <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
