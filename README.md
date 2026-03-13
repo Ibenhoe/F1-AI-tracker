@@ -1,178 +1,298 @@
+
 # F1 AI Tracker
 
-**Final Work 2026 - Erasmus Hogeschool Brussel**
+**Final Work 2026 – Applied Computer Science**  
+**Erasmushogeschool Brussel (EhB)**
 
 ---
 
-## Project Goal
+## Overview
 
-The goal of this project is to build a real-time Formula 1 race prediction system that combines live race data with machine learning. The system replays real F1 races lap by lap, trains an AI model continuously on incoming data, and displays live predictions, battle detection, and race events through an interactive web dashboard.
+**F1 AI Tracker** is a real‑time Formula 1 race prediction and analysis platform that combines live race telemetry with machine learning. The system replays historical F1 races lap‑by‑lap, continuously trains a prediction model on incoming data, and visualizes predictions, race events, and analytics through an interactive web dashboard.
 
-This is not a static analysis tool. The model learns during the race, improving its predictions with every lap, exactly like a real-time decision support system would work.
+Unlike traditional race analytics tools, this system does **incremental machine learning during the race**, meaning predictions improve continuously as more lap data becomes available.
 
----
-
-## What We Built
-
-The project consists of a Python backend and a React frontend connected via WebSockets.
-
-**Backend (Python / Flask)**
-- Fetches real lap-by-lap race data from the FastF1 API for all 22 races of the 2024 F1 season
-- Trains a machine learning model (SGDRegressor + ensemble) incrementally on each new lap using `partial_fit()`
-- Pre-trains the model on 5 years of historical F1 data before the race starts
-- Simulates a race replay at adjustable speed (1x, 2x, 5x)
-- Detects battles between drivers in real time based on gap thresholds
-- Detects overtakes, failed overtake attempts, and pit stops
-- Calculates overtake probability per driver pair based on tire age, driver aggression, and circuit overtaking difficulty
-- Emits live updates to the frontend via Socket.IO after every lap
-
-**Frontend (React / Vite)**
-- Live race dashboard with positions, lap times, tire compounds, gap data, and pit stops
-- Predictions panel showing the top 5 predicted race finishers with confidence scores
-- Notifications panel showing real-time race events (battles, overtakes, pit stops)
-- Battle widget showing active on-track fights with overtake probability
-- Position history chart tracking driver movements over the race
-- Pre-race analysis page with predicted podium, tire strategy, and driver statistics
-- Race replay page for reviewing completed simulations
-- Weather widget, model metrics panel, and track renderer
-- Dark/light theme support
-
-**Machine Learning**
-- Pre-race model: XGBoost trained on historical 2015-2024 data to predict the starting grid outcome
-- Live model: `ContinuousModelLearner` using `SGDRegressor` with `partial_fit()` for incremental lap-by-lap learning
-- Features used: grid position, driver age, constructor points, circuit ID, tire compound, tire age, pit stop count
-- Confidence scores are capped at 85% to prevent deterministic overconfidence
+The goal of the project is to simulate how a **real‑time decision support system** could operate in motorsport analytics.
 
 ---
 
-## Project Structure
+# System Architecture
+
+The project consists of two main components:
+
+- **Python Backend**
+- **React Frontend**
+
+These communicate in real time using **WebSockets (Socket.IO)**.
 
 ```
-F1-AI-tracker/
-|
-|-- app.py                          # Flask + SocketIO backend server
-|-- race_simulator.py               # Lap-by-lap race simulation engine
-|-- continuous_model_learner_v2.py  # Incremental ML model (live learning)
-|-- fastf1_data_fetcher.py          # FastF1 API integration and data fetching
-|-- battle_detector.py              # Real-time battle and overtake detection
-|-- event_generator.py              # Race event formatting for notifications
-|-- race_predictor.py               # Standalone CLI race predictor
-|
-|-- model/
-|   |-- prerace_model.py            # XGBoost pre-race prediction model
-|   |-- tire_strategy_model.py      # Tire strategy ML model
-|   |-- tire_strategy_ml.py         # Tire strategy training pipeline
-|
-|-- data/
-|   |-- f1_historical_5years.csv    # Historical race data 2019-2024
-|   |-- processed_f1_training_data.csv
-|   |-- f1_weather_data.csv
-|
-|-- models/
-|   |-- compound_model.json         # Trained tire compound model
-|   |-- pit_stop_model.json         # Trained pit stop model
-|   |-- stops_model.json
-|
-|-- frontend/
-|   |-- src/
-|   |   |-- pages/                  # Dashboard, PreRaceAnalysis, RaceReplay, Wiki, Docs
-|   |   |-- components/             # All UI components
-|   |   |-- services/               # API and WebSocket client
-|   |   |-- utils/                  # Team colors, helpers
-|   |-- vite.config.js
-|   |-- package.json
-|
-|-- analysis/                       # Exploratory data analysis scripts
-|-- scripts/                        # Data preparation scripts
-|-- cache/                          # FastF1 cache and race frame data
-|-- requirements.txt
+React Frontend  <--WebSocket-->  Flask Backend  <--->  FastF1 API
+                                      |
+                                      |
+                               Machine Learning Models
 ```
 
 ---
 
-## How It Works
+# Backend
 
-1. The user selects a race from the 2024 F1 season in the dashboard
-2. The backend fetches all lap data for that race from the FastF1 API (cached after first fetch)
-3. The pre-race model generates an initial prediction based on qualifying and historical data
-4. The simulation starts and processes one lap at a time at the selected speed
-5. After each lap, the live model trains on the new data using `partial_fit()`
-6. Battle detection runs on the top 5 drivers, checking gaps and position changes
-7. All updates (positions, predictions, events) are emitted to the frontend via Socket.IO
-8. The frontend renders the update in real time
+The backend is implemented using **Python and Flask** and is responsible for data processing, race simulation, and machine learning.
+
+### Responsibilities
+
+- Fetch lap‑by‑lap race data using the **FastF1 API**
+- Simulate races lap‑by‑lap at configurable speeds
+- Train machine learning models incrementally during the race
+- Detect race events such as:
+  - overtakes
+  - battles
+  - pit stops
+- Calculate overtake probabilities
+- Send real‑time updates to the frontend using **Socket.IO**
+
+### Backend Features
+
+- Race replay engine
+- Continuous ML training
+- Real‑time event generation
+- Battle detection algorithm
+- Tire strategy modeling
+- FastF1 caching system
 
 ---
 
-## Getting Started
+# Frontend
 
-**Requirements**
+The frontend was built using **React (Vite)** and focuses on real‑time visualization of race data, AI predictions, and telemetry.
 
-- Python 3.10 or higher
-- Node.js 18 or higher
+The interface is designed to be interactive, data‑driven, and optimized for live race analysis.
 
-**Backend**
+### Key Frontend Features
 
-```bash
+- **Live race dashboard**
+  - driver standings
+  - lap times
+  - tire compounds
+  - pit stop information
+
+- **Prediction insights**
+  - top‑5 predicted race finishers
+  - model confidence scores
+
+- **Race events**
+  - battle detection
+  - overtakes
+  - pit stops
+  - race notifications
+
+- **Race replay system**
+  - interactive lap‑by‑lap replay
+  - track renderer visualization
+  - focus mode for individual drivers
+
+- **Data visualisation**
+  - driver position history chart
+  - race progress indicators
+  - weather data
+
+- **Pre‑race analysis**
+  - predicted podium
+  - tire strategy insights
+  - driver statistics
+
+- **Additional features**
+  - dark / light theme
+  - responsive layout
+  - real‑time updates via WebSockets
+
+---
+
+# Machine Learning
+
+The system uses two different ML approaches:
+
+### Pre‑Race Model
+
+Used before the race starts.
+
+- Model: **XGBoost**
+- Trained on historical race data from **2015‑2024**
+- Predicts probable race outcome based on qualifying and historical performance
+
+### Live Race Model
+
+Used during the race simulation.
+
+- Model: **SGDRegressor**
+- Training method: `partial_fit()`
+- Continuously updated after every lap
+
+### Features Used
+
+- grid position
+- driver age
+- constructor points
+- circuit ID
+- tire compound
+- tire age
+- pit stop count
+
+To prevent unrealistic predictions, **confidence scores are capped at 85%**.
+
+---
+
+# Project Structure
+
+```
+F1-AI-tracker
+│
+├── app.py
+├── race_simulator.py
+├── continuous_model_learner_v2.py
+├── fastf1_data_fetcher.py
+├── battle_detector.py
+├── event_generator.py
+├── race_predictor.py
+│
+├── model
+│   ├── prerace_model.py
+│   ├── tire_strategy_model.py
+│   └── tire_strategy_ml.py
+│
+├── data
+│   ├── f1_historical_5years.csv
+│   ├── processed_f1_training_data.csv
+│   └── f1_weather_data.csv
+│
+├── models
+│   ├── compound_model.json
+│   ├── pit_stop_model.json
+│   └── stops_model.json
+│
+├── frontend
+│   ├── src
+│   │   ├── pages
+│   │   ├── components
+│   │   ├── services
+│   │   └── utils
+│   │
+│   ├── vite.config.js
+│   └── package.json
+│
+├── analysis
+├── scripts
+├── cache
+└── requirements.txt
+```
+
+---
+
+# How the System Works
+
+1. A race from the **2024 Formula 1 season** is selected in the dashboard.
+2. The backend loads lap data using the **FastF1 API**.
+3. The **pre‑race model** generates an initial prediction.
+4. The race simulation begins and processes one lap at a time.
+5. After each lap:
+   - race events are detected
+   - predictions are updated
+   - the ML model trains using `partial_fit()`
+6. Updates are sent to the frontend via **WebSockets**.
+7. The frontend visualizes the data in real time.
+
+---
+
+# Installation
+
+## Requirements
+
+- Python **3.10+**
+- Node.js **18+**
+
+---
+
+# Backend Setup
+
+```
 pip install -r requirements.txt
 python app.py
 ```
 
-The backend runs on `http://localhost:5000`.
+Backend runs at:
 
-**Frontend**
+```
+http://localhost:5000
+```
 
-```bash
+---
+
+# Frontend Setup
+
+```
 cd frontend
 npm install
 npm run dev
 ```
 
-The frontend runs on `http://localhost:5173`.
+Frontend runs at:
+
+```
+http://localhost:5173
+```
 
 ---
 
-## Available Races (2024 Season)
+# Available Races (2024 Season)
 
-| Nr. | Race              | Nr. | Race            |
-|-----|-------------------|-----|-----------------|
-| 1   | Bahrain           | 12  | United Kingdom  |
-| 2   | Saudi Arabia      | 13  | Hungary         |
-| 3   | Australia         | 14  | Belgium         |
-| 4   | Japan             | 15  | Netherlands     |
-| 5   | China             | 16  | Italy           |
-| 6   | Miami             | 17  | Azerbaijan      |
-| 7   | Imola             | 18  | Singapore       |
-| 8   | Monaco            | 19  | Austin          |
-| 9   | Canada            | 20  | Mexico          |
-| 10  | Spain             | 21  | Brazil          |
-| 11  | Austria           | 22  | Abu Dhabi       |
-
----
-
-## Tech Stack
-
-| Layer       | Technology                                      |
-|-------------|------------------------------------------------|
-| Backend     | Python, Flask, Flask-SocketIO, Flask-CORS       |
-| ML          | scikit-learn, XGBoost, pandas, numpy            |
-| F1 Data     | FastF1 (official F1 timing data)                |
-| Frontend    | React 19, Vite, Tailwind CSS, Recharts          |
-| Realtime    | Socket.IO (WebSocket)                           |
-| Routing     | React Router v6                                 |
-| State       | TanStack Query, React useState/useEffect        |
+| Nr | Race | Nr | Race |
+|---|---|---|---|
+| 1 | Bahrain | 12 | United Kingdom |
+| 2 | Saudi Arabia | 13 | Hungary |
+| 3 | Australia | 14 | Belgium |
+| 4 | Japan | 15 | Netherlands |
+| 5 | China | 16 | Italy |
+| 6 | Miami | 17 | Azerbaijan |
+| 7 | Imola | 18 | Singapore |
+| 8 | Monaco | 19 | Austin |
+| 9 | Canada | 20 | Mexico |
+|10 | Spain | 21 | Brazil |
+|11 | Austria | 22 | Abu Dhabi |
 
 ---
 
-## Output Files
+# Technology Stack
 
-Standalone CLI predictions are saved to:
+| Layer | Technology |
+|------|-------------|
+| Backend | Python, Flask, Flask‑SocketIO |
+| Machine Learning | scikit‑learn, XGBoost |
+| Data | FastF1 |
+| Frontend | React 19, Vite |
+| Styling | Tailwind CSS |
+| Charts | Recharts |
+| Real‑time | Socket.IO |
+| Routing | React Router |
+| State | TanStack Query |
+
+---
+
+# Output Files
+
+Standalone CLI predictions are stored in:
 
 ```
 outputs/race_XX_YYYYMMDD_HHMMSS.txt
 ```
 
-These contain the full prediction evolution per lap, accuracy scores, and the final classification.
+These files contain:
+
+- prediction evolution per lap
+- model accuracy scores
+- final race classification
 
 ---
 
-**Project**: Final Work 2026 - Erasmus Hogeschool Brussel
+# Project
+
+**Final Work – Applied Computer Science**  
+**Erasmushogeschool Brussel – 2026**
