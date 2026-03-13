@@ -5,8 +5,8 @@ import ReplayHeader from "./ReplayHeader";
 import RightPanel from "./RightPanel";
 
 // Existing components (kept where they are now)
-import TrackRenderer from "../../TrackRenderer";
-import ReplayControls from "../../ReplayControls";
+import TrackRenderer from "./TrackRenderer";
+import ReplayControls from "./controls/ReplayControls";
 
 export default function NormalView({
     raceData,
@@ -139,54 +139,54 @@ export default function NormalView({
             />
 
             {/* KEYBOARD SHORTCUTS */}
-<Card className="p-5" clip>
-  <div className="mb-4">
-    <div className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
-      Keyboard
-    </div>
-    <div className="mt-1 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
-      Shortcuts
-    </div>
-  </div>
+            <Card className="p-5" clip>
+                <div className="mb-4">
+                    <div className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500 dark:text-neutral-400">
+                        Keyboard
+                    </div>
+                    <div className="mt-1 text-sm font-semibold text-neutral-900 dark:text-neutral-50">
+                        Shortcuts
+                    </div>
+                </div>
 
-  <div className="rounded-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-black/5 dark:divide-white/10">
+                <div className="rounded-2xl ring-1 ring-black/5 dark:ring-white/10 overflow-hidden">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-black/5 dark:divide-white/10">
 
-      {[
-        { k: "SPACE", t: "Play / Pause" },
-        { k: "← / →", t: "Seek" },
-        { k: "+ / −", t: "Speed" },
-        { k: "D", t: "DRS" },
-        { k: "T", t: "Telemetry" },
-        { k: "F", t: "Focus + Predictions" },
-        { k: "S", t: "Sync to real race" },
-        { k: "R", t: "Reset" },
-      ].map(({ k, t }) => (
-        <div
-          key={k}
-          className="flex items-center gap-4 px-4 py-3 bg-white dark:bg-neutral-950/40"
-        >
-          <kbd
-            className={[
-              "flex h-8 min-w-[44px] items-center justify-center",
-              "rounded-xl px-2",
-              "font-mono text-[11px] font-bold",
-              "bg-black/[0.03] dark:bg-white/[0.06]",
-              "ring-1 ring-black/5 dark:ring-white/10",
-              "text-neutral-800 dark:text-neutral-200",
-            ].join(" ")}
-          >
-            {k}
-          </kbd>
+                        {[
+                            { k: "SPACE", t: "Play / Pause" },
+                            { k: "← / →", t: "Seek" },
+                            { k: "+ / −", t: "Speed" },
+                            { k: "D", t: "DRS" },
+                            { k: "T", t: "Telemetry" },
+                            { k: "F", t: "Focus + Predictions" },
+                            { k: "S", t: "Sync to real race" },
+                            { k: "R", t: "Reset" },
+                        ].map(({ k, t }) => (
+                            <div
+                                key={k}
+                                className="flex items-center gap-4 px-4 py-3 bg-white dark:bg-neutral-950/40"
+                            >
+                                <kbd
+                                    className={[
+                                        "flex h-8 min-w-[44px] items-center justify-center",
+                                        "rounded-xl px-2",
+                                        "font-mono text-[11px] font-bold",
+                                        "bg-black/[0.03] dark:bg-white/[0.06]",
+                                        "ring-1 ring-black/5 dark:ring-white/10",
+                                        "text-neutral-800 dark:text-neutral-200",
+                                    ].join(" ")}
+                                >
+                                    {k}
+                                </kbd>
 
-          <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
-            {t}
-          </span>
-        </div>
-      ))}
-    </div>
-  </div>
-</Card>
+                                <span className="text-sm font-medium text-neutral-800 dark:text-neutral-200">
+                                    {t}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </Card>
         </>
     );
 }

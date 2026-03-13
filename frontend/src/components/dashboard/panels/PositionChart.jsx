@@ -1,4 +1,4 @@
-import { TEAM_COLORS } from "../utils/teamColors";
+import { TEAM_COLORS } from "../../../utils/teamColors";
 
 function getDriverColor(team) {
   return TEAM_COLORS?.[team] || "currentColor";
@@ -272,8 +272,8 @@ export default function PositionChart({
                     className={[
                       "font-medium tracking-tight",
                       muted
-  ? "text-neutral-500 dark:text-neutral-400"
-  : "text-neutral-700 dark:text-neutral-200"
+                        ? "text-neutral-500 dark:text-neutral-400"
+                        : "text-neutral-700 dark:text-neutral-200"
                     ].join(" ")}
                     style={{ fontSize: `${fontSize}px`, lineHeight: "1" }}
                   >

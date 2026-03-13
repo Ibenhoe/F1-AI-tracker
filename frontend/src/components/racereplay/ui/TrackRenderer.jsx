@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from "react";
-import { getTeamColor } from "../utils/teamColors";
-import { normalizeDriver } from "../components/racereplay/utils/telemetry";
+import { getTeamColor } from "../../../utils/teamColors";
+import { normalizeDriver } from "../utils/telemetry";
 
 function isDarkTheme() {
   if (typeof document === "undefined") return true;

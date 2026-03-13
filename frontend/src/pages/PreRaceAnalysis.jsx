@@ -10,92 +10,14 @@ import PreRaceStatTiles from "../components/prerace/PreRaceStatTiles";
 import PreRacePredictionsList from "../components/prerace/PreRacePredictionsList";
 import TireStrategyPanel from "../components/prerace/TireStrategyPanel";
 
+import SegmentedControl from "../components/dashboard/components/SegmentedControl";
+import EmptyState from "../components/dashboard/components/EmptyState";
+
 /* ---------- small utilities ---------- */
 function clamp(n, a, b) {
   const x = Number(n);
   if (!Number.isFinite(x)) return a;
   return Math.max(a, Math.min(b, x));
-}
-
-/* ---------- SegmentedControl (EXACT Dashboard style) ---------- */
-function SegmentedControl({ value, onChange, items, ariaLabel }) {
-  const activeIndex = Math.max(0, items.findIndex((i) => i.id === value));
-
-  return (
-    <div
-      className={[
-        "relative inline-flex w-full items-stretch justify-center",
-        "rounded-2xl p-1",
-        // remove the gray track
-        "bg-transparent",
-        // keep only a very subtle container outline
-        "ring-1 ring-black/5 dark:ring-white/10",
-      ].join(" ")}
-      role="tablist"
-      aria-label={ariaLabel}
-    >
-      {/* Active pill (accent) */}
-      <div
-        className={[
-          "pointer-events-none absolute top-1 bottom-1 left-1",
-          "rounded-2xl",
-          "bg-[rgb(var(--accent))]",
-          "ring-1 ring-black/10 dark:ring-white/10",
-          "transition-transform duration-200 ease-out",
-        ].join(" ")}
-        style={{
-          width: `calc((100% - 0.5rem) / ${items.length})`,
-          transform: `translateX(calc(${activeIndex} * 100%))`,
-        }}
-        aria-hidden="true"
-      />
-
-      {items.map((item) => {
-        const active = value === item.id;
-
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => onChange(item.id)}
-            role="tab"
-            aria-selected={active}
-            className={[
-              "relative z-10 flex-1 min-w-0",
-              "inline-flex items-center justify-center gap-2",
-              "rounded-2xl px-3 py-1.5 text-sm font-semibold",
-              "transition-colors",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgb(var(--accent))] focus-visible:ring-offset-2 focus-visible:ring-offset-transparent",
-              active
-                ? "text-[rgb(var(--accent-fg))]"
-                : "text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-neutral-50 hover:bg-black/[0.03] dark:hover:bg-white/[0.05]",
-            ].join(" ")}
-          >
-            <span className="whitespace-nowrap">{item.label}</span>
-            {item.trailing ? item.trailing : null}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
-/** Consistent placeholder/empty state for all panels (EXACT Dashboard style) */
-function EmptyState({ title, subtitle }) {
-  return (
-    <div className="flex h-full min-h-[220px] items-center justify-center">
-      <div className="text-center">
-        <p className="text-sm font-medium text-neutral-900 dark:text-neutral-50">
-          {title}
-        </p>
-        {subtitle ? (
-          <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
-            {subtitle}
-          </p>
-        ) : null}
-      </div>
-    </div>
-  );
 }
 
 function ErrorCard({ message }) {

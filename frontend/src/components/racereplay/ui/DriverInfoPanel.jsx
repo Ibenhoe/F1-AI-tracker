@@ -1,6 +1,6 @@
 import React from "react";
-import { getTeamColor } from "../utils/teamColors";
-import { normalizeDriver } from "../components/racereplay/utils/telemetry";
+import { getTeamColor } from "../../../utils/teamColors";
+import { normalizeDriver } from "../utils/telemetry";
 
 const DRIVER_TEAMS_FALLBACK = {
   VER: "Red Bull Racing",
@@ -72,7 +72,7 @@ function TelBar({ label, value, color = "#ef4444" }) {
   );
 }
 
-const DriverInfoPanel = ({ driver, driverData, frame, showTelemetry }) => {
+const DriverInfoPanel = ({ driver, driverData, showTelemetry }) => {
   if (!driver || !driverData) {
     return (
       <div className="flex h-full items-center justify-center text-sm text-neutral-500 dark:text-neutral-400">
@@ -139,11 +139,10 @@ const DriverInfoPanel = ({ driver, driverData, frame, showTelemetry }) => {
                 DRS
               </span>
               <span
-                className={`rounded-full px-2 py-0.5 text-xs font-bold ${
-                  drsOn
+                className={`rounded-full px-2 py-0.5 text-xs font-bold ${drsOn
                     ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
                     : "bg-neutral-200/60 text-neutral-500 dark:bg-neutral-800 dark:text-neutral-400"
-                }`}
+                  }`}
               >
                 {drsOn ? "ON" : "OFF"}
               </span>

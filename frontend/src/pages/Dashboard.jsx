@@ -6,9 +6,9 @@ import {
   InsightsCard,
   StatsBar,
   SegmentedControl,
+  PositionChart
 } from "../components/dashboard";
 
-import PositionChart from "../components/PositionChart";
 import Card from "../components/ui/Card";
 import Badge from "../components/ui/Badge";
 

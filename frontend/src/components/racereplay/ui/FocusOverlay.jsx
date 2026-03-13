@@ -5,8 +5,8 @@ import Badge from "../../ui/Badge";
 import PredictionsPanel from "./PredictionsPanel";
 
 // Existing components (kept where they are now)
-import TrackRenderer from "../../TrackRenderer";
-import ReplayControls from "../../ReplayControls";
+import TrackRenderer from "./TrackRenderer";
+import ReplayControls from "./controls/ReplayControls";
 import ReplayLeaderboard from "../../ReplayLeaderboard";
 
 export default function FocusOverlay({

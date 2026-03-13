@@ -14,3 +14,4 @@ export { default as PredictionsPanel } from "./panels/PredictionsPanel";
 export { default as NotificationsPanel } from "./panels/NotificationsPanel";
 export { default as BattlesWidget } from "./panels/BattlesWidget";
 export { default as WeatherWidget } from "./panels/WeatherWidget";
+export { default as PositionChart } from "./panels/PositionChart";

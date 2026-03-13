@@ -1,6 +1,6 @@
 // src/components/ReplayControls.jsx
 import React, { useMemo } from "react";
-import SegmentedControl from "./racereplay/ui/controls/SegmentedControl";
+import SegmentedControl from "./SegmentedControl";
 
 const SPEEDS = [0.25, 0.5, 1, 2, 4];
 

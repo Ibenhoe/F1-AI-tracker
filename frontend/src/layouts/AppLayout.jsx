@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Moon, Sun, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 
-import Sidebar from "../components/Sidebar.jsx";
+import Sidebar from "./Sidebar.jsx";
 import Button from "../components/ui/Button.jsx";
 import AccentSelect from "../components/ui/AccentSelect.jsx";
 import { useTheme } from "../providers/ThemeProvider.jsx";

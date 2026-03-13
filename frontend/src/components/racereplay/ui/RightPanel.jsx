@@ -3,7 +3,7 @@ import React, { useMemo } from "react";
 import Card from "../../ui/Card";
 
 import ReplayLeaderboard from "../../ReplayLeaderboard";
-import DriverInfoPanel from "../../DriverInfoPanel";
+import DriverInfoPanel from "./DriverInfoPanel";
 
 import SegmentedControl from "./controls/SegmentedControl";
 
